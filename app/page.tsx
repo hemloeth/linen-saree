@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { VideoHero } from "@/components/video-hero"
 import { NewCollections } from "@/components/new-collections"
 import { CategoryGrid } from "@/components/category-grid"
+import { VideoSection } from "@/components/video-section"
 import { FeaturedBanner } from "@/components/featured-banner"
 import { CelebritySection } from "@/components/celebrity-section"
 import { NewsletterSection } from "@/components/newsletter-section"
@@ -15,6 +16,7 @@ export default function Home() {
       <VideoHero />
       <NewCollections />
       <CategoryGrid />
+      <VideoSection />
       <FeaturedBanner />
       <CelebritySection />
       <NewsletterSection />

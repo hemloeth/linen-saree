@@ -13,7 +13,7 @@ export function Hero() {
           src="/images/hero-saree.jpg"
           alt="Elegant linen saree"
           fill
-          className="object-cover"
+          className="object-cover object-top"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/30 to-background/80" />
