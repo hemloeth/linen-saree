@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Menu, X, Search, ShoppingBag, User, Heart, ChevronDown } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
+import { SearchModal } from "@/components/search-modal"
 import { cn } from "@/lib/utils"
 
 const navLinks = [
@@ -33,8 +34,22 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { totalItems, setIsCartOpen, isHydrated } = useCart()
   const { totalItems: wishlistItems, isHydrated: wishlistHydrated } = useWishlist()
+
+  // Handle keyboard shortcut for search (Ctrl/Cmd + K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsSearchOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -133,7 +148,12 @@ export function Header() {
 
             {/* Icons */}
             <div className="flex items-center gap-2 sm:gap-4">
-              <button className="p-2 hover:bg-muted rounded-full transition-colors" aria-label="Search">
+              <button 
+                className="p-2 hover:bg-muted rounded-full transition-colors group relative" 
+                aria-label="Search (Ctrl+K)"
+                onClick={() => setIsSearchOpen(true)}
+                title="Search (Ctrl+K)"
+              >
                 <Search className="w-5 h-5" />
               </button>
               <Link href="/wishlist" className="hidden sm:block p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist">
@@ -172,6 +192,18 @@ export function Header() {
         )}
       >
         <nav className="px-4 py-6 flex flex-col gap-2">
+          {/* Mobile Search */}
+          <button
+            onClick={() => {
+              setIsSearchOpen(true)
+              setIsMenuOpen(false)
+            }}
+            className="flex items-center gap-3 text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2"
+          >
+            <Search className="w-5 h-5" />
+            Search Products
+          </button>
+          
           {navLinks.map((link) => (
             <div key={link.name}>
               <Link
@@ -202,6 +234,9 @@ export function Header() {
           ))}
         </nav>
       </div>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   )
 }

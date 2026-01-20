@@ -2666,3 +2666,49 @@ export function getFeaturedProducts(): Product[] {
 export function getNewProducts(): Product[] {
   return products.filter(p => p.isNew)
 }
+
+export function searchProducts(query: string): Product[] {
+  if (!query.trim()) {
+    return []
+  }
+  
+  const searchTerm = query.toLowerCase().trim()
+  
+  return products.filter(product => {
+    // Exact matches get higher priority
+    const exactMatches = [
+      product.name.toLowerCase().includes(searchTerm),
+      product.category.toLowerCase().includes(searchTerm),
+      product.color.toLowerCase().includes(searchTerm),
+      product.fabric.toLowerCase().includes(searchTerm)
+    ]
+    
+    // Partial word matches
+    const partialMatches = [
+      product.description.toLowerCase().includes(searchTerm),
+      product.details.some(detail => detail.toLowerCase().includes(searchTerm))
+    ]
+    
+    return exactMatches.some(match => match) || partialMatches.some(match => match)
+  }).sort((a, b) => {
+    // Sort by relevance - exact name matches first
+    const aNameMatch = a.name.toLowerCase().includes(searchTerm)
+    const bNameMatch = b.name.toLowerCase().includes(searchTerm)
+    
+    if (aNameMatch && !bNameMatch) return -1
+    if (!aNameMatch && bNameMatch) return 1
+    
+    // Then by category matches
+    const aCategoryMatch = a.category.toLowerCase().includes(searchTerm)
+    const bCategoryMatch = b.category.toLowerCase().includes(searchTerm)
+    
+    if (aCategoryMatch && !bCategoryMatch) return -1
+    if (!aCategoryMatch && bCategoryMatch) return 1
+    
+    // Finally by featured products
+    if (a.isFeatured && !b.isFeatured) return -1
+    if (!a.isFeatured && b.isFeatured) return 1
+    
+    return 0
+  })
+}
