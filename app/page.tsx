@@ -13,14 +13,16 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Header />
-      <VideoHero />
-      <NewCollections />
-      <CategoryGrid />
-      <VideoSection />
-      <FeaturedBanner />
-      <CelebritySection />
-      <NewsletterSection />
-      <Footer />
+      <div className="pt-[104px]">
+        <VideoHero />
+        <NewCollections />
+        <CategoryGrid />
+        <VideoSection />
+        <FeaturedBanner />
+        <CelebritySection />
+        <NewsletterSection />
+        <Footer />
+      </div>
       <CartSidebar />
     </main>
   )

@@ -37,7 +37,7 @@ export function VideoHero() {
   }
 
   return (
-    <section className="relative h-screen w-full overflow-hidden">
+    <section className="relative h-[calc(100vh-104px)] w-full overflow-hidden">
       {/* Video Background */}
       <video
         ref={videoRef}
