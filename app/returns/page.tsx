@@ -11,7 +11,7 @@ export default function ReturnsPage() {
     {
       step: "1",
       title: "Contact Us",
-      description: "Call us at +91-9264151111 (10 AM to 6 PM, Monday through Saturday) to initiate your return"
+      description: "Call us at +91-92641-51111 (10 AM to 6 PM, Monday through Saturday) to initiate your return"
     },
     {
       step: "2", 
