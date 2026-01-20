@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { searchProducts } from "@/lib/products"
 import { SearchResults } from "@/components/search-results"
@@ -37,7 +37,7 @@ const searchSlides = [
   }
 ]
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [results, setResults] = useState(searchProducts(query))
@@ -81,9 +81,7 @@ export default function SearchPage() {
   }
 
   return (
-    <main className="min-h-screen">
-      <Header />
-      
+    <>
       {/* Hero Section with Auto-Scroll */}
       <div className="mt-[104px]">
         <PageHeroSlider slides={searchSlides} height="30vh" />
@@ -130,6 +128,25 @@ export default function SearchPage() {
           />
         </div>
       </div>
+    </>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <main className="min-h-screen">
+      <Header />
+      
+      <Suspense fallback={
+        <div className="mt-[104px] min-h-[50vh] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading search...</p>
+          </div>
+        </div>
+      }>
+        <SearchContent />
+      </Suspense>
 
       <Footer />
       <CartSidebar />
