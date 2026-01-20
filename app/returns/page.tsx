@@ -13,7 +13,7 @@ export default function ReturnsPage() {
     {
       step: "1",
       title: "Contact Us",
-      description: "Call us at +91-92641-51111 (10 AM to 6 PM, Monday through Saturday) to initiate your return"
+      description: "Call us at +91 92641-51111 (10 AM to 6 PM, Monday through Saturday) to initiate your return"
     },
     {
       step: "2", 
@@ -343,11 +343,11 @@ export default function ReturnsPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
-                href="tel:+919264151111" 
+                href="tel:+91 92641-51111" 
                 className="inline-flex items-center justify-center px-8 py-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
               >
                 <Phone className="w-4 h-4 mr-2" />
-                Call: +91-9264151111
+                Call: +91 92641-51111
               </a>
               <a 
                 href="mailto:linensaree001@gmail.com" 

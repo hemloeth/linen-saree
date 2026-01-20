@@ -348,10 +348,10 @@ export default function SizeGuidePage() {
                 Contact Support
               </a>
               <a 
-                href="tel:+919264151111" 
+                href="tel:+91 92641-51111" 
                 className="inline-flex items-center justify-center px-8 py-4 border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors font-medium"
               >
-                Call: +91-9264151111
+                Call: +91 92641-51111
               </a>
             </div>
           </div>

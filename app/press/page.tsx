@@ -90,7 +90,7 @@ export default function PressPage() {
                   </div>
                   <div>
                     <h3 className="font-sans font-medium mb-1">Phone</h3>
-                    <p className="font-sans text-muted-foreground">+91-9264151111</p>
+                    <p className="font-sans text-muted-foreground">+91 92641-51111</p>
                   </div>
                   <div>
                     <h3 className="font-sans font-medium mb-1">Response Time</h3>

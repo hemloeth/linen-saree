@@ -16,7 +16,7 @@ const faqData: FAQItem[] = [
   {
     category: "Contact & Account",
     question: "How do I contact linensaree.com?",
-    answer: "You may call/WhatsApp us at +91-9264151111 from Monday to Saturday [10:00 am to 6:30 pm]. Or drop us an email at linensaree001@gmail.com, our team will be happy to assist you. You may also subscribe to our newsletters through our website www.linensaree.com and follow us on Facebook, Instagram, and more, to know about our Launches, New Arrivals, Offers & much more…"
+    answer: "You may call/WhatsApp us at +91 92641-51111 from Monday to Saturday [10:00 am to 6:30 pm]. Or drop us an email at linensaree001@gmail.com, our team will be happy to assist you. You may also subscribe to our newsletters through our website www.linensaree.com and follow us on Facebook, Instagram, and more, to know about our Launches, New Arrivals, Offers & much more…"
   },
   {
     category: "Contact & Account",
@@ -53,7 +53,7 @@ const faqData: FAQItem[] = [
   {
     category: "Products & Orders",
     question: "How many days does the shipping of orders take?",
-    answer: "(1 to 5 days) The dispatch time will depend on the Saree you order. As our Sarees are completely Handloom/Handcrafted/Handwoven and in many cases made to order, we do mention the timeline for dispatch for each of our Sarees. Kindly refer to the product details on our website for dispatch-related information or reach out to us at +91-9264151111."
+    answer: "(1 to 5 days) The dispatch time will depend on the Saree you order. As our Sarees are completely Handloom/Handcrafted/Handwoven and in many cases made to order, we do mention the timeline for dispatch for each of our Sarees. Kindly refer to the product details on our website for dispatch-related information or reach out to us at +91 92641-51111."
   },
   {
     category: "Products & Orders",
@@ -73,7 +73,7 @@ const faqData: FAQItem[] = [
   {
     category: "Products & Orders",
     question: "How do I change my shipping details?",
-    answer: "Kindly reach out to us at +91-9264151111 immediately, before the dispatch of the order, for making changes to the shipping details. Once the order is dispatched, changes cannot be made to the shipping details."
+    answer: "Kindly reach out to us at +91 92641-51111  immediately, before the dispatch of the order, for making changes to the shipping details. Once the order is dispatched, changes cannot be made to the shipping details."
   },
   {
     category: "Products & Orders",
@@ -83,7 +83,7 @@ const faqData: FAQItem[] = [
   {
     category: "Products & Orders",
     question: "I am facing an issue placing the order/Can I place an order through the phone?",
-    answer: "You may call/WhatsApp us at +91-9264151111 and our dedicated team will assist you with the various options for placing the order with linensaree.com"
+    answer: "You may call/WhatsApp us at +91 92641-51111 and our dedicated team will assist you with the various options for placing the order with linensaree.com"
   },
 
   // Shipping
@@ -164,17 +164,17 @@ const faqData: FAQItem[] = [
   {
     category: "General",
     question: "Does Linen Saree take bulk orders?",
-    answer: "Yes, we do. Kindly email us the details of your requirements at support@linensaree.com or connect with us at +91-9264151111"
+    answer: "Yes, we do. Kindly email us the details of your requirements at support@linensaree.com or connect with us at +91 92641-51111"
   },
   {
     category: "General",
     question: "How do I send linensaree.com products as a gift to dear ones?",
-    answer: "You may contact us at +91-9264151111 and give us details. We shall send the product with customized details as provided by you."
+    answer: "You may contact us at +91 92641-51111 and give us details. We shall send the product with customized details as provided by you."
   },
   {
     category: "General",
     question: "What if I still have queries?",
-    answer: "You may certainly read our policies on the website or reach out to us through… Call or WhatsApp: +91-9264151111, Email id: support@linensaree.com, Facebook Messenger: https://www.facebook.com/Linensareecom-260110851539434, Instagram: https://www.instagram.com/_linensaree/. Our team will be happy to assist. Happy shopping with www.linensaree.com"
+    answer: "You may certainly read our policies on the website or reach out to us through… Call or WhatsApp: +91 92641-51111, Email id: support@linensaree.com, Facebook Messenger: https://www.facebook.com/Linensareecom-260110851539434, Instagram: https://www.instagram.com/_linensaree/. Our team will be happy to assist. Happy shopping with www.linensaree.com"
   }
 ]
 
@@ -325,10 +325,10 @@ export default function FAQPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a
-              href="tel:+919264151111"
+              href="tel:+91 92641-51111"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
             >
-              Call/WhatsApp: +91-9264151111
+              Call/WhatsApp: +91 92641-51111
             </a>
             <a
               href="mailto:support@linensaree.com"
