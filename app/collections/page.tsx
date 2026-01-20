@@ -2,8 +2,8 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { CartSidebar } from "@/components/cart-sidebar"
 import { ProductCard } from "@/components/product-card"
+import { PageHeroSlider } from "@/components/page-hero-slider"
 import { products, categories } from "@/lib/products"
-import Image from "next/image"
 import Link from "next/link"
 
 export const metadata = {
@@ -11,27 +11,42 @@ export const metadata = {
   description: "Browse our complete collection of premium linen sarees."
 }
 
+const collectionSlides = [
+  {
+    id: "all-collections-main",
+    image: "/images/hero-saree.jpg",
+    title: "All Collections",
+    subtitle: "Discover our complete range of handcrafted linen sarees"
+  },
+  {
+    id: "handloom-collection",
+    image: "/images/handloom-saree.jpg",
+    title: "Handloom Heritage",
+    subtitle: "Traditional craftsmanship meets contemporary design"
+  },
+  {
+    id: "festive-collection",
+    image: "/images/celebrity-look.jpg",
+    title: "Festive Elegance",
+    subtitle: "Perfect for celebrations and special occasions"
+  },
+  {
+    id: "bridal-collection",
+    image: "/images/bridal-saree.jpg",
+    title: "Bridal Splendor",
+    subtitle: "Exquisite sarees for your most precious moments"
+  }
+]
+
 export default function CollectionsPage() {
   return (
     <main className="min-h-screen">
       <Header />
       
-      {/* Hero Banner */}
-      <section className="relative h-[40vh] min-h-[300px] mt-[104px]">
-        <Image
-          src="/images/hero-saree.jpg"
-          alt="All Collections"
-          fill
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
-          <h1 className="font-serif text-4xl md:text-6xl mb-4">All Collections</h1>
-          <p className="text-lg text-white/90 max-w-xl">
-            Discover our complete range of handcrafted linen sarees
-          </p>
-        </div>
-      </section>
+      {/* Hero Banner with Auto-Scroll */}
+      <div className="mt-[104px]">
+        <PageHeroSlider slides={collectionSlides} height="40vh" />
+      </div>
 
       {/* Categories */}
       <section className="py-12 px-4 lg:px-8 bg-secondary">

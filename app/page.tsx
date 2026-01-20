@@ -1,5 +1,5 @@
 import { Header } from "@/components/header"
-import { VideoHero } from "@/components/video-hero"
+import { AutoScrollHero } from "@/components/auto-scroll-hero"
 import { NewCollections } from "@/components/new-collections"
 import { CategoryGrid } from "@/components/category-grid"
 import { VideoSection } from "@/components/video-section"
@@ -14,7 +14,7 @@ export default function Home() {
     <main className="min-h-screen">
       <Header />
       <div className="pt-[104px]">
-        <VideoHero />
+        <AutoScrollHero />
         <NewCollections />
         <CategoryGrid />
         <VideoSection />

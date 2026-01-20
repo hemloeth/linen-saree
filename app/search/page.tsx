@@ -4,7 +4,38 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { searchProducts } from "@/lib/products"
 import { SearchResults } from "@/components/search-results"
+import { PageHeroSlider } from "@/components/page-hero-slider"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { CartSidebar } from "@/components/cart-sidebar"
 import { Search } from "lucide-react"
+
+const searchSlides = [
+  {
+    id: "search-main",
+    image: "/images/hero-saree.jpg",
+    title: "Find Your Perfect Saree",
+    subtitle: "Search through our curated collection of premium linen sarees"
+  },
+  {
+    id: "search-variety",
+    image: "/images/celebrity-look.jpg",
+    title: "Endless Variety",
+    subtitle: "From casual to festive, discover sarees for every occasion"
+  },
+  {
+    id: "search-quality",
+    image: "/images/handloom-saree.jpg",
+    title: "Premium Quality",
+    subtitle: "Handcrafted sarees with attention to every detail"
+  },
+  {
+    id: "search-colors",
+    image: "/images/designer-saree.jpg",
+    title: "Vibrant Colors",
+    subtitle: "Explore our rainbow of colors and patterns"
+  }
+]
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
@@ -50,54 +81,58 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-32 pb-16">
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
-        {/* Search Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl lg:text-4xl font-serif mb-4">Search Products</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Find your perfect saree from our curated collection
-          </p>
-        </div>
-
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-12">
-          <div className="relative">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name, color, fabric, or category..."
-              className="w-full px-6 py-4 text-lg border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-          </div>
-        </form>
-
-        {/* Search Results Count */}
-        <div className="mb-8">
-          {query && (
-            <p className="text-muted-foreground text-center">
-              {results.length > 0 
-                ? `Found ${results.length} result${results.length === 1 ? '' : 's'} for "${query}"`
-                : `No results found for "${query}"`
-              }
-            </p>
-          )}
-        </div>
-
-        {/* Results */}
-        <SearchResults 
-          products={results} 
-          query={query} 
-          onSuggestionClick={handleSuggestionClick}
-        />
+    <main className="min-h-screen">
+      <Header />
+      
+      {/* Hero Section with Auto-Scroll */}
+      <div className="mt-[104px]">
+        <PageHeroSlider slides={searchSlides} height="30vh" />
       </div>
-    </div>
+      {/* Main Content */}
+      <div className="bg-background py-16">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-12">
+            <div className="relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name, color, fabric, or category..."
+                className="w-full px-6 py-4 text-lg border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            </div>
+          </form>
+
+          {/* Search Results Count */}
+          <div className="mb-8">
+            {query && (
+              <p className="text-muted-foreground text-center">
+                {results.length > 0 
+                  ? `Found ${results.length} result${results.length === 1 ? '' : 's'} for "${query}"`
+                  : `No results found for "${query}"`
+                }
+              </p>
+            )}
+          </div>
+
+          {/* Results */}
+          <SearchResults 
+            products={results} 
+            query={query} 
+            onSuggestionClick={handleSuggestionClick}
+          />
+        </div>
+      </div>
+
+      <Footer />
+      <CartSidebar />
+    </main>
   )
 }
