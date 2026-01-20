@@ -3,25 +3,24 @@ import { Instagram, Facebook, Twitter, Youtube } from "lucide-react"
 
 const footerLinks = {
   shop: [
-    { name: "New Arrivals", href: "#" },
-    { name: "Handloom Sarees", href: "#" },
-    { name: "Designer Collection", href: "#" },
-    { name: "Bridal Wear", href: "#" },
-    { name: "Festive Collection", href: "#" },
+    { name: "New Arrivals", href: "collections/new-arrivals" },
+    { name: "Handloom Sarees", href: "/collections/handloom" },
+    { name: "Designer Collection", href: "/collections" },
+    { name: "Bridal Wear", href: "/collections" },
+    { name: "Festive Collection", href: "/collections" },
   ],
   about: [
-    { name: "Our Story", href: "#" },
-    { name: "Craftsmanship", href: "#" },
-    { name: "Sustainability", href: "#" },
-    { name: "Press", href: "#" },
-    { name: "Careers", href: "#" },
+    { name: "About Us", href: "/about" },
+    { name: "Craftsmanship", href: "/craftsmanship" },
+    { name: "Sustainability", href: "/sustainability" },
+    { name: "Press", href: "/press" },
   ],
   help: [
-    { name: "Contact Us", href: "#" },
-    { name: "Shipping", href: "#" },
-    { name: "Returns", href: "#" },
-    { name: "Size Guide", href: "#" },
-    { name: "FAQs", href: "#" },
+    { name: "Contact Us", href: "/contact" },
+    { name: "FAQs", href: "/faq" },
+    { name: "Shipping", href: "/shipping" },
+    { name: "Returns", href: "/returns" },
+    { name: "Size Guide", href: "/size-guide" },
   ],
 }
 
@@ -118,10 +117,10 @@ export function Footer() {
             © 2026 Linen Sarees. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <Link href="#" className="font-sans text-xs text-background/50 hover:text-background transition-colors">
+            <Link href="/privacy" className="font-sans text-xs text-background/50 hover:text-background transition-colors">
               Privacy Policy
             </Link>
-            <Link href="#" className="font-sans text-xs text-background/50 hover:text-background transition-colors">
+            <Link href="/terms" className="font-sans text-xs text-background/50 hover:text-background transition-colors">
               Terms of Service
             </Link>
           </div>
