@@ -228,19 +228,7 @@ export function AutoScrollHero() {
         ))}
       </div>
 
-      {/* Auto-play indicator */}
-      <div className="absolute top-8 right-8 z-20">
-        <button
-          onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-          className={`px-3 py-1 text-xs tracking-wider uppercase backdrop-blur-sm rounded-full transition-colors ${
-            isAutoPlaying
-              ? "bg-green-500/20 text-green-300 border border-green-500/30"
-              : "bg-white/20 text-white/70 border border-white/30"
-          }`}
-        >
-          {isAutoPlaying ? "Auto" : "Manual"}
-        </button>
-      </div>
+      
 
       {/* Progress Bar */}
       {isAutoPlaying && (

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Instagram, Facebook, Twitter, Youtube } from "lucide-react"
+import { Instagram, Facebook, Youtube, MessageCircle } from "lucide-react"
 
 const footerLinks = {
   shop: [
@@ -25,10 +25,10 @@ const footerLinks = {
 }
 
 const socialLinks = [
-  { name: "Instagram", icon: Instagram, href: "#" },
-  { name: "Facebook", icon: Facebook, href: "#" },
-  { name: "Twitter", icon: Twitter, href: "#" },
-  { name: "YouTube", icon: Youtube, href: "#" },
+  { name: "Instagram", icon: Instagram, href: "https://www.instagram.com/_linensaree/" },
+  { name: "Facebook", icon: Facebook, href: "https://www.facebook.com/people/Linensareecom/100063776541814/" },
+  { name: "WhatsApp", icon: MessageCircle, href: "https://wa.me/9264151111" },
+  { name: "YouTube", icon: Youtube, href: "https://www.youtube.com/@linensaree" },
 ]
 
 export function Footer() {
