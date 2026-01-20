@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Heart, Share2, Truck, RotateCcw, Shield, Minus, Plus, Check } from "lucide-react"
 import { useCart } from "@/context/cart-context"
+import { useWishlist } from "@/context/wishlist-context"
 import { Button } from "@/components/ui/button"
 import type { Product } from "@/lib/products"
 
@@ -17,13 +18,23 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
   const { addToCart } = useCart()
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const isWishlisted = isInWishlist(product.id)
 
   const handleAddToCart = () => {
     addToCart(product, quantity)
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
+  }
+
+  const handleWishlistClick = () => {
+    if (isWishlisted) {
+      removeFromWishlist(product.id)
+    } else {
+      addToWishlist(product)
+    }
   }
 
   return (
@@ -155,8 +166,14 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   "Add to Cart"
                 )}
               </Button>
-              <Button size="lg" variant="outline" className="p-6 bg-transparent">
-                <Heart className="w-5 h-5" />
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className={`p-6 bg-transparent ${isWishlisted ? 'text-primary border-primary' : ''}`}
+                onClick={handleWishlistClick}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-primary' : ''}`} />
               </Button>
               <Button size="lg" variant="outline" className="p-6 bg-transparent">
                 <Share2 className="w-5 h-5" />

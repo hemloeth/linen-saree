@@ -3,6 +3,7 @@
 import { useRef, useState } from "react"
 import { Heart, ShoppingBag, Play, Pause } from "lucide-react"
 import { useCart } from "@/context/cart-context"
+import { useWishlist } from "@/context/wishlist-context"
 import { products } from "@/lib/products"
 
 interface VideoCardProps {
@@ -18,9 +19,11 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(true)
   const { addToCart } = useCart()
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   
   const product = products.find(p => p.id === productId) || products[0]
   const discount = Math.round(((originalPrice - price) / originalPrice) * 100)
+  const isWishlisted = isInWishlist(product.id)
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -30,6 +33,14 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
         videoRef.current.play()
       }
       setIsPlaying(!isPlaying)
+    }
+  }
+
+  const handleWishlistClick = () => {
+    if (isWishlisted) {
+      removeFromWishlist(product.id)
+    } else {
+      addToWishlist(product)
     }
   }
 
@@ -75,10 +86,13 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
         {/* Quick Actions */}
         <div className="absolute top-12 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100 z-10">
           <button
-            className="p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-sm"
-            aria-label="Add to wishlist"
+            onClick={handleWishlistClick}
+            className={`p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-sm ${
+              isWishlisted ? 'text-primary' : 'text-gray-700'
+            }`}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           >
-            <Heart className="w-4 h-4 text-gray-700" />
+            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
           </button>
         </div>
 

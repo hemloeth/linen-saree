@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Heart, ShoppingBag } from "lucide-react"
 import { useCart } from "@/context/cart-context"
+import { useWishlist } from "@/context/wishlist-context"
 import type { Product } from "@/lib/products"
 import { cn } from "@/lib/utils"
 
@@ -14,8 +15,18 @@ interface ProductCardProps {
 
 export function ProductCard({ product, className }: ProductCardProps) {
   const { addToCart } = useCart()
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const isWishlisted = isInWishlist(product.id)
+
+  const handleWishlistClick = () => {
+    if (isWishlisted) {
+      removeFromWishlist(product.id)
+    } else {
+      addToWishlist(product)
+    }
+  }
 
   return (
     <div className={cn("group relative w-full", className)}>
@@ -46,10 +57,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {/* Quick Actions */}
         <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
           <button
-            className="p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm"
-            aria-label="Add to wishlist"
+            onClick={handleWishlistClick}
+            className={`p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${
+              isWishlisted ? 'text-primary' : ''
+            }`}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           >
-            <Heart className="w-4 h-4" />
+            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
           </button>
         </div>
 

@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Menu, X, Search, ShoppingBag, User, Heart, ChevronDown } from "lucide-react"
 import { useCart } from "@/context/cart-context"
+import { useWishlist } from "@/context/wishlist-context"
 import { cn } from "@/lib/utils"
 
 const navLinks = [
@@ -33,6 +34,7 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
   const { totalItems, setIsCartOpen, isHydrated } = useCart()
+  const { totalItems: wishlistItems, isHydrated: wishlistHydrated } = useWishlist()
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -134,8 +136,13 @@ export function Header() {
               <button className="p-2 hover:bg-muted rounded-full transition-colors" aria-label="Search">
                 <Search className="w-5 h-5" />
               </button>
-              <Link href="/wishlist" className="hidden sm:block p-2 hover:bg-muted rounded-full transition-colors" aria-label="Wishlist">
+              <Link href="/wishlist" className="hidden sm:block p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist">
                 <Heart className="w-5 h-5" />
+                {wishlistHydrated && wishlistItems > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full">
+                    {wishlistItems}
+                  </span>
+                )}
               </Link>
               <Link href="/account" className="hidden sm:block p-2 hover:bg-muted rounded-full transition-colors" aria-label="Account">
                 <User className="w-5 h-5" />

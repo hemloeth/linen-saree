@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Cormorant_Garamond, Montserrat } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from "@/context/cart-context"
+import { WishlistProvider } from "@/context/wishlist-context"
 import './globals.css'
 
 const _cormorant = Cormorant_Garamond({ 
@@ -46,7 +47,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <CartProvider>
-          {children}
+          <WishlistProvider>
+            {children}
+          </WishlistProvider>
         </CartProvider>
         <Analytics />
       </body>
