@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export function CartSidebar() {
-  const { items, removeFromCart, updateQuantity, totalPrice, isCartOpen, setIsCartOpen } = useCart()
+  const { items, removeFromCart, updateQuantity, totalPrice, isCartOpen, setIsCartOpen, isHydrated } = useCart()
 
   return (
     <>
@@ -41,7 +41,11 @@ export function CartSidebar() {
 
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-6">
-          {items.length === 0 ? (
+          {!isHydrated ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-pulse text-muted-foreground">Loading...</div>
+            </div>
+          ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <ShoppingBag className="w-16 h-16 text-muted-foreground mb-4" />
               <p className="text-lg text-muted-foreground mb-4">Your bag is empty</p>
@@ -103,7 +107,7 @@ export function CartSidebar() {
         </div>
 
         {/* Footer */}
-        {items.length > 0 && (
+        {isHydrated && items.length > 0 && (
           <div className="border-t border-border p-6 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Subtotal</span>

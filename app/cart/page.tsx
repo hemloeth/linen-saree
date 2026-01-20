@@ -10,7 +10,7 @@ import Link from "next/link"
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react"
 
 export default function CartPage() {
-  const { items, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart()
+  const { items, removeFromCart, updateQuantity, totalPrice, clearCart, isHydrated } = useCart()
 
   return (
     <main className="min-h-screen">
@@ -21,7 +21,11 @@ export default function CartPage() {
           <div className="max-w-[1200px] mx-auto">
             <h1 className="font-serif text-4xl md:text-5xl mb-8">Shopping Cart</h1>
 
-            {items.length === 0 ? (
+            {!isHydrated ? (
+              <div className="text-center py-20">
+                <div className="animate-pulse text-muted-foreground">Loading cart...</div>
+              </div>
+            ) : items.length === 0 ? (
               <div className="text-center py-20">
                 <ShoppingBag className="w-20 h-20 text-muted-foreground mx-auto mb-6" />
                 <h2 className="font-serif text-2xl mb-4">Your cart is empty</h2>

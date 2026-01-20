@@ -12,7 +12,7 @@ import Link from "next/link"
 import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft } from "lucide-react"
 
 export default function CheckoutPage() {
-  const { items, totalPrice, clearCart } = useCart()
+  const { items, totalPrice, clearCart, isHydrated } = useCart()
   const [step, setStep] = useState(1)
   const [orderPlaced, setOrderPlaced] = useState(false)
   
@@ -39,6 +39,18 @@ export default function CheckoutPage() {
     e.preventDefault()
     setOrderPlaced(true)
     clearCart()
+  }
+
+  if (!isHydrated) {
+    return (
+      <main className="min-h-screen">
+        <Header />
+        <div className="pt-[104px] min-h-[80vh] flex items-center justify-center">
+          <div className="animate-pulse text-muted-foreground">Loading checkout...</div>
+        </div>
+        <Footer />
+      </main>
+    )
   }
 
   if (items.length === 0 && !orderPlaced) {
