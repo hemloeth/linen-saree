@@ -1,4 +1,10 @@
 import { Shield, Eye, Cookie, Database, Users, Clock } from "lucide-react"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Privacy Policy - Linen Sarees",
+  description: "Learn how we collect, use, and protect your personal information. Your privacy is important to us.",
+}
 
 export default function PrivacyPolicyPage() {
   return (
