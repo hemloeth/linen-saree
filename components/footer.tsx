@@ -10,18 +10,18 @@ const footerLinks = {
     { name: "Festive Collection", href: "#" },
   ],
   about: [
-    { name: "Our Story", href: "#" },
+    { name: "About Us", href: "/about" },
     { name: "Craftsmanship", href: "#" },
     { name: "Sustainability", href: "#" },
     { name: "Press", href: "#" },
     { name: "Careers", href: "#" },
   ],
   help: [
-    { name: "Contact Us", href: "#" },
+    { name: "Contact Us", href: "/contact" },
+    { name: "FAQs", href: "/faq" },
     { name: "Shipping", href: "#" },
     { name: "Returns", href: "#" },
     { name: "Size Guide", href: "#" },
-    { name: "FAQs", href: "#" },
   ],
 }
 
