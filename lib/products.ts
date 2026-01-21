@@ -2654,12 +2654,6 @@ export const categories = [
     slug: "bridal-collection",
     image: "/images/products/banarasi-red.jpg",
     description: "Exquisite bridal sarees for your special day"
-  },
-  {
-    name: "Casual Wear",
-    slug: "casual-wear",
-    image: "/images/products/pure-linen-blue.jpg",
-    description: "Comfortable and stylish sarees for everyday occasions"
   }
 ]
 

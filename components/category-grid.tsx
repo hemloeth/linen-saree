@@ -24,21 +24,15 @@ export function CategoryGrid() {
           </p>
         </div>
 
-        {/* Category Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
-          {categories.map((category, index) => (
+        {/* Category Grid - 8 items in 2 rows */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+          {categories.map((category) => (
             <Link
               key={category.slug}
               href={`/collections/${category.slug}`}
-              className={`group relative overflow-hidden rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 ${
-                index === 0 ? "lg:col-span-2 lg:row-span-2" : ""
-              } ${
-                index === 1 ? "md:col-span-1" : ""
-              }`}
+              className="group relative overflow-hidden rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
             >
-              <div className={`relative ${
-                index === 0 ? "aspect-[4/3] lg:aspect-square" : "aspect-[4/5] sm:aspect-[3/4]"
-              } bg-gradient-to-br from-muted to-muted/50 min-h-[200px] sm:min-h-[250px] md:min-h-[300px]`}>
+              <div className="relative aspect-[4/5] sm:aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 min-h-[200px] sm:min-h-[250px] md:min-h-[280px]">
                 <Image
                   src={category.image || "/placeholder.svg"}
                   alt={category.name}
@@ -55,20 +49,16 @@ export function CategoryGrid() {
                 </div>
                 
                 {/* Content */}
-                <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-4 md:p-6 lg:p-8 pb-4 sm:pb-6 md:pb-8 lg:pb-12 text-white">
+                <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-4 md:p-6 text-white">
                   <div className="transition-transform duration-500">
-                    <h3 className={`font-serif font-medium ${
-                      index === 0 ? "text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl" : "text-sm sm:text-base md:text-xl lg:text-2xl"
-                    } mb-1 sm:mb-2 md:mb-3 leading-tight sm:leading-relaxed break-words`}>
+                    <h3 className="font-serif font-medium text-sm sm:text-base md:text-lg lg:text-xl mb-1 sm:mb-2 leading-tight break-words">
                       {category.name}
                     </h3>
-                    <p className={`text-white/90 mb-2 sm:mb-4 md:mb-6 ${
-                      index === 0 ? "text-xs sm:text-sm lg:text-base line-clamp-2" : "text-xs lg:text-sm line-clamp-2"
-                    }`}>
+                    <p className="text-white/90 mb-2 sm:mb-3 text-xs sm:text-sm line-clamp-2">
                       {category.description}
                     </p>
                     <div className="flex items-center gap-2 text-xs font-medium tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100 hidden sm:flex">
-                      <span className="border-b border-white/50 pb-1">Explore Collection</span>
+                      <span className="border-b border-white/50 pb-1">Explore</span>
                     </div>
                   </div>
                 </div>
