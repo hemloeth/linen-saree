@@ -9,14 +9,13 @@ import { products } from "@/lib/products"
 
 interface VideoCardProps {
   title: string
-  description: string
   price: number
   originalPrice: number
   videoSrc: string
   productId: string
 }
 
-function VideoCard({ title, description, price, originalPrice, videoSrc, productId }: VideoCardProps) {
+function VideoCard({ title, price, originalPrice, videoSrc, productId }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(true)
   const { addToCart } = useCart()
@@ -63,15 +62,12 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Badges 
-        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+        {/* Discount Badge */}
+        <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm">
             {discount}% OFF
           </span>
-          <span className="bg-red-500 text-white text-xs px-2 py-1 font-medium rounded-sm">
-            TRENDING
-          </span>
-        </div>*/}
+        </div>
 
         {/* Play/Pause Button */}
         <button
@@ -108,9 +104,13 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
 
         {/* Content Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-          <h3 className="font-serif text-lg font-medium mb-4 line-clamp-2">
+          <h3 className="font-serif text-lg font-medium mb-2 line-clamp-2">
             {title}
           </h3>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-semibold">₹{price.toLocaleString()}</span>
+            <span className="text-white/70 line-through">₹{originalPrice.toLocaleString()}</span>
+          </div>
         </div>
 
         {/* Add to Cart Button */}
@@ -121,9 +121,9 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
               e.stopPropagation()
               addToCart(product)
             }}
-            className="w-full bg-white/95 hover:bg-white text-gray-900 py-1 px-2 flex items-center justify-center gap-1 text-xs font-medium transition-colors"
+            className="w-full bg-white/95 hover:bg-white text-gray-900 py-3 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
           >
-            <ShoppingBag className="w-3 h-3" />
+            <ShoppingBag className="w-4 h-4" />
             Add to Cart
           </button>
         </div>
@@ -137,7 +137,6 @@ export function VideoSection() {
   const videoCards = [
     {
       title: "Premium Silk Linen Collection",
-      description: "Luxurious silk linen sarees with intricate handwork and premium finishing",
       price: 3499,
       originalPrice: 5999,
       videoSrc: "/Video-266.mp4",
@@ -145,7 +144,6 @@ export function VideoSection() {
     },
     {
       title: "Banarasi Silk Elegance",
-      description: "Traditional Banarasi silk sarees with rich gold zari work and timeless appeal",
       price: 4299,
       originalPrice: 7999,
       videoSrc: "/bluesaree.mp4",
@@ -153,7 +151,6 @@ export function VideoSection() {
     },
     {
       title: "Handloom Heritage",
-      description: "Authentic handloom sarees crafted by skilled artisans using traditional techniques",
       price: 2890,
       originalPrice: 5290,
       videoSrc: "/Video-385.mp4",
@@ -161,7 +158,6 @@ export function VideoSection() {
     },
     {
       title: "Pure Linen Comfort",
-      description: "Breathable pure linen sarees perfect for everyday elegance and comfort",
       price: 2499,
       originalPrice: 4799,
       videoSrc: "/Video-28.mp4",
@@ -193,7 +189,6 @@ export function VideoSection() {
             <VideoCard
               key={index}
               title={card.title}
-              description={card.description}
               price={card.price}
               originalPrice={card.originalPrice}
               videoSrc={card.videoSrc}
