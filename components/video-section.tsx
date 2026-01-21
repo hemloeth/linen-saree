@@ -46,18 +46,19 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
-      <div className="relative aspect-[3/4] bg-black">
-        <video
-          ref={videoRef}
-          src={videoSrc}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-          onLoadedData={() => setIsPlaying(true)}
-        />
+    <Link href="/video-collection" className="block">
+      <div className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer">
+        <div className="relative aspect-[3/4] bg-black">
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+            onLoadedData={() => setIsPlaying(true)}
+          />
         
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -74,7 +75,11 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
 
         {/* Play/Pause Button */}
         <button
-          onClick={togglePlay}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            togglePlay()
+          }}
           className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors opacity-0 group-hover:opacity-100 z-10"
         >
           {isPlaying ? (
@@ -87,7 +92,11 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
         {/* Quick Actions */}
         <div className="absolute top-12 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100 z-10">
           <button
-            onClick={handleWishlistClick}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleWishlistClick()
+            }}
             className={`p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-sm ${
               isWishlisted ? 'text-primary' : 'text-gray-700'
             }`}
@@ -107,15 +116,20 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
         {/* Add to Cart Button */}
         <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
           <button
-            onClick={() => addToCart(product)}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              addToCart(product)
+            }}
             className="w-full bg-white/95 hover:bg-white text-gray-900 py-1 px-2 flex items-center justify-center gap-1 text-xs font-medium transition-colors"
           >
             <ShoppingBag className="w-3 h-3" />
             Add to Cart
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
