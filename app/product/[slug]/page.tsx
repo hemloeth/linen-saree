@@ -41,7 +41,7 @@ export default async function ProductPage({ params }: Props) {
     <main className="min-h-screen">
       <Header />
       
-      <div className="pt-[120px] lg:pt-[140px]">
+      <div className="pt-[96px] lg:pt-[104px]">
         <ProductDetails product={product} />
         <RelatedProducts products={relatedProducts} category={product.category} />
       </div>

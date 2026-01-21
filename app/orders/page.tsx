@@ -64,7 +64,7 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="container mx-auto px-4 py-12 pt-[120px] lg:pt-[140px]">
+      <div className="container mx-auto px-4 py-12 pt-[96px] lg:pt-[104px]">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-4">My Orders</h1>

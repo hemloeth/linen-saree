@@ -45,7 +45,7 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen">
         <Header />
-        <div className="pt-[120px] lg:pt-[140px] min-h-[80vh] flex items-center justify-center">
+        <div className="pt-[96px] lg:pt-[104px] min-h-[80vh] flex items-center justify-center">
           <div className="animate-pulse text-muted-foreground">Loading checkout...</div>
         </div>
         <Footer />
@@ -57,7 +57,7 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen">
         <Header />
-        <div className="pt-[120px] lg:pt-[140px] min-h-[80vh] flex items-center justify-center">
+        <div className="pt-[96px] lg:pt-[104px] min-h-[80vh] flex items-center justify-center">
           <div className="text-center px-4">
             <h1 className="font-serif text-3xl mb-4">Your cart is empty</h1>
             <p className="text-muted-foreground mb-8">Add some products to checkout</p>
@@ -77,7 +77,7 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen">
         <Header />
-        <div className="pt-[120px] lg:pt-[140px] min-h-[80vh] flex items-center justify-center">
+        <div className="pt-[96px] lg:pt-[104px] min-h-[80vh] flex items-center justify-center">
           <div className="text-center px-4 max-w-md">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <Check className="w-10 h-10 text-primary" />
@@ -105,7 +105,7 @@ export default function CheckoutPage() {
     <main className="min-h-screen bg-background">
       <Header />
       
-      <div className="pt-[120px] lg:pt-[140px]">
+      <div className="pt-[96px] lg:pt-[104px]">
         <section className="py-8 lg:py-12 px-4 lg:px-8">
           <div className="max-w-[1200px] mx-auto">
             {/* Back Link */}

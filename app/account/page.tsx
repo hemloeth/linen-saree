@@ -14,7 +14,7 @@ export default function AccountPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="container mx-auto px-4 py-12 pt-[120px] lg:pt-[140px]">
+      <div className="container mx-auto px-4 py-12 pt-[96px] lg:pt-[104px]">
         {/* Welcome Section */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full mb-6">

@@ -46,7 +46,7 @@ export default function ContactPage() {
       <Header />
       
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-muted/50 to-background pt-[120px] lg:pt-[140px]">
+      <div className="relative bg-gradient-to-b from-muted/50 to-background pt-[96px] lg:pt-[104px]">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-20 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif text-4xl lg:text-6xl font-light mb-6">

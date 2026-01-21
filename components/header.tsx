@@ -60,7 +60,7 @@ export function Header() {
       </div>
       
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
+        <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Left Side - Logo and Mobile Menu */}
           <div className="flex items-center gap-4">
             {/* Mobile Menu Button */}
@@ -190,7 +190,7 @@ export function Header() {
       {/* Mobile Menu */}
       <div
         className={cn(
-          "lg:hidden fixed inset-x-0 top-[104px] bg-background border-b border-border transition-all duration-300 overflow-hidden",
+          "lg:hidden fixed inset-x-0 top-[96px] bg-background border-b border-border transition-all duration-300 overflow-hidden",
           isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
         )}
       >
