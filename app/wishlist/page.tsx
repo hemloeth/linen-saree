@@ -39,7 +39,7 @@ export default function WishlistPage() {
                   onClick={clearWishlist}
                   className="hidden sm:flex"
                 >
-                  Clear All
+                  Clear Allaaaa
                 </Button>
                 <Button
                   onClick={handleAddAllToCart}
