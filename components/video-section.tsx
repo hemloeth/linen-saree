@@ -13,9 +13,10 @@ interface VideoCardProps {
   originalPrice: number
   videoSrc: string
   productId: string
+  category: string
 }
 
-function VideoCard({ title, price, originalPrice, videoSrc, productId }: VideoCardProps) {
+function VideoCard({ title, price, originalPrice, videoSrc, productId, category }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(true)
   const { addToCart } = useCart()
@@ -45,7 +46,7 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId }: VideoCa
   }
 
   return (
-    <div className="group relative w-full">
+    <Link href={`/video-collection?category=${encodeURIComponent(category)}`} className="group relative w-full block cursor-pointer">
       <div className="relative w-full mb-4">
         <div className="aspect-[3/4] overflow-hidden bg-black rounded-sm relative">
           <video
@@ -66,6 +67,9 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId }: VideoCa
           <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[calc(100%-3rem)]">
             <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
               {discount}% OFF
+            </span>
+            <span className="bg-background/90 text-foreground text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
+              {category}
             </span>
           </div>
 
@@ -116,10 +120,17 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId }: VideoCa
               Add to Cart
             </button>
           </div>
+
+          {/* Click to View Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-5">
+            <div className="bg-background/95 text-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+              Click to view {category} collection
+            </div>
+          </div>
         </div>
       </div>
 
-      <Link href="/video-collection" className="block">
+      <div className="block">
         <h3 className="font-medium text-sm leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
           {title}
         </h3>
@@ -129,8 +140,8 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId }: VideoCa
             ₹{originalPrice.toLocaleString()}
           </span>
         </div>
-      </Link>
-    </div>
+      </div>
+    </Link>
   )
 }
 
@@ -141,28 +152,64 @@ export function VideoSection() {
       price: 3499,
       originalPrice: 5999,
       videoSrc: "/Video-266.mp4",
-      productId: "8"
+      productId: "8",
+      category: "Silk"
+    },
+    {
+      title: "Designer Dupatta Elegance",
+      price: 1899,
+      originalPrice: 3499,
+      videoSrc: "/dupaataa.mp4",
+      productId: "2",
+      category: "Dupatta"
+    },
+    {
+      title: "Festive Special Collection",
+      price: 3999,
+      originalPrice: 6999,
+      videoSrc: "/gemini_vedio.mp4",
+      productId: "3",
+      category: "Festive"
     },
     {
       title: "Banarasi Silk Elegance",
       price: 4299,
       originalPrice: 7999,
       videoSrc: "/bluesaree.mp4",
-      productId: "4"
+      productId: "4",
+      category: "Banarasi"
+    },
+    {
+      title: "Contemporary Elegance",
+      price: 2799,
+      originalPrice: 4999,
+      videoSrc: "/videoplayback.mp4",
+      productId: "5",
+      category: "Contemporary"
     },
     {
       title: "Handloom Heritage",
       price: 2890,
       originalPrice: 5290,
       videoSrc: "/Video-385.mp4",
-      productId: "6"
+      productId: "6",
+      category: "Handloom"
     },
     {
       title: "Pure Linen Comfort",
       price: 2499,
       originalPrice: 4799,
       videoSrc: "/Video-28.mp4",
-      productId: "1"
+      productId: "1",
+      category: "Linen"
+    },
+    {
+      title: "Royal Silk Collection",
+      price: 4599,
+      originalPrice: 7299,
+      videoSrc: "/Video-266.mp4",
+      productId: "9",
+      category: "Silk"
     }
   ]
 
@@ -185,7 +232,7 @@ export function VideoSection() {
         </div>
 
         {/* Video Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {videoCards.map((card, index) => (
             <VideoCard
               key={index}
@@ -194,6 +241,7 @@ export function VideoSection() {
               originalPrice={card.originalPrice}
               videoSrc={card.videoSrc}
               productId={card.productId}
+              category={card.category}
             />
           ))}
         </div>

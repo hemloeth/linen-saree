@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { ShoppingBag, Heart, Play, Pause } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
@@ -146,12 +147,36 @@ const baseVideoCards = [
     category: "Silk"
   },
   {
+    title: "Designer Dupatta Elegance",
+    price: 1899,
+    originalPrice: 3499,
+    videoSrc: "/dupaataa.mp4",
+    productId: "2",
+    category: "Dupatta"
+  },
+  {
+    title: "Festive Special Collection",
+    price: 3999,
+    originalPrice: 6999,
+    videoSrc: "/gemini_vedio.mp4",
+    productId: "3",
+    category: "Festive"
+  },
+  {
     title: "Banarasi Silk Elegance",
     price: 4299,
     originalPrice: 7999,
     videoSrc: "/bluesaree.mp4",
     productId: "4",
     category: "Banarasi"
+  },
+  {
+    title: "Contemporary Elegance",
+    price: 2799,
+    originalPrice: 4999,
+    videoSrc: "/videoplayback.mp4",
+    productId: "5",
+    category: "Contemporary"
   },
   {
     title: "Handloom Heritage Collection",
@@ -168,59 +193,230 @@ const baseVideoCards = [
     videoSrc: "/Video-28.mp4",
     productId: "1",
     category: "Linen"
+  }
+]
+
+// Extended video collection with more variety
+const extendedVideoCards = [
+  // Silk Collection
+  {
+    title: "Royal Silk Elegance",
+    price: 4599,
+    originalPrice: 7299,
+    videoSrc: "/Video-266.mp4",
+    productId: "9",
+    category: "Silk"
   },
   {
-    title: "Designer Dupatta Collection",
-    price: 1899,
-    originalPrice: 3499,
+    title: "Luxurious Silk Drape",
+    price: 3899,
+    originalPrice: 6499,
+    videoSrc: "/bluesaree.mp4",
+    productId: "10",
+    category: "Silk"
+  },
+  {
+    title: "Premium Silk Weave",
+    price: 4199,
+    originalPrice: 6999,
+    videoSrc: "/gemini_vedio.mp4",
+    productId: "11",
+    category: "Silk"
+  },
+  
+  // Banarasi Collection
+  {
+    title: "Traditional Banarasi Gold",
+    price: 5299,
+    originalPrice: 8999,
+    videoSrc: "/Video-385.mp4",
+    productId: "12",
+    category: "Banarasi"
+  },
+  {
+    title: "Heritage Banarasi Silk",
+    price: 4799,
+    originalPrice: 7999,
+    videoSrc: "/videoplayback.mp4",
+    productId: "13",
+    category: "Banarasi"
+  },
+  {
+    title: "Classic Banarasi Weave",
+    price: 4999,
+    originalPrice: 8499,
+    videoSrc: "/Video-28.mp4",
+    productId: "14",
+    category: "Banarasi"
+  },
+  
+  // Handloom Collection
+  {
+    title: "Artisan Handloom Special",
+    price: 3299,
+    originalPrice: 5799,
     videoSrc: "/dupaataa.mp4",
-    productId: "2",
+    productId: "15",
+    category: "Handloom"
+  },
+  {
+    title: "Traditional Handloom Cotton",
+    price: 2699,
+    originalPrice: 4999,
+    videoSrc: "/Video-266.mp4",
+    productId: "16",
+    category: "Handloom"
+  },
+  {
+    title: "Heritage Handloom Craft",
+    price: 3099,
+    originalPrice: 5499,
+    videoSrc: "/bluesaree.mp4",
+    productId: "17",
+    category: "Handloom"
+  },
+  
+  // Linen Collection
+  {
+    title: "Organic Linen Comfort",
+    price: 2799,
+    originalPrice: 4599,
+    videoSrc: "/gemini_vedio.mp4",
+    productId: "18",
+    category: "Linen"
+  },
+  {
+    title: "Premium Linen Blend",
+    price: 2999,
+    originalPrice: 4999,
+    videoSrc: "/Video-385.mp4",
+    productId: "19",
+    category: "Linen"
+  },
+  {
+    title: "Summer Linen Collection",
+    price: 2599,
+    originalPrice: 4299,
+    videoSrc: "/videoplayback.mp4",
+    productId: "20",
+    category: "Linen"
+  },
+  
+  // Dupatta Collection
+  {
+    title: "Embroidered Dupatta Set",
+    price: 2199,
+    originalPrice: 3999,
+    videoSrc: "/Video-28.mp4",
+    productId: "21",
     category: "Dupatta"
   },
   {
-    title: "Festive Special Collection",
-    price: 3999,
-    originalPrice: 6999,
-    videoSrc: "/gemini_vedio.mp4",
-    productId: "3",
+    title: "Silk Dupatta Elegance",
+    price: 2499,
+    originalPrice: 4299,
+    videoSrc: "/Video-266.mp4",
+    productId: "22",
+    category: "Dupatta"
+  },
+  {
+    title: "Designer Dupatta Collection",
+    price: 1999,
+    originalPrice: 3699,
+    videoSrc: "/bluesaree.mp4",
+    productId: "23",
+    category: "Dupatta"
+  },
+  
+  // Festive Collection
+  {
+    title: "Wedding Special Saree",
+    price: 5999,
+    originalPrice: 9999,
+    videoSrc: "/Video-385.mp4",
+    productId: "24",
     category: "Festive"
   },
   {
-    title: "Contemporary Elegance",
-    price: 2799,
-    originalPrice: 4999,
+    title: "Celebration Wear Elegance",
+    price: 4599,
+    originalPrice: 7999,
     videoSrc: "/videoplayback.mp4",
-    productId: "5",
+    productId: "25",
+    category: "Festive"
+  },
+  {
+    title: "Festival Special Collection",
+    price: 4299,
+    originalPrice: 7299,
+    videoSrc: "/dupaataa.mp4",
+    productId: "26",
+    category: "Festive"
+  },
+  
+  // Contemporary Collection
+  {
+    title: "Modern Drape Style",
+    price: 3199,
+    originalPrice: 5499,
+    videoSrc: "/Video-28.mp4",
+    productId: "27",
+    category: "Contemporary"
+  },
+  {
+    title: "Fusion Wear Collection",
+    price: 2899,
+    originalPrice: 4999,
+    videoSrc: "/gemini_vedio.mp4",
+    productId: "28",
+    category: "Contemporary"
+  },
+  {
+    title: "Urban Chic Saree",
+    price: 3399,
+    originalPrice: 5799,
+    videoSrc: "/Video-266.mp4",
+    productId: "29",
     category: "Contemporary"
   }
 ]
 
 const categories = ["All", "Silk", "Banarasi", "Handloom", "Linen", "Dupatta", "Festive", "Contemporary"]
 
-export default function VideoCollectionPage() {
-  const [selectedCategory, setSelectedCategory] = useState("All")
+function VideoCollectionContent() {
+  const searchParams = useSearchParams()
+  const categoryFromUrl = searchParams.get('category')
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "All")
   const [currentHeroVideo, setCurrentHeroVideo] = useState(0)
   
-  // Create 14 video cards by repeating the 7 base videos twice
-  const videoCards = [
-    ...baseVideoCards,
-    ...baseVideoCards.map((card, index) => ({
-      ...card,
-      title: card.title,
-      price: card.price + 500,
-      originalPrice: card.originalPrice + 1000,
-      productId: (parseInt(card.productId) + 7).toString()
-    }))
-  ]
+  // Update selected category when URL parameter changes
+  useEffect(() => {
+    if (categoryFromUrl && categories.includes(categoryFromUrl)) {
+      setSelectedCategory(categoryFromUrl)
+    }
+  }, [categoryFromUrl])
+  
+  // Create comprehensive video collection by combining base and extended videos
+  const videoCards = [...baseVideoCards, ...extendedVideoCards]
   
   const filteredVideos = selectedCategory === "All" 
     ? videoCards 
     : videoCards.filter(card => card.category === selectedCategory)
 
-  // Auto-rotate hero videos every 5 seconds
+  // Auto-rotate hero videos every 5 seconds using a mixed selection
   useEffect(() => {
+    const heroVideos = [
+      baseVideoCards[0], // Silk
+      baseVideoCards[3], // Banarasi
+      baseVideoCards[6], // Linen
+      baseVideoCards[2], // Festive
+      baseVideoCards[5], // Handloom
+      baseVideoCards[4], // Contemporary
+      baseVideoCards[1]  // Dupatta
+    ]
+    
     const interval = setInterval(() => {
-      setCurrentHeroVideo((prev) => (prev + 1) % baseVideoCards.length)
+      setCurrentHeroVideo((prev) => (prev + 1) % heroVideos.length)
     }, 5000)
     return () => clearInterval(interval)
   }, [])
@@ -231,7 +427,7 @@ export default function VideoCollectionPage() {
       <div className="min-h-screen bg-black pt-[96px] lg:pt-[104px]">
         {/* Full-Page Video Cover Hero */}
         <section className="relative h-screen w-full overflow-hidden">
-          {baseVideoCards.map((video, index) => (
+          {baseVideoCards.slice(0, 7).map((video, index) => (
             <div
               key={index}
               className={`absolute inset-0 transition-opacity duration-1000 ${
@@ -279,7 +475,7 @@ export default function VideoCollectionPage() {
 
           {/* Video Navigation Dots */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3 z-10">
-            {baseVideoCards.map((_, index) => (
+            {baseVideoCards.slice(0, 7).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentHeroVideo(index)}
@@ -392,5 +588,13 @@ export default function VideoCollectionPage() {
         </section>
       </div>
     </>
+  )
+}
+
+export default function VideoCollectionPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VideoCollectionContent />
+    </Suspense>
   )
 }
