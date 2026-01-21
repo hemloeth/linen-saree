@@ -1,6 +1,5 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { CartSidebar } from "@/components/cart-sidebar"
 import { ProductDetails } from "@/components/product-details"
 import { RelatedProducts } from "@/components/related-products"
 import { products, getProductBySlug, getProductsByCategory } from "@/lib/products"
@@ -48,7 +47,6 @@ export default async function ProductPage({ params }: Props) {
       </div>
 
       <Footer />
-      <CartSidebar />
     </main>
   )
 }

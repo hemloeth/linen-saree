@@ -7,7 +7,6 @@ import { FeaturedBanner } from "@/components/featured-banner"
 import { CelebritySection } from "@/components/celebrity-section"
 import { NewsletterSection } from "@/components/newsletter-section"
 import { Footer } from "@/components/footer"
-import { CartSidebar } from "@/components/cart-sidebar"
 
 export default function Home() {
   return (
@@ -23,7 +22,6 @@ export default function Home() {
         <NewsletterSection />
         <Footer />
       </div>
-      <CartSidebar />
     </main>
   )
 }

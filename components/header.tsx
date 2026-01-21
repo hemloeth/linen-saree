@@ -159,11 +159,12 @@ export function Header() {
               </button>
               <Link href="/wishlist" className="hidden sm:block p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist">
                 <Heart className="w-5 h-5" />
-                {wishlistHydrated && wishlistItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full">
-                    {wishlistItems}
-                  </span>
-                )}
+                <span className={cn(
+                  "absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full transition-opacity",
+                  wishlistHydrated && wishlistItems > 0 ? "opacity-100" : "opacity-0"
+                )}>
+                  {wishlistHydrated ? wishlistItems : 0}
+                </span>
               </Link>
               <Link href="/account" className="hidden sm:block p-2 hover:bg-muted rounded-full transition-colors" aria-label="Account">
                 <User className="w-5 h-5" />
@@ -174,11 +175,12 @@ export function Header() {
                 onClick={() => setIsCartOpen(true)}
               >
                 <ShoppingBag className="w-5 h-5" />
-                {isHydrated && totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full">
-                    {totalItems}
-                  </span>
-                )}
+                <span className={cn(
+                  "absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full transition-opacity",
+                  isHydrated && totalItems > 0 ? "opacity-100" : "opacity-0"
+                )}>
+                  {isHydrated ? totalItems : 0}
+                </span>
               </button>
             </div>
           </div>

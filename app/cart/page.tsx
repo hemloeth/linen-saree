@@ -2,7 +2,6 @@
 
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { CartSidebar } from "@/components/cart-sidebar"
 import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
@@ -201,7 +200,6 @@ export default function CartPage() {
       </div>
 
       <Footer />
-      <CartSidebar />
     </main>
   )
 }

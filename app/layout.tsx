@@ -4,6 +4,7 @@ import { Cormorant_Garamond, Montserrat } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from "@/context/cart-context"
 import { WishlistProvider } from "@/context/wishlist-context"
+import { CartSidebar } from "@/components/cart-sidebar"
 import WhatsAppFloat from "@/components/whatsapp-float"
 import './globals.css'
 
@@ -50,6 +51,7 @@ export default function RootLayout({
         <CartProvider>
           <WishlistProvider>
             {children}
+            <CartSidebar />
             <WhatsAppFloat />
           </WishlistProvider>
         </CartProvider>

@@ -1,6 +1,5 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { CartSidebar } from "@/components/cart-sidebar"
 import { ProductCard } from "@/components/product-card"
 import { PageHeroSlider } from "@/components/page-hero-slider"
 import { products, categories } from "@/lib/products"
@@ -95,7 +94,6 @@ export default function CollectionsPage() {
       </section>
 
       <Footer />
-      <CartSidebar />
     </main>
   )
 }

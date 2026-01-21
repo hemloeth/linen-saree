@@ -7,7 +7,6 @@ import { SearchResults } from "@/components/search-results"
 import { PageHeroSlider } from "@/components/page-hero-slider"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { CartSidebar } from "@/components/cart-sidebar"
 import { Search } from "lucide-react"
 
 const searchSlides = [
@@ -149,7 +148,6 @@ export default function SearchPage() {
       </Suspense>
 
       <Footer />
-      <CartSidebar />
     </main>
   )
 }

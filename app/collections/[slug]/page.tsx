@@ -1,6 +1,5 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { CartSidebar } from "@/components/cart-sidebar"
 import { ProductCard } from "@/components/product-card"
 import { PageHeroSlider } from "@/components/page-hero-slider"
 import { products, categories, getProductsByCategory } from "@/lib/products"
@@ -323,7 +322,6 @@ export default async function CategoryPage({ params }: Props) {
       </section>
 
       <Footer />
-      <CartSidebar />
     </main>
   )
 }

@@ -5,7 +5,6 @@ import { ShoppingBag } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { products } from "@/lib/products"
 import { Header } from "@/components/header"
-import { CartSidebar } from "@/components/cart-sidebar"
 import Link from "next/link"
 
 interface VideoCardProps {
@@ -344,7 +343,6 @@ export default function VideoCollectionPage() {
           </div>
         </section>
       </div>
-      <CartSidebar />
     </>
   )
 }
