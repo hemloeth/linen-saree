@@ -136,7 +136,7 @@ export function VideoSection() {
       description: "Luxurious silk linen sarees with intricate handwork and premium finishing",
       price: 3499,
       originalPrice: 5999,
-      videoSrc: "/gemini_vedio.mp4",
+      videoSrc: "/dupaataa.mp4",
       productId: "8"
     },
     {
@@ -144,7 +144,7 @@ export function VideoSection() {
       description: "Traditional Banarasi silk sarees with rich gold zari work and timeless appeal",
       price: 4299,
       originalPrice: 7999,
-      videoSrc: "/gemini_vedio.mp4",
+      videoSrc: "/bluesaree.mp4",
       productId: "4"
     },
     {
@@ -152,7 +152,7 @@ export function VideoSection() {
       description: "Authentic handloom sarees crafted by skilled artisans using traditional techniques",
       price: 2890,
       originalPrice: 5290,
-      videoSrc: "/gemini_vedio.mp4",
+      videoSrc: "/Video-385.mp4",
       productId: "6"
     },
     {
@@ -160,7 +160,7 @@ export function VideoSection() {
       description: "Breathable pure linen sarees perfect for everyday elegance and comfort",
       price: 2499,
       originalPrice: 4799,
-      videoSrc: "/gemini_vedio.mp4",
+      videoSrc: "/videoplayback.mp4",
       productId: "1"
     }
   ]

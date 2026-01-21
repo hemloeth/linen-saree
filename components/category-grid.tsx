@@ -38,7 +38,7 @@ export function CategoryGrid() {
             >
               <div className={`relative ${
                 index === 0 ? "aspect-[4/3] lg:aspect-square" : "aspect-[3/4]"
-              } bg-gradient-to-br from-muted to-muted/50`}>
+              } bg-gradient-to-br from-muted to-muted/50 min-h-[300px]`}>
                 <Image
                   src={category.image || "/placeholder.svg"}
                   alt={category.name}
@@ -47,7 +47,7 @@ export function CategoryGrid() {
                 />
                 
                 {/* Overlay with modern gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                 
                 {/* Decorative elements */}
                 <div className="absolute top-4 right-4 w-12 h-12 border border-white/20 rounded-full flex items-center justify-center backdrop-blur-sm bg-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-4 group-hover:translate-x-0">
@@ -55,19 +55,19 @@ export function CategoryGrid() {
                 </div>
                 
                 {/* Content */}
-                <div className="absolute inset-0 flex flex-col justify-end p-6 lg:p-8 text-white">
-                  <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                <div className="absolute inset-0 flex flex-col justify-end p-6 lg:p-8 pb-8 lg:pb-12 text-white">
+                  <div className="transition-transform duration-500">
                     <h3 className={`font-serif font-medium ${
-                      index === 0 ? "text-3xl lg:text-4xl xl:text-5xl" : "text-2xl lg:text-3xl"
-                    } mb-3 leading-tight`}>
+                      index === 0 ? "text-2xl lg:text-3xl xl:text-4xl" : "text-xl lg:text-2xl"
+                    } mb-3 leading-relaxed break-words`}>
                       {category.name}
                     </h3>
-                    <p className={`text-white/90 mb-4 line-clamp-2 ${
-                      index === 0 ? "text-base lg:text-lg" : "text-sm lg:text-base"
+                    <p className={`text-white/90 mb-6 ${
+                      index === 0 ? "text-sm lg:text-base line-clamp-2" : "text-xs lg:text-sm line-clamp-2"
                     }`}>
                       {category.description}
                     </p>
-                    <div className="flex items-center gap-2 text-sm font-medium tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100">
+                    <div className="flex items-center gap-2 text-xs font-medium tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100">
                       <span className="border-b border-white/50 pb-1">Explore Collection</span>
                     </div>
                   </div>

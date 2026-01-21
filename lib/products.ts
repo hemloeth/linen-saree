@@ -2648,6 +2648,18 @@ export const categories = [
     slug: "cotton-linen",
     image: "/images/products/cotton-white.jpg",
     description: "Comfortable cotton linen blends for daily wear"
+  },
+  {
+    name: "Bridal Collection",
+    slug: "bridal-collection",
+    image: "/images/products/banarasi-red.jpg",
+    description: "Exquisite bridal sarees for your special day"
+  },
+  {
+    name: "Casual Wear",
+    slug: "casual-wear",
+    image: "/images/products/pure-linen-blue.jpg",
+    description: "Comfortable and stylish sarees for everyday occasions"
   }
 ]
 
