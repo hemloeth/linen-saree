@@ -61,7 +61,7 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Badges */}
+        {/* Badges 
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
           <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm">
             {discount}% OFF
@@ -69,7 +69,7 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
           <span className="bg-red-500 text-white text-xs px-2 py-1 font-medium rounded-sm">
             TRENDING
           </span>
-        </div>
+        </div>*/}
 
         {/* Play/Pause Button */}
         <button
@@ -98,29 +98,18 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
 
         {/* Content Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-          <h3 className="font-serif text-xl font-medium mb-2 line-clamp-2">
+          <h3 className="font-serif text-lg font-medium mb-4 line-clamp-2">
             {title}
           </h3>
-          <p className="text-sm text-white/80 mb-4 line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-            {description}
-          </p>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-lg">₹{price.toLocaleString()}</span>
-              <span className="text-sm text-white/60 line-through">
-                ₹{originalPrice.toLocaleString()}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Add to Cart Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
+        <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
           <button
             onClick={() => addToCart(product)}
-            className="w-full bg-white/95 hover:bg-white text-gray-900 py-3 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-colors rounded-lg"
+            className="w-full bg-white/95 hover:bg-white text-gray-900 py-1 px-2 flex items-center justify-center gap-1 text-xs font-medium transition-colors"
           >
-            <ShoppingBag className="w-4 h-4" />
+            <ShoppingBag className="w-3 h-3" />
             Add to Cart
           </button>
         </div>
@@ -136,7 +125,7 @@ export function VideoSection() {
       description: "Luxurious silk linen sarees with intricate handwork and premium finishing",
       price: 3499,
       originalPrice: 5999,
-      videoSrc: "/dupaataa.mp4",
+      videoSrc: "/Video-266.mp4",
       productId: "8"
     },
     {
@@ -160,7 +149,7 @@ export function VideoSection() {
       description: "Breathable pure linen sarees perfect for everyday elegance and comfort",
       price: 2499,
       originalPrice: 4799,
-      videoSrc: "/videoplayback.mp4",
+      videoSrc: "/Video-28.mp4",
       productId: "1"
     }
   ]
