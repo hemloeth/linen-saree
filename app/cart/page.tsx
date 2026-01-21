@@ -15,7 +15,7 @@ export default function CartPage() {
     <main className="min-h-screen">
       <Header />
       
-      <div className="pt-[104px] min-h-[80vh]">
+      <div className="pt-[120px] lg:pt-[140px] min-h-[80vh]">
         <section className="py-12 lg:py-16 px-4 lg:px-8">
           <div className="max-w-[1200px] mx-auto">
             <h1 className="font-serif text-4xl md:text-5xl mb-8">Shopping Cart</h1>

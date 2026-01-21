@@ -252,7 +252,7 @@ export default async function CategoryPage({ params }: Props) {
       <Header />
       
       {/* Hero Banner with Auto-Scroll */}
-      <div className="mt-[104px]">
+      <div className="mt-[120px] lg:mt-[140px]">
         <PageHeroSlider 
           slides={collectionSlides} 
           height="40vh" 

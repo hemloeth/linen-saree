@@ -179,7 +179,7 @@ export default function VideoCollectionPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-black pt-[104px]">
+      <div className="min-h-screen bg-black pt-[120px] lg:pt-[140px]">
         {/* Full-Page Video Cover Hero */}
         <section className="relative h-screen w-full overflow-hidden">
           {baseVideoCards.map((video, index) => (
