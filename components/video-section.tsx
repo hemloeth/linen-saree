@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRef, useState } from "react"
 import { Heart, ShoppingBag, Play, Pause } from "lucide-react"
 import { useCart } from "@/context/cart-context"
@@ -189,13 +190,22 @@ export function VideoSection() {
 
         {/* Bottom CTA */}
         <div className="text-center mt-16">
-          <div className="inline-flex items-center gap-4">
+          <div className="inline-flex items-center gap-4 mb-8">
             <div className="h-px w-16 bg-gradient-to-r from-transparent to-border" />
             <p className="text-sm text-muted-foreground tracking-wide">
               Discover more in our complete collection
             </p>
             <div className="h-px w-16 bg-gradient-to-l from-transparent to-border" />
           </div>
+          <Link 
+            href="/video-collection"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-full font-semibold transition-colors duration-300"
+          >
+            View All Video Collection
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
         </div>
       </div>
     </section>

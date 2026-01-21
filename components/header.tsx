@@ -26,6 +26,7 @@ const navLinks = [
       { name: "Cotton Linen", href: "/collections/cotton-linen" },
     ]
   },
+  { name: "Video Collection", href: "/video-collection" },
   { name: "Handloom", href: "/collections/handloom" },
   { name: "Bridal", href: "/collections/banarasi-silk" },
   { name: "Sale", href: "/collections/sale" },
@@ -55,7 +56,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       {/* Top Bar */}
       <div className="bg-foreground text-background text-center py-2 px-4 text-xs tracking-wide">
-        Free Shipping on orders above ₹2999 | Hassle-Free Returns within 7 Days
+        Free Shipping on orders above ₹999 | Hassle-Free Returns within 7 Days
       </div>
       
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
