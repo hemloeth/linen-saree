@@ -84,7 +84,7 @@ const baseVideoCards = [
     title: "Premium Silk Linen Collection",
     description: "Luxurious silk linen sarees with intricate handwork and premium finishing. Perfect for special occasions and celebrations.",
     price: 3499,
-    originalPrice: 5999,
+    originalPrice: 4999,
     videoSrc: "/Video-266.mp4",
     productId: "8",
     category: "Silk"
