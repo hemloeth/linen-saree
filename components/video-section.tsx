@@ -45,9 +45,9 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId }: VideoCa
   }
 
   return (
-    <Link href="/video-collection" className="block">
-      <div className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer">
-        <div className="relative aspect-[3/4] bg-black">
+    <div className="group relative w-full">
+      <div className="relative w-full mb-4">
+        <div className="aspect-[3/4] overflow-hidden bg-black rounded-sm relative">
           <video
             ref={videoRef}
             src={videoSrc}
@@ -55,81 +55,82 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId }: VideoCa
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onLoadedData={() => setIsPlaying(true)}
           />
-        
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Discount Badge */}
-        <div className="absolute top-3 left-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm">
-            {discount}% OFF
-          </span>
-        </div>
+          
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[calc(100%-3rem)]">
+            <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
+              {discount}% OFF
+            </span>
+          </div>
 
-        {/* Play/Pause Button */}
-        <button
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            togglePlay()
-          }}
-          className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors opacity-0 group-hover:opacity-100 z-10"
-        >
-          {isPlaying ? (
-            <Pause className="w-4 h-4 text-white" />
-          ) : (
-            <Play className="w-4 h-4 text-white" />
-          )}
-        </button>
-
-        {/* Quick Actions */}
-        <div className="absolute top-12 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 delay-100 z-10">
+          {/* Play/Pause Button */}
           <button
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              handleWishlistClick()
+              togglePlay()
             }}
-            className={`p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-sm ${
-              isWishlisted ? 'text-primary' : 'text-gray-700'
-            }`}
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            className="absolute top-2 right-12 p-2 bg-background/90 hover:bg-background rounded-full transition-colors opacity-0 group-hover:opacity-100 z-10"
           >
-            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
+            {isPlaying ? (
+              <Pause className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
           </button>
-        </div>
 
-        {/* Content Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-          <h3 className="font-serif text-lg font-medium mb-2 line-clamp-2">
-            {title}
-          </h3>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold">₹{price.toLocaleString()}</span>
-            <span className="text-white/70 line-through">₹{originalPrice.toLocaleString()}</span>
+          {/* Quick Actions */}
+          <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                handleWishlistClick()
+              }}
+              className={`p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${
+                isWishlisted ? 'text-primary' : ''
+              }`}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
+            </button>
+          </div>
+
+          {/* Add to Cart Button */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                addToCart(product)
+              }}
+              className="w-full bg-background/95 hover:bg-background py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-colors rounded-sm"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Add to Cart
+            </button>
           </div>
         </div>
-
-        {/* Add to Cart Button */}
-        <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              addToCart(product)
-            }}
-            className="w-full bg-white/95 hover:bg-white text-gray-900 py-3 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            Add to Cart
-          </button>
-        </div>
-        </div>
       </div>
-    </Link>
+
+      <Link href="/video-collection" className="block">
+        <h3 className="font-medium text-sm leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+          {title}
+        </h3>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold">₹{price.toLocaleString()}</span>
+          <span className="text-sm text-muted-foreground line-through">
+            ₹{originalPrice.toLocaleString()}
+          </span>
+        </div>
+      </Link>
+    </div>
   )
 }
 
