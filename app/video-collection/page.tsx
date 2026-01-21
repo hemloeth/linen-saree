@@ -44,10 +44,8 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
           }}
         />
         
-        {/* Subtle Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Add to Cart Button - Small and Elegant */}
         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
           <button
             onClick={() => addToCart(product)}
@@ -59,7 +57,6 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
         </div>
       </div>
 
-      {/* Product Info - Clean and Minimal */}
       <div className="p-4 bg-white">
         <h3 className="font-serif text-lg font-medium text-gray-900 mb-2 line-clamp-1">
           {title}
@@ -83,76 +80,78 @@ function VideoCard({ title, description, price, originalPrice, videoSrc, product
   )
 }
 
+const baseVideoCards = [
+  {
+    title: "Premium Silk Linen Collection",
+    description: "Luxurious silk linen sarees with intricate handwork and premium finishing. Perfect for special occasions and celebrations.",
+    price: 3499,
+    originalPrice: 5999,
+    videoSrc: "/Video-266.mp4",
+    productId: "8",
+    category: "Silk"
+  },
+  {
+    title: "Banarasi Silk Elegance",
+    description: "Traditional Banarasi silk sarees with rich gold zari work and timeless appeal. Handcrafted by master weavers.",
+    price: 4299,
+    originalPrice: 7999,
+    videoSrc: "/bluesaree.mp4",
+    productId: "4",
+    category: "Banarasi"
+  },
+  {
+    title: "Handloom Heritage Collection",
+    description: "Authentic handloom sarees crafted by skilled artisans using traditional techniques passed down through generations.",
+    price: 2890,
+    originalPrice: 5290,
+    videoSrc: "/Video-385.mp4",
+    productId: "6",
+    category: "Handloom"
+  },
+  {
+    title: "Pure Linen Comfort",
+    description: "Breathable pure linen sarees perfect for everyday elegance and comfort. Ideal for both casual and formal wear.",
+    price: 2499,
+    originalPrice: 4799,
+    videoSrc: "/Video-28.mp4",
+    productId: "1",
+    category: "Linen"
+  },
+  {
+    title: "Designer Dupatta Collection",
+    description: "Exquisite designer dupattas that complement any outfit. Featuring intricate embroidery and premium fabrics.",
+    price: 1899,
+    originalPrice: 3499,
+    videoSrc: "/dupaataa.mp4",
+    productId: "2",
+    category: "Dupatta"
+  },
+  {
+    title: "Festive Special Collection",
+    description: "Specially curated sarees for festivals and celebrations. Rich colors and traditional designs for memorable occasions.",
+    price: 3999,
+    originalPrice: 6999,
+    videoSrc: "/gemini_vedio.mp4",
+    productId: "3",
+    category: "Festive"
+  },
+  {
+    title: "Contemporary Elegance",
+    description: "Modern designs with traditional craftsmanship. Perfect blend of contemporary style and classic Indian heritage.",
+    price: 2799,
+    originalPrice: 4999,
+    videoSrc: "/videoplayback.mp4",
+    productId: "5",
+    category: "Contemporary"
+  }
+]
+
+const categories = ["All", "Silk", "Banarasi", "Handloom", "Linen", "Dupatta", "Festive", "Contemporary"]
+
 export default function VideoCollectionPage() {
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [currentHeroVideo, setCurrentHeroVideo] = useState(0)
   
-  const baseVideoCards = [
-    {
-      title: "Premium Silk Linen Collection",
-      description: "Luxurious silk linen sarees with intricate handwork and premium finishing. Perfect for special occasions and celebrations.",
-      price: 3499,
-      originalPrice: 5999,
-      videoSrc: "/Video-266.mp4",
-      productId: "8",
-      category: "Silk"
-    },
-    {
-      title: "Banarasi Silk Elegance",
-      description: "Traditional Banarasi silk sarees with rich gold zari work and timeless appeal. Handcrafted by master weavers.",
-      price: 4299,
-      originalPrice: 7999,
-      videoSrc: "/bluesaree.mp4",
-      productId: "4",
-      category: "Banarasi"
-    },
-    {
-      title: "Handloom Heritage Collection",
-      description: "Authentic handloom sarees crafted by skilled artisans using traditional techniques passed down through generations.",
-      price: 2890,
-      originalPrice: 5290,
-      videoSrc: "/Video-385.mp4",
-      productId: "6",
-      category: "Handloom"
-    },
-    {
-      title: "Pure Linen Comfort",
-      description: "Breathable pure linen sarees perfect for everyday elegance and comfort. Ideal for both casual and formal wear.",
-      price: 2499,
-      originalPrice: 4799,
-      videoSrc: "/Video-28.mp4",
-      productId: "1",
-      category: "Linen"
-    },
-    {
-      title: "Designer Dupatta Collection",
-      description: "Exquisite designer dupattas that complement any outfit. Featuring intricate embroidery and premium fabrics.",
-      price: 1899,
-      originalPrice: 3499,
-      videoSrc: "/dupaataa.mp4",
-      productId: "2",
-      category: "Dupatta"
-    },
-    {
-      title: "Festive Special Collection",
-      description: "Specially curated sarees for festivals and celebrations. Rich colors and traditional designs for memorable occasions.",
-      price: 3999,
-      originalPrice: 6999,
-      videoSrc: "/gemini_vedio.mp4",
-      productId: "3",
-      category: "Festive"
-    },
-    {
-      title: "Contemporary Elegance",
-      description: "Modern designs with traditional craftsmanship. Perfect blend of contemporary style and classic Indian heritage.",
-      price: 2799,
-      originalPrice: 4999,
-      videoSrc: "/videoplayback.mp4",
-      productId: "5",
-      category: "Contemporary"
-    }
-  ]
-
   // Create 14 video cards by repeating the 7 base videos twice
   const videoCards = [
     ...baseVideoCards,
@@ -165,8 +164,6 @@ export default function VideoCollectionPage() {
       productId: (parseInt(card.productId) + 7).toString()
     }))
   ]
-
-  const categories = ["All", "Silk", "Banarasi", "Handloom", "Linen", "Dupatta", "Festive", "Contemporary"]
   
   const filteredVideos = selectedCategory === "All" 
     ? videoCards 
@@ -178,7 +175,7 @@ export default function VideoCollectionPage() {
       setCurrentHeroVideo((prev) => (prev + 1) % baseVideoCards.length)
     }, 5000)
     return () => clearInterval(interval)
-  }, [baseVideoCards.length])
+  }, [])
 
   return (
     <>
