@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { ShoppingBag, Heart, Play, Pause } from "lucide-react"
+import { ShoppingBag, Heart, Play, Pause, ChevronLeft, ChevronRight } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { products } from "@/lib/products"
@@ -403,18 +403,27 @@ function VideoCollectionContent() {
     ? videoCards 
     : videoCards.filter(card => card.category === selectedCategory)
 
+  const heroVideos = [
+    baseVideoCards[0], // Silk
+    baseVideoCards[3], // Banarasi
+    baseVideoCards[6], // Linen
+    baseVideoCards[2], // Festive
+    baseVideoCards[5], // Handloom
+    baseVideoCards[4], // Contemporary
+    baseVideoCards[1]  // Dupatta
+  ]
+
+  // Navigation functions
+  const goToPrevious = () => {
+    setCurrentHeroVideo((prev) => prev === 0 ? heroVideos.length - 1 : prev - 1)
+  }
+
+  const goToNext = () => {
+    setCurrentHeroVideo((prev) => (prev + 1) % heroVideos.length)
+  }
+
   // Auto-rotate hero videos every 5 seconds using a mixed selection
   useEffect(() => {
-    const heroVideos = [
-      baseVideoCards[0], // Silk
-      baseVideoCards[3], // Banarasi
-      baseVideoCards[6], // Linen
-      baseVideoCards[2], // Festive
-      baseVideoCards[5], // Handloom
-      baseVideoCards[4], // Contemporary
-      baseVideoCards[1]  // Dupatta
-    ]
-    
     const interval = setInterval(() => {
       setCurrentHeroVideo((prev) => (prev + 1) % heroVideos.length)
     }, 5000)
@@ -427,7 +436,7 @@ function VideoCollectionContent() {
       <div className="min-h-screen bg-black pt-[96px] lg:pt-[104px]">
         {/* Full-Page Video Cover Hero */}
         <section className="relative h-screen w-full overflow-hidden">
-          {baseVideoCards.slice(0, 7).map((video, index) => (
+          {heroVideos.map((video, index) => (
             <div
               key={index}
               className={`absolute inset-0 transition-opacity duration-1000 ${
@@ -447,6 +456,22 @@ function VideoCollectionContent() {
           
           {/* Dark Overlay */}
           <div className="absolute inset-0 bg-black/40" />
+          
+          {/* Navigation Arrows */}
+          <button
+            onClick={goToPrevious}
+            className="absolute left-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-colors text-white group"
+            aria-label="Previous video"
+          >
+            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" />
+          </button>
+          <button
+            onClick={goToNext}
+            className="absolute right-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-colors text-white group"
+            aria-label="Next video"
+          >
+            <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
+          </button>
           
           {/* Hero Content */}
           <div className="absolute inset-0 flex items-center justify-center text-center text-white z-10">
@@ -473,20 +498,7 @@ function VideoCollectionContent() {
             </div>
           </div>
 
-          {/* Video Navigation Dots */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3 z-10">
-            {baseVideoCards.slice(0, 7).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentHeroVideo(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentHeroVideo 
-                    ? 'bg-white scale-125' 
-                    : 'bg-white/50 hover:bg-white/70'
-                }`}
-              />
-            ))}
-          </div>
+
 
           {/* Scroll Indicator */}
           <div className="absolute bottom-8 right-8 text-white/60 animate-bounce z-10">
