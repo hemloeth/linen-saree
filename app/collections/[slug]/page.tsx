@@ -1,10 +1,14 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { ProductCard } from "@/components/product-card"
 import { PageHeroSlider } from "@/components/page-hero-slider"
-import { products, categories, getProductsByCategory } from "@/lib/products"
+import { 
+  products, 
+  categories, 
+  getProductsByCategory
+} from "@/lib/products"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { CategoryProductsClient } from "./category-products-client"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -287,39 +291,11 @@ export default async function CategoryPage({ params }: Props) {
         </div>
       </section>
 
-      {/* Products Grid */}
-      <section className="py-16 px-4 lg:px-8">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-            <p className="text-muted-foreground">
-              Showing {categoryProducts.length} products
-            </p>
-            <div className="flex items-center gap-4">
-              <select className="border border-border px-4 py-2 bg-background text-sm">
-                <option>Sort by: Featured</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
-                <option>Newest First</option>
-              </select>
-            </div>
-          </div>
-
-          {categoryProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-              {categoryProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-20">
-              <p className="text-muted-foreground text-lg mb-4">No products found in this collection</p>
-              <Link href="/collections" className="text-primary hover:underline">
-                Browse all collections
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Products Section - Client Component */}
+      <CategoryProductsClient 
+        initialProducts={categoryProducts}
+        pageTitle={pageTitle}
+      />
 
       <Footer />
     </main>

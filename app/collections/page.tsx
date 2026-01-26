@@ -1,9 +1,9 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { ProductCard } from "@/components/product-card"
 import { PageHeroSlider } from "@/components/page-hero-slider"
 import { products, categories } from "@/lib/products"
 import Link from "next/link"
+import { CollectionsClient } from "./collections-client"
 
 export const metadata = {
   title: "All Collections | Linen Sarees",
@@ -70,28 +70,8 @@ export default function CollectionsPage() {
         </div>
       </section>
 
-      {/* Products Grid */}
-      <section className="py-16 px-4 lg:px-8">
-        <div className="max-w-[1400px] mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <p className="text-muted-foreground">
-              Showing {products.length} products
-            </p>
-            <select className="border border-border px-4 py-2 bg-background text-sm">
-              <option>Sort by: Featured</option>
-              <option>Price: Low to High</option>
-              <option>Price: High to Low</option>
-              <option>Newest First</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Products Section - Client Component */}
+      <CollectionsClient initialProducts={products} />
 
       <Footer />
     </main>

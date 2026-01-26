@@ -2673,48 +2673,195 @@ export function getNewProducts(): Product[] {
   return products.filter(p => p.isNew)
 }
 
-export function searchProducts(query: string): Product[] {
-  if (!query.trim()) {
-    return []
+// Filter and Sort Types
+export type SortOption = 'featured' | 'price-low' | 'price-high' | 'newest' | 'name-asc' | 'name-desc'
+
+export interface FilterOptions {
+  categories?: string[]
+  colors?: string[]
+  fabrics?: string[]
+  priceRange?: {
+    min: number
+    max: number
   }
-  
-  const searchTerm = query.toLowerCase().trim()
-  
+  isOnSale?: boolean
+  isFeatured?: boolean
+  isNew?: boolean
+}
+
+// Get unique values for filters
+export function getUniqueColors(): string[] {
+  const colors = [...new Set(products.map(p => p.color))].sort()
+  return colors
+}
+
+export function getUniqueFabrics(): string[] {
+  const fabrics = [...new Set(products.map(p => p.fabric))].sort()
+  return fabrics
+}
+
+export function getPriceRange(): { min: number; max: number } {
+  const prices = products.map(p => p.price)
+  return {
+    min: Math.min(...prices),
+    max: Math.max(...prices)
+  }
+}
+
+// Filter products
+export function filterProducts(products: Product[], filters: FilterOptions): Product[] {
   return products.filter(product => {
-    // Exact matches get higher priority
-    const exactMatches = [
-      product.name.toLowerCase().includes(searchTerm),
-      product.category.toLowerCase().includes(searchTerm),
-      product.color.toLowerCase().includes(searchTerm),
-      product.fabric.toLowerCase().includes(searchTerm)
-    ]
-    
-    // Partial word matches
-    const partialMatches = [
-      product.description.toLowerCase().includes(searchTerm),
-      product.details.some(detail => detail.toLowerCase().includes(searchTerm))
-    ]
-    
-    return exactMatches.some(match => match) || partialMatches.some(match => match)
-  }).sort((a, b) => {
-    // Sort by relevance - exact name matches first
-    const aNameMatch = a.name.toLowerCase().includes(searchTerm)
-    const bNameMatch = b.name.toLowerCase().includes(searchTerm)
-    
-    if (aNameMatch && !bNameMatch) return -1
-    if (!aNameMatch && bNameMatch) return 1
-    
-    // Then by category matches
-    const aCategoryMatch = a.category.toLowerCase().includes(searchTerm)
-    const bCategoryMatch = b.category.toLowerCase().includes(searchTerm)
-    
-    if (aCategoryMatch && !bCategoryMatch) return -1
-    if (!aCategoryMatch && bCategoryMatch) return 1
-    
-    // Finally by featured products
-    if (a.isFeatured && !b.isFeatured) return -1
-    if (!a.isFeatured && b.isFeatured) return 1
-    
-    return 0
+    // Category filter
+    if (filters.categories && filters.categories.length > 0) {
+      if (!filters.categories.includes(product.categorySlug)) {
+        return false
+      }
+    }
+
+    // Color filter
+    if (filters.colors && filters.colors.length > 0) {
+      if (!filters.colors.includes(product.color)) {
+        return false
+      }
+    }
+
+    // Fabric filter
+    if (filters.fabrics && filters.fabrics.length > 0) {
+      if (!filters.fabrics.includes(product.fabric)) {
+        return false
+      }
+    }
+
+    // Price range filter
+    if (filters.priceRange) {
+      if (product.price < filters.priceRange.min || product.price > filters.priceRange.max) {
+        return false
+      }
+    }
+
+    // Sale filter
+    if (filters.isOnSale !== undefined) {
+      if (product.isOnSale !== filters.isOnSale) {
+        return false
+      }
+    }
+
+    // Featured filter
+    if (filters.isFeatured !== undefined) {
+      if (product.isFeatured !== filters.isFeatured) {
+        return false
+      }
+    }
+
+    // New filter
+    if (filters.isNew !== undefined) {
+      if (product.isNew !== filters.isNew) {
+        return false
+      }
+    }
+
+    return true
   })
+}
+
+// Sort products
+export function sortProducts(products: Product[], sortBy: SortOption): Product[] {
+  const sortedProducts = [...products]
+  
+  switch (sortBy) {
+    case 'featured':
+      return sortedProducts.sort((a, b) => {
+        if (a.isFeatured && !b.isFeatured) return -1
+        if (!a.isFeatured && b.isFeatured) return 1
+        if (a.isNew && !b.isNew) return -1
+        if (!a.isNew && b.isNew) return 1
+        return 0
+      })
+    
+    case 'price-low':
+      return sortedProducts.sort((a, b) => a.price - b.price)
+    
+    case 'price-high':
+      return sortedProducts.sort((a, b) => b.price - a.price)
+    
+    case 'newest':
+      return sortedProducts.sort((a, b) => {
+        if (a.isNew && !b.isNew) return -1
+        if (!a.isNew && b.isNew) return 1
+        return 0
+      })
+    
+    case 'name-asc':
+      return sortedProducts.sort((a, b) => a.name.localeCompare(b.name))
+    
+    case 'name-desc':
+      return sortedProducts.sort((a, b) => b.name.localeCompare(a.name))
+    
+    default:
+      return sortedProducts
+  }
+}
+
+// Enhanced search with filters and sorting
+export function searchProducts(
+  query: string, 
+  filters?: FilterOptions, 
+  sortBy: SortOption = 'featured'
+): Product[] {
+  let results = products
+
+  // Apply text search if query provided
+  if (query.trim()) {
+    const searchTerm = query.toLowerCase().trim()
+    
+    results = products.filter(product => {
+      // Exact matches get higher priority
+      const exactMatches = [
+        product.name.toLowerCase().includes(searchTerm),
+        product.category.toLowerCase().includes(searchTerm),
+        product.color.toLowerCase().includes(searchTerm),
+        product.fabric.toLowerCase().includes(searchTerm)
+      ]
+      
+      // Partial word matches
+      const partialMatches = [
+        product.description.toLowerCase().includes(searchTerm),
+        product.details.some(detail => detail.toLowerCase().includes(searchTerm))
+      ]
+      
+      return exactMatches.some(match => match) || partialMatches.some(match => match)
+    })
+  }
+
+  // Apply filters
+  if (filters) {
+    results = filterProducts(results, filters)
+  }
+
+  // Apply sorting
+  results = sortProducts(results, sortBy)
+
+  // For search results, add relevance sorting
+  if (query.trim()) {
+    const searchTerm = query.toLowerCase().trim()
+    results = results.sort((a, b) => {
+      // Sort by relevance - exact name matches first
+      const aNameMatch = a.name.toLowerCase().includes(searchTerm)
+      const bNameMatch = b.name.toLowerCase().includes(searchTerm)
+      
+      if (aNameMatch && !bNameMatch) return -1
+      if (!aNameMatch && bNameMatch) return 1
+      
+      // Then by category matches
+      const aCategoryMatch = a.category.toLowerCase().includes(searchTerm)
+      const bCategoryMatch = b.category.toLowerCase().includes(searchTerm)
+      
+      if (aCategoryMatch && !bCategoryMatch) return -1
+      if (!aCategoryMatch && bCategoryMatch) return 1
+      
+      return 0
+    })
+  }
+
+  return results
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { searchProducts } from "@/lib/products"
+import { searchProducts, FilterOptions, SortOption } from "@/lib/products"
 import { SearchResults } from "@/components/search-results"
 import { PageHeroSlider } from "@/components/page-hero-slider"
 import { Header } from "@/components/header"
@@ -39,12 +39,15 @@ const searchSlides = [
 function SearchContent() {
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(searchParams.get('q') || '')
-  const [results, setResults] = useState(searchProducts(query))
+  const [filters, setFilters] = useState<FilterOptions>({})
+  const [sortBy, setSortBy] = useState<SortOption>('featured')
+  const [results, setResults] = useState(searchProducts(query, filters, sortBy))
 
   useEffect(() => {
     const searchQuery = searchParams.get('q') || ''
     setQuery(searchQuery)
-    setResults(searchProducts(searchQuery))
+    const newResults = searchProducts(searchQuery, filters, sortBy)
+    setResults(newResults)
     
     // Update page title
     if (searchQuery) {
@@ -52,11 +55,11 @@ function SearchContent() {
     } else {
       document.title = 'Search Products - Linen Sarees'
     }
-  }, [searchParams])
+  }, [searchParams, filters, sortBy])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    const newResults = searchProducts(query)
+    const newResults = searchProducts(query, filters, sortBy)
     setResults(newResults)
     
     // Update URL without page reload
@@ -71,12 +74,20 @@ function SearchContent() {
 
   const handleSuggestionClick = (suggestion: string) => {
     setQuery(suggestion)
-    setResults(searchProducts(suggestion))
+    const newResults = searchProducts(suggestion, filters, sortBy)
+    setResults(newResults)
     
     // Update URL
     const url = new URL(window.location.href)
     url.searchParams.set('q', suggestion)
     window.history.pushState({}, '', url.toString())
+  }
+
+  const handleFiltersChange = (newFilters: FilterOptions, newSortBy: SortOption) => {
+    setFilters(newFilters)
+    setSortBy(newSortBy)
+    const newResults = searchProducts(query, newFilters, newSortBy)
+    setResults(newResults)
   }
 
   return (
@@ -124,6 +135,7 @@ function SearchContent() {
             products={results} 
             query={query} 
             onSuggestionClick={handleSuggestionClick}
+            onFiltersChange={handleFiltersChange}
           />
         </div>
       </div>
