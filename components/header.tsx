@@ -161,7 +161,7 @@ export function Header() {
               >
                 <Search className="w-5 h-5" />
               </button>
-              <Link href="/wishlist" className="hidden sm:block p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist">
+              <Link href="/wishlist" className="p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist">
                 <Heart className="w-5 h-5" />
                 {wishlistHydrated && wishlistItems > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full">
@@ -169,11 +169,12 @@ export function Header() {
                   </span>
                 )}
               </Link>
-              <div className="hidden sm:block relative group">
+              <div className="relative group">
                 <Link href="/account" className="p-2 hover:bg-muted rounded-full transition-colors flex items-center" aria-label="Account">
                   <User className="w-5 h-5" />
                 </Link>
-                <div className="absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                {/* Desktop dropdown - only show on hover for larger screens */}
+                <div className="hidden sm:block absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <div className="bg-background border border-border shadow-lg py-2 min-w-[160px]">
                     <Link
                       href="/account"
