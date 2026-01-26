@@ -40,7 +40,7 @@ export default function CheckoutPage() {
     "NEWUSER": { discount: 20, type: "percentage" as const }
   }
 
-  const shipping = totalPrice >= 2999 ? 0 : 199
+  const shipping = totalPrice >= 999 ? 0 : 199
   
   // Calculate discount
   let discount = 0

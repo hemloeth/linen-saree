@@ -90,7 +90,7 @@ const faqData: FAQItem[] = [
   {
     category: "Shipping",
     question: "Are there any shipping charges?",
-    answer: "Yes, for Indian shipping addresses: For Cash on delivery orders, Rs 100.00 INR. For Prepaid orders, free shipping is available. For International orders, shipping charges will apply as per the country in which the order needs shipping."
+    answer: "Yes, for Indian shipping addresses: For Cash on delivery orders, Rs 100.00 INR. For Prepaid orders above ₹999, free shipping is available. Orders below ₹999 have ₹199 shipping charge. For International orders, shipping charges will apply as per the country in which the order needs shipping."
   },
   {
     category: "Shipping",

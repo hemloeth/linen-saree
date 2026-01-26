@@ -18,9 +18,9 @@ export default function ShippingPage() {
     },
     {
       method: "Prepaid Orders",
-      cost: "Free",
+      cost: "Free (on orders ₹999+)",
       timeframe: "3-5 business days",
-      description: "Free shipping on all prepaid orders"
+      description: "Free shipping on prepaid orders above ₹999"
     }
   ]
 

@@ -149,12 +149,12 @@ export default function CartPage() {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Shipping</span>
                         <span className="text-primary">
-                          {totalPrice >= 2999 ? "Free" : "₹199"}
+                          {totalPrice >= 999 ? "Free" : "₹199"}
                         </span>
                       </div>
-                      {totalPrice < 2999 && (
+                      {totalPrice < 999 && (
                         <p className="text-xs text-muted-foreground">
-                          Add ₹{(2999 - totalPrice).toLocaleString()} more for free shipping
+                          Add ₹{(999 - totalPrice).toLocaleString()} more for free shipping
                         </p>
                       )}
                     </div>
@@ -163,7 +163,7 @@ export default function CartPage() {
                       <div className="flex justify-between text-lg font-semibold">
                         <span>Total</span>
                         <span>
-                          ₹{(totalPrice + (totalPrice >= 2999 ? 0 : 199)).toLocaleString()}
+                          ₹{(totalPrice + (totalPrice >= 999 ? 0 : 199)).toLocaleString()}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">

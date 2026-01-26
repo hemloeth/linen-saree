@@ -439,7 +439,7 @@ export default function ReturnsPage() {
               <div>
                 <h3 className="font-serif text-xl font-medium mb-6">Domestic Shipping (India)</h3>
                 <div className="space-y-4 font-sans text-muted-foreground">
-                  <p>• <strong>Prepaid Orders:</strong> Free shipping</p>
+                  <p>• <strong>Prepaid Orders:</strong> Free shipping on orders ₹999+ (₹199 below ₹999)</p>
                   <p>• <strong>Cash on Delivery:</strong> ₹100 shipping charge (non-refundable)</p>
                   <p>• <strong>Delivery Time:</strong> 3-7 business days (standard)</p>
                   <p>• <strong>High Demand Items:</strong> 10-15 working days</p>
