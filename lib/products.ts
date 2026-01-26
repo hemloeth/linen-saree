@@ -2673,6 +2673,22 @@ export function getNewProducts(): Product[] {
   return products.filter(p => p.isNew)
 }
 
+export function getBestSellers(): Product[] {
+  // Get best sellers based on featured products and sales
+  return products
+    .filter(p => p.isFeatured || p.isOnSale)
+    .sort((a, b) => {
+      // Prioritize featured products
+      if (a.isFeatured && !b.isFeatured) return -1
+      if (!a.isFeatured && b.isFeatured) return 1
+      // Then by discount percentage
+      const aDiscount = ((a.originalPrice - a.price) / a.originalPrice) * 100
+      const bDiscount = ((b.originalPrice - b.price) / b.originalPrice) * 100
+      return bDiscount - aDiscount
+    })
+    .slice(0, 12) // Limit to top 12 best sellers
+}
+
 // Filter and Sort Types
 export type SortOption = 'featured' | 'price-low' | 'price-high' | 'newest' | 'name-asc' | 'name-desc'
 

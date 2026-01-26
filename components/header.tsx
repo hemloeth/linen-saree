@@ -26,6 +26,7 @@ const navLinks = [
       { name: "Cotton Linen", href: "/collections/cotton-linen" },
     ]
   },
+  { name: "Best Sellers", href: "/best-sellers" },
   { name: "Video Collection", href: "/video-collection" },
   { name: "Blog", href: "/blog" },
   { name: "Handloom", href: "/collections/handloom" },
@@ -60,7 +61,7 @@ export function Header() {
         Free Shipping on orders above ₹999 | Hassle-Free Returns within 7 Days
       </div>
       
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+      <div className="max-w-[1500px] mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Left Side - Logo and Mobile Menu */}
           <div className="flex items-center gap-4">
@@ -86,8 +87,8 @@ export function Header() {
             </Link>
 
             {/* Desktop Navigation Left */}
-            <nav className="hidden lg:flex items-center gap-6 ml-8">
-              {navLinks.slice(0, 3).map((link) => (
+            <nav className="hidden lg:flex items-center gap-4 xl:gap-6 ml-8">
+              {navLinks.slice(0, 4).map((link) => (
                 <div
                   key={link.name}
                   className="relative group"
@@ -96,7 +97,10 @@ export function Header() {
                 >
                   <Link
                     href={link.href}
-                    className="text-sm font-sans tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1"
+                    className={cn(
+                      "text-sm font-sans tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1",
+                      link.name === "Best Sellers" && "text-primary hover:text-primary/80 font-medium"
+                    )}
                   >
                     {link.name}
                     {link.submenu && <ChevronDown className="w-3 h-3" />}
@@ -133,8 +137,8 @@ export function Header() {
           {/* Right Side - Navigation and Icons */}
           <div className="flex items-center gap-4">
             {/* Desktop Navigation Right */}
-            <nav className="hidden lg:flex items-center gap-6">
-              {navLinks.slice(3).map((link) => (
+            <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
+              {navLinks.slice(4).map((link) => (
                 <Link
                   key={link.name}
                   href={link.href}
@@ -268,7 +272,8 @@ export function Header() {
                 href={link.href}
                 className={cn(
                   "text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block",
-                  link.name === "Sale" && "text-destructive"
+                  link.name === "Sale" && "text-destructive",
+                  link.name === "Best Sellers" && "text-primary font-medium"
                 )}
                 onClick={() => setIsMenuOpen(false)}
               >
