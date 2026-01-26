@@ -42,8 +42,9 @@ const footerLinks = {
   help: [
     { name: "Contact Us", href: "/contact" },
     { name: "FAQs", href: "/faq" },
+    { name: "Track Order", href: "/track-order" },
     { name: "Shipping", href: "/shipping" },
-    { name: "Returns", href: "/returns" },
+    { name: "Returns & Exchange", href: "/returns" },
     { name: "Size Guide", href: "/size-guide" },
   ],
 }
