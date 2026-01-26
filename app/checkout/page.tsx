@@ -9,7 +9,7 @@ import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import Link from "next/link"
-import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft } from "lucide-react"
+import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X } from "lucide-react"
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart, isHydrated } = useCart()
@@ -28,11 +28,63 @@ export default function CheckoutPage() {
     paymentMethod: "card"
   })
 
+  const [couponCode, setCouponCode] = useState("")
+  const [appliedCoupon, setAppliedCoupon] = useState<{code: string, discount: number, type: 'percentage' | 'fixed'} | null>(null)
+  const [couponError, setCouponError] = useState("")
+
+  // Sample coupon codes - in real app, this would come from backend
+  const validCoupons = {
+    "WELCOME10": { discount: 10, type: "percentage" as const },
+    "SAVE500": { discount: 500, type: "fixed" as const },
+    "FESTIVE15": { discount: 15, type: "percentage" as const },
+    "NEWUSER": { discount: 20, type: "percentage" as const }
+  }
+
   const shipping = totalPrice >= 2999 ? 0 : 199
-  const total = totalPrice + shipping
+  
+  // Calculate discount
+  let discount = 0
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percentage') {
+      discount = Math.round((totalPrice * appliedCoupon.discount) / 100)
+    } else {
+      discount = appliedCoupon.discount
+    }
+  }
+  
+  const total = totalPrice + shipping - discount
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const handleApplyCoupon = () => {
+    setCouponError("")
+    
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code")
+      return
+    }
+
+    const upperCouponCode = couponCode.toUpperCase()
+    const coupon = validCoupons[upperCouponCode as keyof typeof validCoupons]
+    
+    if (coupon) {
+      setAppliedCoupon({
+        code: upperCouponCode,
+        discount: coupon.discount,
+        type: coupon.type
+      })
+      setCouponCode("")
+    } else {
+      setCouponError("Invalid coupon code")
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode("")
+    setCouponError("")
   }
 
   const handlePlaceOrder = (e: React.FormEvent) => {
@@ -255,6 +307,56 @@ export default function CheckoutPage() {
 
                   {step === 2 && (
                     <div className="space-y-6">
+                      {/* Coupon Code Section */}
+                      <div>
+                        <h2 className="font-medium text-lg mb-4">Coupon Code</h2>
+                        
+                        {appliedCoupon ? (
+                          <div className="flex items-center justify-between p-4 bg-primary/10 border border-primary/20 rounded">
+                            <div className="flex items-center gap-2">
+                              <Tag className="w-5 h-5 text-primary" />
+                              <span className="font-medium text-primary">{appliedCoupon.code}</span>
+                              <span className="text-sm text-primary/70">
+                                ({appliedCoupon.type === 'percentage' ? `${appliedCoupon.discount}% off` : `₹${appliedCoupon.discount} off`})
+                              </span>
+                            </div>
+                            <button
+                              onClick={handleRemoveCoupon}
+                              className="text-primary hover:text-primary/70 transition-colors p-1"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex gap-3">
+                              <input
+                                type="text"
+                                placeholder="Enter coupon code"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value)}
+                                className="flex-1 px-4 py-3 border border-border bg-background text-sm"
+                                onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleApplyCoupon}
+                                className="px-6 py-3"
+                              >
+                                Apply
+                              </Button>
+                            </div>
+                            {couponError && (
+                              <p className="text-sm text-red-500">{couponError}</p>
+                            )}
+                            <div className="text-sm text-muted-foreground">
+                              Available codes: WELCOME10, SAVE500, FESTIVE15, NEWUSER
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       {/* Payment Method */}
                       <div>
                         <h2 className="font-medium text-lg mb-4">Payment Method</h2>
@@ -400,6 +502,12 @@ export default function CheckoutPage() {
                       {shipping === 0 ? "Free" : `₹${shipping}`}
                     </span>
                   </div>
+                  {appliedCoupon && discount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Discount ({appliedCoupon.code})</span>
+                      <span className="text-primary">-₹{discount.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-lg font-semibold pt-3 border-t border-border">
                     <span>Total</span>
                     <span>₹{total.toLocaleString()}</span>
