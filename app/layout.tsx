@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/cart-context"
 import { WishlistProvider } from "@/context/wishlist-context"
 import { CartSidebar } from "@/components/cart-sidebar"
 import WhatsAppFloat from "@/components/whatsapp-float"
+import { ClientOnly } from "@/components/client-only"
 import './globals.css'
 
 const _cormorant = Cormorant_Garamond({ 
@@ -47,12 +48,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <CartProvider>
           <WishlistProvider>
             {children}
-            <CartSidebar />
-            <WhatsAppFloat />
+            <ClientOnly>
+              <CartSidebar />
+              <WhatsAppFloat />
+            </ClientOnly>
           </WishlistProvider>
         </CartProvider>
         <Analytics />

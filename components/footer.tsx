@@ -35,6 +35,7 @@ const footerLinks = {
   ],
   about: [
     { name: "About Us", href: "/about" },
+    { name: "Blog", href: "/blog" },
     { name: "Craftsmanship", href: "/craftsmanship" },
     { name: "Sustainability", href: "/sustainability" },
     { name: "Press", href: "/press" },
