@@ -32,6 +32,8 @@ const footerLinks = {
     { name: "Designer Collection", href: "/collections" },
     { name: "Bridal Wear", href: "/collections" },
     { name: "Festive Collection", href: "/collections" },
+    { name: "Best Sellers", href: "/best-sellers" },
+
   ],
   about: [
     { name: "About Us", href: "/about" },

@@ -26,11 +26,10 @@ const navLinks = [
       { name: "Cotton Linen", href: "/collections/cotton-linen" },
     ]
   },
-  { name: "Best Sellers", href: "/best-sellers" },
   { name: "Video Collection", href: "/video-collection" },
   { name: "Blog", href: "/blog" },
   { name: "Handloom", href: "/collections/handloom" },
-  { name: "Bridal", href: "/collections/banarasi-silk" },
+  { name: "Best Sellers", href: "/best-sellers" },
   { name: "Sale", href: "/collections/sale" },
 ]
 
