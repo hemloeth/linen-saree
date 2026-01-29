@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { AutoScrollHero } from "@/components/auto-scroll-hero"
 import { NewCollections } from "@/components/new-collections"
 import { CategoryGrid } from "@/components/category-grid"
+import { CollectionBanners } from "@/components/collection-banners"
 import { VideoSection } from "@/components/video-section"
 import { FeaturedBanner } from "@/components/featured-banner"
 import { CelebritySection } from "@/components/celebrity-section"
@@ -16,6 +17,7 @@ export default function Home() {
         <AutoScrollHero />
         <NewCollections />
         <CategoryGrid />
+        <CollectionBanners />
         <VideoSection />
         <FeaturedBanner />
         <CelebritySection />

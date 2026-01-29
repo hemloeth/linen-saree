@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -123,4 +124,20 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom styles for collection banners */
+.font-script {
+  font-family: 'Dancing Script', cursive;
+}
+
+.banner-text-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, #fbbf24, #f59e0b, #d97706);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
