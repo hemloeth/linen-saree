@@ -7,6 +7,7 @@ import { Menu, X, Search, ShoppingBag, User, Heart, ChevronDown } from "lucide-r
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { SearchModal } from "@/components/search-modal"
+import { TrustBadgesCompact } from "@/components/trust-badges"
 import { cn } from "@/lib/utils"
 
 const navLinks = [
@@ -56,8 +57,19 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       {/* Top Bar */}
-      <div className="bg-foreground text-background text-center py-2 px-4 text-xs tracking-wide">
-        Free Shipping on orders above ₹999 | Hassle-Free Returns within 7 Days
+      <div className="bg-foreground text-background">
+        <div className="max-w-[1500px] mx-auto px-4 lg:px-8 py-2">
+          <div className="flex items-center justify-between">
+            <div className="text-xs tracking-wide">
+              Free Shipping on orders above ₹999 | Hassle-Free Returns within 7 Days
+            </div>
+            <TrustBadgesCompact className="hidden md:flex text-background/90" />
+          </div>
+          {/* Mobile Trust Badges */}
+          <div className="md:hidden pt-2 border-t border-background/20 mt-2">
+            <TrustBadgesCompact className="text-background/90 justify-center" />
+          </div>
+        </div>
       </div>
       
       <div className="max-w-[1500px] mx-auto px-4 lg:px-8">
@@ -217,7 +229,7 @@ export function Header() {
       {/* Mobile Menu */}
       <div
         className={cn(
-          "lg:hidden fixed inset-x-0 top-[96px] bg-background border-b border-border transition-all duration-300 overflow-hidden",
+          "lg:hidden fixed inset-x-0 top-[128px] bg-background border-b border-border transition-all duration-300 overflow-hidden",
           isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
         )}
       >

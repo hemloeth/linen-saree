@@ -3,10 +3,11 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, Share2, Truck, RotateCcw, Shield, Minus, Plus, Check } from "lucide-react"
+import { Heart, Share2, Minus, Plus, Check } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { Button } from "@/components/ui/button"
+import { TrustBadges } from "@/components/trust-badges"
 import type { Product } from "@/lib/products"
 
 interface ProductDetailsProps {
@@ -192,20 +193,14 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               </Button>
             </Link>
 
-            {/* Features */}
-            <div className="grid grid-cols-3 gap-4 py-6 border-t border-b border-border mb-8">
-              <div className="flex flex-col items-center text-center">
-                <Truck className="w-6 h-6 mb-2 text-primary" />
-                <p className="text-xs text-muted-foreground">Free Shipping</p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <RotateCcw className="w-6 h-6 mb-2 text-primary" />
-                <p className="text-xs text-muted-foreground">7 Day Returns</p>
-              </div>
-              <div className="flex flex-col items-center text-center">
-                <Shield className="w-6 h-6 mb-2 text-primary" />
-                <p className="text-xs text-muted-foreground">Secure Payment</p>
-              </div>
+            {/* Trust Badges */}
+            <div className="py-6 border-t border-b border-border mb-8">
+              <TrustBadges 
+                variant="horizontal" 
+                showDescription={false}
+                iconSize="md"
+                className="justify-start"
+              />
             </div>
 
             {/* Product Details */}

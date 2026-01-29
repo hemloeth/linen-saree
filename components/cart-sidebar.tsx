@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
+import { TrustBadgesCompact } from "@/components/trust-badges"
 import { cn } from "@/lib/utils"
 
 export function CartSidebar() {
@@ -115,6 +116,12 @@ export function CartSidebar() {
               <span className="font-semibold text-lg">₹{totalPrice.toLocaleString()}</span>
             </div>
             <p className="text-xs text-muted-foreground">Shipping and taxes calculated at checkout</p>
+            
+            {/* Trust Badges */}
+            <div className="py-3 border-t border-border">
+              <TrustBadgesCompact className="justify-center text-xs" />
+            </div>
+            
             <div className="space-y-2">
               <Link href="/checkout" onClick={() => setIsCartOpen(false)}>
                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">

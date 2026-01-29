@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { TrustBadges } from "@/components/trust-badges"
 
 // Custom SVG Icons for Social Media
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -137,6 +138,15 @@ export function Footer() {
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* Trust Badges Section */}
+        <div className="py-8 border-t border-background/10">
+          <TrustBadges 
+            variant="horizontal" 
+            className="text-background" 
+            iconSize="md"
+          />
         </div>
 
         {/* Bottom Bar */}
