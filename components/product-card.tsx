@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Heart, ShoppingBag } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
+import { StarRating } from "@/components/star-rating"
+import { getReviewStats } from "@/lib/reviews"
 import type { Product } from "@/lib/products"
 import { cn } from "@/lib/utils"
 
@@ -19,6 +21,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
+  const reviewStats = getReviewStats(product.id)
 
   const handleWishlistClick = () => {
     if (isWishlisted) {
@@ -85,6 +88,17 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <h3 className="font-medium text-sm leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
           {product.name}
         </h3>
+        
+        {/* Reviews */}
+        {reviewStats.totalReviews > 0 && (
+          <div className="flex items-center gap-2 mb-2">
+            <StarRating rating={reviewStats.averageRating} size="sm" />
+            <span className="text-xs text-muted-foreground">
+              ({reviewStats.totalReviews})
+            </span>
+          </div>
+        )}
+        
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold">₹{product.price.toLocaleString()}</span>
           {product.originalPrice > product.price && (

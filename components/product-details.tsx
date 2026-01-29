@@ -8,6 +8,8 @@ import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { Button } from "@/components/ui/button"
 import { TrustBadges } from "@/components/trust-badges"
+import { StarRating } from "@/components/star-rating"
+import { getReviewStats } from "@/lib/reviews"
 import type { Product } from "@/lib/products"
 
 interface ProductDetailsProps {
@@ -26,6 +28,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const [isAdded, setIsAdded] = useState(false)
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+
+  // Get review stats
+  const reviewStats = getReviewStats(product.id)
 
   // Combine images and videos into a single media array
   const mediaItems: MediaItem[] = [
@@ -143,6 +148,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </div>
 
             <h1 className="font-serif text-3xl lg:text-4xl mb-4">{product.name}</h1>
+
+            {/* Reviews */}
+            {reviewStats.totalReviews > 0 && (
+              <div className="flex items-center gap-3 mb-6">
+                <StarRating rating={reviewStats.averageRating} size="md" showRating />
+                <Link 
+                  href="#reviews" 
+                  className="text-sm text-muted-foreground hover:text-primary underline"
+                >
+                  ({reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''})
+                </Link>
+              </div>
+            )}
 
             {/* Price */}
             <div className="flex items-center gap-4 mb-6">

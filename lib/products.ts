@@ -16,6 +16,9 @@ export interface Product {
   isOnSale: boolean
   isFeatured: boolean
   isNew: boolean
+  // Review stats (computed dynamically)
+  averageRating?: number
+  totalReviews?: number
 }
 
 export const products: Product[] = [

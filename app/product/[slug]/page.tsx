@@ -1,6 +1,7 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ProductDetails } from "@/components/product-details"
+import { ProductReviews } from "@/components/product-reviews"
 import { RelatedProducts } from "@/components/related-products"
 import { products, getProductBySlug, getProductsByCategory } from "@/lib/products"
 import { notFound } from "next/navigation"
@@ -43,6 +44,12 @@ export default async function ProductPage({ params }: Props) {
       
       <div className="pt-[96px] lg:pt-[104px]">
         <ProductDetails product={product} />
+        
+        {/* Reviews Section */}
+        <div id="reviews">
+          <ProductReviews productId={product.id} productName={product.name} />
+        </div>
+        
         <RelatedProducts products={relatedProducts} category={product.category} />
       </div>
 
