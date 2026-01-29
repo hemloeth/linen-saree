@@ -66,8 +66,8 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           {/* Badges */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[calc(100%-3rem)]">
-            <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
+          <div className="absolute top-1 left-1 md:top-2 md:left-2 flex flex-col gap-1 z-10 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)]">
+            <span className="bg-primary text-primary-foreground text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1 font-medium rounded-sm whitespace-nowrap inline-block">
               {discount}% OFF
             </span>
           </div>
@@ -79,56 +79,57 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
               e.stopPropagation()
               togglePlay()
             }}
-            className="absolute top-2 right-12 p-2 bg-background/90 hover:bg-background rounded-full transition-colors opacity-0 group-hover:opacity-100 z-10"
+            className="absolute top-1 right-8 md:top-2 md:right-12 p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors opacity-0 group-hover:opacity-100 z-10"
           >
             {isPlaying ? (
-              <Pause className="w-4 h-4" />
+              <Pause className="w-3 h-3 md:w-4 md:h-4" />
             ) : (
-              <Play className="w-4 h-4" />
+              <Play className="w-3 h-3 md:w-4 md:h-4" />
             )}
           </button>
 
           {/* Quick Actions */}
-          <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+          <div className="absolute top-1 right-1 md:top-2 md:right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
             <button
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 handleWishlistClick()
               }}
-              className={`p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${
+              className={`p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${
                 isWishlisted ? 'text-primary' : ''
               }`}
               aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
-              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
+              <Heart className={`w-3 h-3 md:w-4 md:h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
             </button>
           </div>
 
           {/* Add to Cart Button */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
+          <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
             <button
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 addToCart(product)
               }}
-              className="w-full bg-background/95 hover:bg-background py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-colors rounded-sm"
+              className="w-full bg-background/95 hover:bg-background py-1.5 md:py-2.5 px-2 md:px-4 flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm font-medium transition-colors rounded-sm"
             >
-              <ShoppingBag className="w-4 h-4" />
-              Add to Cart
+              <ShoppingBag className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Add to Cart</span>
+              <span className="sm:hidden">Add</span>
             </button>
           </div>
         </div>
       </div>
 
       <div className="block">
-        <h3 className="font-medium text-sm leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+        <h3 className="font-medium text-xs md:text-sm leading-tight mb-1 md:mb-2 group-hover:text-primary transition-colors line-clamp-2">
           {title}
         </h3>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-semibold">₹{price.toLocaleString()}</span>
-          <span className="text-sm text-muted-foreground line-through">
+        <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+          <span className="font-semibold text-xs md:text-sm">₹{price.toLocaleString()}</span>
+          <span className="text-[10px] md:text-sm text-muted-foreground line-through">
             ₹{originalPrice.toLocaleString()}
           </span>
         </div>
@@ -549,7 +550,7 @@ function VideoCollectionContent() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
               {filteredVideos.map((card, index) => (
                 <VideoCard
                   key={`${card.productId}-${index}`}
