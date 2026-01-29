@@ -7,7 +7,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
-import Image from "next/image"
+import { CheckoutProductMedia } from "@/components/checkout-product-media"
 import Link from "next/link"
 import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X } from "lucide-react"
 
@@ -467,26 +467,11 @@ export default function CheckoutPage() {
                 {/* Items */}
                 <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto">
                   {items.map((item) => (
-                    <div key={item.product.id} className="flex gap-4">
-                      <div className="relative w-16 h-20 flex-shrink-0 bg-muted">
-                        <Image
-                          src={item.product.image || "/placeholder.svg"}
-                          alt={item.product.name}
-                          fill
-                          className="object-cover"
-                        />
-                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-foreground text-background text-xs rounded-full flex items-center justify-center">
-                          {item.quantity}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium line-clamp-2">{item.product.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.product.color}</p>
-                      </div>
-                      <p className="font-medium">
-                        ₹{(item.product.price * item.quantity).toLocaleString()}
-                      </p>
-                    </div>
+                    <CheckoutProductMedia
+                      key={item.product.id}
+                      product={item.product}
+                      quantity={item.quantity}
+                    />
                   ))}
                 </div>
 

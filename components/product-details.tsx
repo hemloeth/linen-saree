@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, Share2, Minus, Plus, Check } from "lucide-react"
+import { Heart, Share2, Minus, Plus, Check, Play } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { Button } from "@/components/ui/button"
@@ -14,12 +14,24 @@ interface ProductDetailsProps {
   product: Product
 }
 
+type MediaItem = {
+  type: 'image' | 'video'
+  src: string
+  alt?: string
+}
+
 export function ProductDetails({ product }: ProductDetailsProps) {
-  const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedMedia, setSelectedMedia] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isAdded, setIsAdded] = useState(false)
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+
+  // Combine images and videos into a single media array
+  const mediaItems: MediaItem[] = [
+    ...product.images.map(img => ({ type: 'image' as const, src: img, alt: product.name })),
+    ...(product.videos || []).map(video => ({ type: 'video' as const, src: video, alt: `${product.name} video` }))
+  ]
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
@@ -57,33 +69,57 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <div className="flex flex-col-reverse lg:flex-row gap-4">
             {/* Thumbnails */}
             <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible">
-              {product.images.map((image, index) => (
+              {mediaItems.map((media, index) => (
                 <button
                   key={index}
-                  onClick={() => setSelectedImage(index)}
+                  onClick={() => setSelectedMedia(index)}
                   className={`relative w-20 h-24 flex-shrink-0 border-2 transition-colors ${
-                    selectedImage === index ? "border-primary" : "border-transparent"
+                    selectedMedia === index ? "border-primary" : "border-transparent"
                   }`}
                 >
-                  <Image
-                    src={image || "/placeholder.svg"}
-                    alt={`${product.name} view ${index + 1}`}
-                    fill
-                    className="object-cover"
-                  />
+                  {media.type === 'image' ? (
+                    <Image
+                      src={media.src || "/placeholder.svg"}
+                      alt={media.alt || `${product.name} view ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="relative w-full h-full bg-black">
+                      <video
+                        src={media.src}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Play className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
 
-            {/* Main Image */}
+            {/* Main Media */}
             <div className="relative flex-1 aspect-[3/4] lg:aspect-auto lg:h-[700px] overflow-hidden bg-muted">
-              <Image
-                src={product.images[selectedImage] || "/placeholder.svg"}
-                alt={product.name}
-                fill
-                className="object-cover"
-                priority
-              />
+              {mediaItems[selectedMedia]?.type === 'image' ? (
+                <Image
+                  src={mediaItems[selectedMedia]?.src || "/placeholder.svg"}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              ) : (
+                <video
+                  src={mediaItems[selectedMedia]?.src}
+                  className="w-full h-full object-cover"
+                  controls
+                  autoPlay
+                  muted
+                  loop
+                />
+              )}
               {product.isOnSale && (
                 <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-sm px-3 py-1 font-medium">
                   {discount}% OFF

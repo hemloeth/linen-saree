@@ -4,9 +4,10 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
+import { CheckoutProductMedia } from "@/components/checkout-product-media"
 import Image from "next/image"
 import Link from "next/link"
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react"
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Play } from "lucide-react"
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, totalPrice, clearCart, isHydrated } = useCart()
@@ -61,14 +62,32 @@ export default function CartPage() {
                         key={item.product.id}
                         className="flex gap-6 pb-6 border-b border-border"
                       >
-                        <Link href={`/product/${item.product.slug}`} className="relative w-28 h-36 flex-shrink-0">
-                          <Image
-                            src={item.product.image || "/placeholder.svg"}
-                            alt={item.product.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </Link>
+                        <div className="relative w-28 h-36 flex-shrink-0">
+                          {item.product.videos && item.product.videos.length > 0 ? (
+                            <div className="relative w-full h-full bg-black cursor-pointer group">
+                              <video
+                                src={item.product.videos[0]}
+                                className="w-full h-full object-cover"
+                                muted
+                                onMouseEnter={(e) => e.currentTarget.play()}
+                                onMouseLeave={(e) => e.currentTarget.pause()}
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Play className="w-8 h-8 text-white" />
+                              </div>
+                              <Link href={`/product/${item.product.slug}`} className="absolute inset-0" />
+                            </div>
+                          ) : (
+                            <Link href={`/product/${item.product.slug}`} className="relative w-full h-full block">
+                              <Image
+                                src={item.product.image || "/placeholder.svg"}
+                                alt={item.product.name}
+                                fill
+                                className="object-cover"
+                              />
+                            </Link>
+                          )}
+                        </div>
                         
                         <div className="flex-1 flex flex-col">
                           <div className="flex justify-between gap-4">

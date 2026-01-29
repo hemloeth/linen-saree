@@ -8,6 +8,7 @@ export interface Product {
   originalPrice: number
   image: string
   images: string[]
+  videos?: string[]
   description: string
   details: string[]
   fabric: string
@@ -32,6 +33,10 @@ export const products: Product[] = [
       "/images/products/pure-linen-brown.jpg",
       "/images/handloom-saree.jpg",
       "/images/casual-saree.jpg"
+    ],
+    videos: [
+      "/bluesaree.mp4",
+      "/dupaataa.mp4"
     ],
     description: "Elegant brown pure linen saree with gold zari border. Perfect for casual gatherings and daily wear. The soft texture and breathable fabric make it ideal for all seasons.",
     details: [
@@ -61,6 +66,10 @@ export const products: Product[] = [
       "/images/products/pure-linen-blue.jpg",
       "/images/designer-saree.jpg",
       "/images/festive-saree.jpg"
+    ],
+    videos: [
+      "/Video-28.mp4",
+      "/gemini_vedio.mp4"
     ],
     description: "Stunning royal blue pure linen saree with silver border. A versatile piece that transitions seamlessly from office wear to evening gatherings.",
     details: [
@@ -439,6 +448,10 @@ export const products: Product[] = [
       "/images/products/banarasi-pink.jpg",
       "/images/bridal-saree.jpg",
       "/images/celebrity-look.jpg"
+    ],
+    videos: [
+      "/Video-266.mp4",
+      "/videoplayback.mp4"
     ],
     description: "Exquisite pink Banarasi silk linen saree with intricate gold brocade work. A timeless piece for weddings and special occasions.",
     details: [
