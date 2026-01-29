@@ -147,6 +147,7 @@ export function ProductFilters({
             <option value="newest">Newest First</option>
             <option value="name-asc">Name: A to Z</option>
             <option value="name-desc">Name: Z to A</option>
+            <option value="color-asc">Color: Color</option>
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
         </div>

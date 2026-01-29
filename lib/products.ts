@@ -2690,7 +2690,7 @@ export function getBestSellers(): Product[] {
 }
 
 // Filter and Sort Types
-export type SortOption = 'featured' | 'price-low' | 'price-high' | 'newest' | 'name-asc' | 'name-desc'
+export type SortOption = 'featured' | 'price-low' | 'price-high' | 'newest' | 'name-asc' | 'name-desc' | 'color-asc' | 'color-desc'
 
 export interface FilterOptions {
   categories?: string[]
@@ -2812,6 +2812,12 @@ export function sortProducts(products: Product[], sortBy: SortOption): Product[]
     
     case 'name-desc':
       return sortedProducts.sort((a, b) => b.name.localeCompare(a.name))
+    
+    case 'color-asc':
+      return sortedProducts.sort((a, b) => a.color.localeCompare(b.color))
+    
+    case 'color-desc':
+      return sortedProducts.sort((a, b) => b.color.localeCompare(a.color))
     
     default:
       return sortedProducts
