@@ -44,8 +44,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
             />
           </Link>
           
-          {/* Badges */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[calc(100%-3rem)]">
+          {/* Badges - Hidden on mobile to avoid covering product face */}
+          <div className="absolute top-2 left-2 flex-col gap-1 z-10 max-w-[calc(100%-3rem)] hidden md:flex">
             {product.isOnSale && (
               <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
                 {discount}% OFF
@@ -102,9 +102,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold">₹{product.price.toLocaleString()}</span>
           {product.originalPrice > product.price && (
-            <span className="text-sm text-muted-foreground line-through">
-              ₹{product.originalPrice.toLocaleString()}
-            </span>
+            <>
+              <span className="text-sm text-muted-foreground line-through">
+                ₹{product.originalPrice.toLocaleString()}
+              </span>
+              {/* Show discount percentage on mobile below price */}
+              <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 font-medium rounded-sm md:hidden">
+                {discount}% OFF
+              </span>
+            </>
           )}
         </div>
       </Link>

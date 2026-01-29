@@ -1,9 +1,8 @@
 'use client'
 
-import { Metadata } from 'next'
 import { useState, useEffect } from 'react'
 import { CheckCircle, Star, Heart, Shield, Truck, Award } from 'lucide-react'
-
+import Head from 'next/head'
 
 export default function WhyChooseUsPage() {
   const [isVisible, setIsVisible] = useState(false)
@@ -103,11 +102,10 @@ export default function WhyChooseUsPage() {
 
   return (
     <>
-      {/* SEO Head */}
-      <head>
+      <Head>
         <title>Why Choose Linen Saree | Premium Quality & Authentic Craftsmanship</title>
         <meta name="description" content="Discover why 10,000+ women across India trust Linen Saree for premium quality, handloom craftsmanship, and authentic pricing. Made in India with love." />
-      </head>
+      </Head>
       
       <div className="min-h-screen bg-background">
         {/* Animated Background Elements */}
