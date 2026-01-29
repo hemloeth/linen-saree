@@ -66,7 +66,6 @@ export function Footer() {
   return (
     <footer className="bg-foreground text-background">
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
-        {/* Main Footerrr */}
         <div className="py-16 lg:py-20 grid grid-cols-2 md:grid-cols-4 gap-10 lg:gap-16">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
@@ -142,8 +141,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Trust Badges Section */}
-        <div className="py-8 border-t border-background/10">
+        <div className="py-8">
           <TrustBadges 
             variant="horizontal" 
             className="text-background" 
