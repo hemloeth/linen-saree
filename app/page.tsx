@@ -18,12 +18,12 @@ export default function Home() {
         <AutoScrollHero />
         <NewCollections />
         <CategoryGrid />
-        <TrustSection />
         <CollectionBanners />
         <VideoSection />
         <FeaturedBanner />
         <CelebritySection />
         <NewsletterSection />
+        <TrustSection />
         <Footer />
       </div>
     </main>

@@ -4,11 +4,6 @@ import { Metadata } from 'next'
 import { useState, useEffect } from 'react'
 import { CheckCircle, Star, Heart, Shield, Truck, Award } from 'lucide-react'
 
-// Note: Since we can't export metadata from client components, we'll handle SEO differently
-// export const metadata: Metadata = {
-//   title: 'Why Choose Linen Saree | Premium Quality & Authentic Craftsmanship',
-//   description: 'Discover why 10,000+ women across India trust Linen Saree for premium quality, handloom craftsmanship, and authentic pricing. Made in India with love.',
-// }
 
 export default function WhyChooseUsPage() {
   const [isVisible, setIsVisible] = useState(false)
