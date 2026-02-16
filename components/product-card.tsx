@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef, useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, ShoppingBag } from "lucide-react"
@@ -9,6 +10,15 @@ import { StarRating } from "@/components/star-rating"
 import { getReviewStats } from "@/lib/reviews"
 import type { Product } from "@/lib/products"
 import { cn } from "@/lib/utils"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel"
+import Autoplay from "embla-carousel-autoplay"
 
 interface ProductCardProps {
   product: Product
@@ -18,6 +28,13 @@ interface ProductCardProps {
 export function ProductCard({ product, className }: ProductCardProps) {
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+  const [api, setApi] = useState<CarouselApi>()
+
+  useEffect(() => {
+    if (!api) return
+    // Stop autoplay initially so it only runs on hover
+    api.plugins().autoplay.stop()
+  }, [api])
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
@@ -34,18 +51,71 @@ export function ProductCard({ product, className }: ProductCardProps) {
   return (
     <div className={cn("group relative w-full", className)}>
       <div className="relative w-full mb-4">
-        <div className="aspect-[3/4] overflow-hidden bg-muted rounded-sm relative">
-          <Link href={`/product/${product.slug}`}>
-            <Image
-              src={product.image || "/placeholder.svg"}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </Link>
-          
+        <div
+          className="aspect-[2/3] overflow-hidden bg-muted rounded-sm relative"
+          onMouseEnter={() => {
+            if (!api) return
+            api.plugins().autoplay.play()
+          }}
+          onMouseLeave={() => {
+            if (!api) return
+            api.plugins().autoplay.stop()
+            api.scrollTo(0)
+          }}
+        >
+          {product.images && product.images.length > 1 ? (
+            <Carousel
+              className="w-full h-full group/carousel"
+              setApi={setApi}
+              plugins={[
+                Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: false })
+              ]}
+              opts={{ loop: true }}
+            >
+              <CarouselContent className="-ml-0 h-full">
+                {product.images.map((img, index) => (
+                  <CarouselItem key={index} className="pl-0 basis-full">
+                    <Link href={`/product/${product.slug}`} className="block w-full h-full relative">
+                      <Image
+                        src={img}
+                        alt={`${product.name} - Image ${index + 1}`}
+                        fill
+                        className="object-cover object-top"
+                      />
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 bg-background/80 hover:bg-background border-none"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  api?.scrollPrev();
+                }}
+              />
+              <CarouselNext
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 bg-background/80 hover:bg-background border-none"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  api?.scrollNext();
+                }}
+              />
+            </Carousel>
+          ) : (
+            <Link href={`/product/${product.slug}`}>
+              <Image
+                src={product.image || "/placeholder.svg"}
+                alt={product.name}
+                fill
+                className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+              />
+            </Link>
+          )}
+
           {/* Badges - Hidden on mobile to avoid covering product face */}
-          <div className="absolute top-2 left-2 flex-col gap-1 z-10 max-w-[calc(100%-3rem)] hidden md:flex">
+          <div className="absolute top-2 left-2 flex-col gap-1 z-10 max-w-[calc(100%-3rem)] hidden md:flex pointer-events-none">
             {product.isOnSale && (
               <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
                 {discount}% OFF
@@ -61,10 +131,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
           {/* Quick Actions */}
           <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
             <button
-              onClick={handleWishlistClick}
-              className={`p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${
-                isWishlisted ? 'text-primary' : ''
-              }`}
+              onClick={(e) => { e.preventDefault(); handleWishlistClick(); }}
+              className={`p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${isWishlisted ? 'text-primary' : ''
+                }`}
               aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
               <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
@@ -74,7 +143,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           {/* Add to Cart Button */}
           <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
             <button
-              onClick={() => addToCart(product)}
+              onClick={(e) => { e.preventDefault(); addToCart(product); }}
               className="w-full bg-background/95 hover:bg-background py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-colors rounded-sm"
             >
               <ShoppingBag className="w-4 h-4" />
@@ -82,13 +151,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </button>
           </div>
         </div>
-      </div>
+      </div >
 
       <Link href={`/product/${product.slug}`} className="block">
         <h3 className="font-medium text-sm leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
           {product.name}
         </h3>
-        
+
         {/* Reviews */}
         {reviewStats.totalReviews > 0 && (
           <div className="flex items-center gap-2 mb-2">
@@ -98,7 +167,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </span>
           </div>
         )}
-        
+
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold">₹{product.price.toLocaleString()}</span>
           {product.originalPrice > product.price && (
@@ -114,6 +183,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
           )}
         </div>
       </Link>
-    </div>
+    </div >
   )
 }
