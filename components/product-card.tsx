@@ -32,8 +32,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
   useEffect(() => {
     if (!api) return
-    // Stop autoplay initially so it only runs on hover
-    api.plugins().autoplay.stop()
+      // Stop autoplay initially so it only runs on hover
+      ; (api.plugins() as any).autoplay.stop()
   }, [api])
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -55,11 +55,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
           className="aspect-[2/3] overflow-hidden bg-muted rounded-sm relative"
           onMouseEnter={() => {
             if (!api) return
-            api.plugins().autoplay.play()
+              ; (api.plugins() as any).autoplay.play()
           }}
           onMouseLeave={() => {
             if (!api) return
-            api.plugins().autoplay.stop()
+              ; (api.plugins() as any).autoplay.stop()
             api.scrollTo(0)
           }}
         >

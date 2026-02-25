@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, X, Plus } from "lucide-react"
 import { ProductPreviewCard } from "@/components/admin/product-preview-card"
+import { SuccessModal } from "@/components/admin/success-modal"
 import {
     Select,
     SelectContent,
@@ -29,6 +30,8 @@ const categories = [
 export default function AddProductPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [lastAddedName, setLastAddedName] = useState("")
     const [images, setImages] = useState<string[]>([])
     const [isDragging, setIsDragging] = useState(false)
 
@@ -43,6 +46,7 @@ export default function AddProductPage() {
     const [tags, setTags] = useState("")
     const [videoUrl, setVideoUrl] = useState("")
     const [videoFile, setVideoFile] = useState<string | null>(null)
+    const [color, setColor] = useState("")
 
     // Specification State
     const [material, setMaterial] = useState("")
@@ -112,6 +116,8 @@ export default function AddProductPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
+        const currentName = name
+        setLastAddedName(currentName)
 
         const newProduct = {
             id: Date.now(),
@@ -126,6 +132,7 @@ export default function AddProductPage() {
             videoUrl,
             videoFile,
             image: images[0] || null,
+            color,
             material,
             sareeSize,
             blouseSize,
@@ -149,6 +156,7 @@ export default function AddProductPage() {
         // Simulate API call
         setTimeout(() => {
             setLoading(false)
+            // Clear all fields
             setImages([])
             setName("")
             setCategory("")
@@ -167,12 +175,20 @@ export default function AddProductPage() {
             setDispatch("")
             setDisclaimer("")
             setInternationalNote("")
-            alert("Product added successfully!")
+            setColor("")
+
+            // Show Success Modal instead of alert
+            setShowSuccessModal(true)
         }, 1000)
     }
 
     return (
         <div className="space-y-6">
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                productName={lastAddedName}
+            />
             <div>
                 <h2 className="text-3xl font-bold tracking-tight font-serif text-primary">Add Product</h2>
                 <p className="text-muted-foreground">Create a new product in your catalog.</p>
@@ -319,7 +335,7 @@ export default function AddProductPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid sm:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="regular-price">Regular Price</Label>
                                     <Input
@@ -345,7 +361,7 @@ export default function AddProductPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid sm:grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="stock">Stock</Label>
                                     <Input
@@ -396,6 +412,15 @@ export default function AddProductPage() {
                                             value={blouseSize}
                                             onChange={(e) => setBlouseSize(e.target.value)}
                                             placeholder="e.g. 0.8 Meters"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="color">Color</Label>
+                                        <Input
+                                            id="color"
+                                            value={color}
+                                            onChange={(e) => setColor(e.target.value)}
+                                            placeholder="e.g. Royal Blue"
                                         />
                                     </div>
                                     <div className="grid gap-2">
@@ -450,6 +475,7 @@ export default function AddProductPage() {
                                 price={price}
                                 regularPrice={regularPrice}
                                 stock={stock}
+                                color={color}
                                 tags={tags}
                             />
                         </div>

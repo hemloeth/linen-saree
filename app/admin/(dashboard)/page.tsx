@@ -44,7 +44,7 @@ export default function AdminDashboard() {
                 </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatsCard
                     title="Total Revenue"
                     value="$15,231.89"
@@ -71,8 +71,8 @@ export default function AdminDashboard() {
                 />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <Card className="col-span-4">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+                <Card className="lg:col-span-4">
                     <CardHeader>
                         <CardTitle>Revenue Overview</CardTitle>
                         <CardDescription>
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
-                <Card className="col-span-3">
+                <Card className="lg:col-span-3">
                     <CardHeader>
                         <CardTitle>Recent Sales</CardTitle>
                         <CardDescription>

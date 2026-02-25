@@ -28,7 +28,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const [isAdded, setIsAdded] = useState(false)
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
-  
+
   // Touch/swipe handling
   const touchStartX = useRef<number>(0)
   const touchEndX = useRef<number>(0)
@@ -60,7 +60,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const handleTouchEnd = () => {
     if (!isDragging) return
     setIsDragging(false)
-    
+
     const swipeDistance = touchStartX.current - touchEndX.current
     const minSwipeDistance = 50
 
@@ -120,9 +120,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 <button
                   key={index}
                   onClick={() => setSelectedMedia(index)}
-                  className={`relative w-20 h-24 flex-shrink-0 border-2 transition-colors ${
-                    selectedMedia === index ? "border-primary" : "border-transparent"
-                  }`}
+                  className={`relative w-20 h-24 flex-shrink-0 border-2 transition-colors ${selectedMedia === index ? "border-primary" : "border-transparent"
+                    }`}
                 >
                   {media.type === 'image' ? (
                     <Image
@@ -149,8 +148,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
             {/* Main Media with Swipe Support */}
             <div className="relative flex-1">
-              <div 
-                className="relative aspect-[3/4] lg:aspect-auto lg:h-[700px] overflow-hidden bg-muted select-none"
+              <div
+                className="relative overflow-hidden bg-muted select-none"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -159,8 +158,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <Image
                     src={mediaItems[selectedMedia]?.src || "/placeholder.svg"}
                     alt={product.name}
-                    fill
-                    className="object-cover"
+                    width={1000}
+                    height={1500}
+                    className="w-full h-auto object-contain"
                     priority
                     draggable={false}
                   />
@@ -174,7 +174,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     loop
                   />
                 )}
-                
+
                 {product.isOnSale && (
                   <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-sm px-3 py-1 font-medium z-10">
                     {discount}% OFF
@@ -208,9 +208,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                       <button
                         key={index}
                         onClick={() => setSelectedMedia(index)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          selectedMedia === index ? "bg-white" : "bg-white/50"
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-colors ${selectedMedia === index ? "bg-white" : "bg-white/50"
+                          }`}
                         aria-label={`Go to image ${index + 1}`}
                       />
                     ))}
@@ -224,9 +223,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <button
                     key={index}
                     onClick={() => setSelectedMedia(index)}
-                    className={`relative w-16 h-20 flex-shrink-0 border-2 transition-colors ${
-                      selectedMedia === index ? "border-primary" : "border-transparent"
-                    }`}
+                    className={`relative w-16 h-20 flex-shrink-0 border-2 transition-colors ${selectedMedia === index ? "border-primary" : "border-transparent"
+                      }`}
                   >
                     {media.type === 'image' ? (
                       <Image
@@ -256,7 +254,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           {/* Product Info */}
           <div className="lg:py-8">
             <div className="flex items-center gap-4 mb-4">
-              <Link 
+              <Link
                 href={`/collections/${product.categorySlug}`}
                 className="text-sm text-muted-foreground hover:text-primary uppercase tracking-wide"
               >
@@ -273,8 +271,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             {reviewStats.totalReviews > 0 && (
               <div className="flex items-center gap-3 mb-6">
                 <StarRating rating={reviewStats.averageRating} size="md" showRating />
-                <Link 
-                  href="#reviews" 
+                <Link
+                  href="#reviews"
                   className="text-sm text-muted-foreground hover:text-primary underline"
                 >
                   ({reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''})
@@ -341,9 +339,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   "Add to Cart"
                 )}
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className={`p-6 bg-transparent ${isWishlisted ? 'text-primary border-primary' : ''}`}
                 onClick={handleWishlistClick}
                 aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
@@ -369,8 +367,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
             {/* Trust Badges */}
             <div className="py-6 border-t border-b border-border mb-8">
-              <TrustBadges 
-                variant="horizontal" 
+              <TrustBadges
+                variant="horizontal"
                 showDescription={false}
                 iconSize="md"
                 className="justify-start"

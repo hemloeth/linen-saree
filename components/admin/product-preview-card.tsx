@@ -16,10 +16,11 @@ interface ProductPreviewCardProps {
     price: string
     regularPrice?: string
     stock: string
+    color?: string
     tags?: string
 }
 
-export function ProductPreviewCard({ images, name, sku, category, price, regularPrice, stock, tags }: ProductPreviewCardProps) {
+export function ProductPreviewCard({ images, name, sku, category, price, regularPrice, stock, color, tags }: ProductPreviewCardProps) {
     const displayPrice = price ? parseFloat(price) : 0
     const displayRegular = regularPrice ? parseFloat(regularPrice) : null
     const displayImages = images.length > 0 ? images : ["/placeholder.svg"]
@@ -27,17 +28,17 @@ export function ProductPreviewCard({ images, name, sku, category, price, regular
     return (
         <div className="group relative w-full">
             <div className="relative w-full mb-4">
-                <div className="aspect-[3/4] overflow-hidden bg-muted rounded-sm relative">
+                <div className="aspect-[2/3] overflow-hidden bg-muted rounded-sm relative">
                     {displayImages.length > 1 ? (
                         <Carousel className="w-full h-full">
                             <CarouselContent>
                                 {displayImages.map((src, index) => (
-                                    <CarouselItem key={index} className="relative aspect-[3/4] w-full h-full">
+                                    <CarouselItem key={index} className="relative aspect-[2/3] w-full h-full">
                                         <Image
                                             src={src}
                                             alt={`${name} - Image ${index + 1}`}
                                             fill
-                                            className="object-cover"
+                                            className="object-cover object-top"
                                         />
                                     </CarouselItem>
                                 ))}
@@ -53,7 +54,7 @@ export function ProductPreviewCard({ images, name, sku, category, price, regular
                             src={displayImages[0]}
                             alt={name || "Product Preview"}
                             fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
                         />
                     )}
 
@@ -135,6 +136,12 @@ export function ProductPreviewCard({ images, name, sku, category, price, regular
                         <span>{category || "Category"}</span>
                         <span>•</span>
                         <span>Stock: {stock || "0"}</span>
+                        {color && (
+                            <>
+                                <span>•</span>
+                                <span>Color: {color}</span>
+                            </>
+                        )}
                     </div>
                     {tags && (
                         <div className="flex flex-wrap gap-1">
