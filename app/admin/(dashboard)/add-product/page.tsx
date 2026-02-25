@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Upload, X, Plus } from "lucide-react"
 import { ProductPreviewCard } from "@/components/admin/product-preview-card"
 import { SuccessModal } from "@/components/admin/success-modal"
+import { AddCategoryModal } from "@/components/admin/add-category-modal"
 import {
     Select,
     SelectContent,
@@ -16,16 +17,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-const categories = [
-    "Pure Linen",
-    "Banarasi Silk",
-    "Handloom",
-    "Silk Linen",
-    "Embroidery",
-    "Kota Linen",
-    "Cotton Linen",
-    "Bridal Collection"
-]
+// No hardcoded categories
 
 export default function AddProductPage() {
     const router = useRouter()
@@ -47,6 +39,29 @@ export default function AddProductPage() {
     const [videoUrl, setVideoUrl] = useState("")
     const [videoFile, setVideoFile] = useState<string | null>(null)
     const [color, setColor] = useState("")
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+    const [dynamicCategories, setDynamicCategories] = useState<string[]>([])
+
+    const loadCategories = () => {
+        if (typeof window !== "undefined") {
+            const saved = window.localStorage.getItem("adminCategories")
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved)
+                    if (Array.isArray(parsed)) {
+                        setDynamicCategories(parsed.map((c: any) => c.name))
+                    }
+                } catch (e) {
+                    console.error("Failed to load categories", e)
+                }
+            }
+        }
+    }
+
+    // Load categories from localStorage
+    useState(() => {
+        loadCategories()
+    })
 
     // Specification State
     const [material, setMaterial] = useState("")
@@ -189,6 +204,14 @@ export default function AddProductPage() {
                 onClose={() => setShowSuccessModal(false)}
                 productName={lastAddedName}
             />
+            <AddCategoryModal
+                isOpen={isCategoryModalOpen}
+                onClose={() => setIsCategoryModalOpen(false)}
+                onSuccess={(newCat) => {
+                    loadCategories()
+                    setCategory(newCat)
+                }}
+            />
             <div>
                 <h2 className="text-3xl font-bold tracking-tight font-serif text-primary">Add Product</h2>
                 <p className="text-muted-foreground">Create a new product in your catalog.</p>
@@ -277,7 +300,7 @@ export default function AddProductPage() {
                                     value={category}
                                     onValueChange={(value) => {
                                         if (value === "add-category") {
-                                            router.push("/admin/categories")
+                                            setIsCategoryModalOpen(true)
                                             return
                                         }
                                         setCategory(value)
@@ -287,7 +310,7 @@ export default function AddProductPage() {
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {categories.map((cat) => (
+                                        {dynamicCategories.map((cat) => (
                                             <SelectItem key={cat} value={cat}>
                                                 {cat}
                                             </SelectItem>

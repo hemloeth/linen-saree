@@ -7,54 +7,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-const staticCategories = [
-    {
-        name: "Pure Linen",
-        description: "Breathable, everyday linen sarees in solid and subtle weaves.",
-        image: "/categories/pure-linen.jpg",
-    },
-    {
-        name: "Banarasi Silk",
-        description: "Rich banarasi silk sarees with intricate zari work.",
-        image: "/categories/banarasi-silk.jpg",
-    },
-    {
-        name: "Handloom",
-        description: "Authentic handloom sarees woven by skilled artisans.",
-        image: "/categories/handloom.jpg",
-    },
-    {
-        name: "Silk Linen",
-        description: "A luxurious blend of silk sheen and linen comfort.",
-        image: "/categories/silk-linen.jpg",
-    },
-    {
-        name: "Embroidery",
-        description: "Delicate embroidered sarees perfect for special occasions.",
-        image: "/categories/embroidery.jpg",
-    },
-    {
-        name: "Kota Linen",
-        description: "Feather-light kota linen sarees ideal for summer.",
-        image: "/categories/kota-linen.jpg",
-    },
-    {
-        name: "Cotton Linen",
-        description: "Soft cotton-linen mix sarees for all-day wear.",
-        image: "/categories/cotton-linen.jpg",
-    },
-    {
-        name: "Bridal Collection",
-        description: "Statement bridal sarees for your biggest moments.",
-        image: "/categories/bridal-collection.jpg",
-    },
-]
+const staticCategories = []
 
 export default function CategoriesPage() {
-    const [categories, setCategories] = useState(staticCategories)
+    const [categories, setCategories] = useState<{ name: string; description: string; image: string }[]>([])
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [image, setImage] = useState<string | null>(null)
+
+    // Load from localStorage
+    useState(() => {
+        if (typeof window !== "undefined") {
+            const saved = window.localStorage.getItem("adminCategories")
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved)
+                    if (Array.isArray(parsed)) setCategories(parsed)
+                } catch (e) {
+                    console.error("Failed to parse categories", e)
+                }
+            }
+        }
+    })
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -71,14 +45,19 @@ export default function CategoriesPage() {
         e.preventDefault()
         if (!name || !description || !image) return
 
-        setCategories((prev) => [
-            ...prev,
+        const newCategories = [
+            ...categories,
             {
                 name,
                 description,
                 image,
             },
-        ])
+        ]
+        setCategories(newCategories)
+
+        if (typeof window !== "undefined") {
+            window.localStorage.setItem("adminCategories", JSON.stringify(newCategories))
+        }
 
         setName("")
         setDescription("")
