@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function AdminBlogPage() {
+function BlogPageContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
 
@@ -114,6 +114,14 @@ export default function AdminBlogPage() {
                 </CardContent>
             </Card>
         </div>
+    )
+}
+
+export default function AdminBlogPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <BlogPageContent />
+        </Suspense>
     )
 }
 

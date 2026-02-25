@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ProductPreviewCard } from "@/components/admin/product-preview-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,7 +18,7 @@ interface StoredProduct {
     image: string | null
 }
 
-export default function MediaPage() {
+function MediaPageContent() {
     const [products, setProducts] = useState<StoredProduct[]>([])
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -109,7 +109,7 @@ export default function MediaPage() {
                                     sku={product.sku}
                                     category={product.category}
                                     price={product.price}
-                                regularPrice={product.regularPrice}
+                                    regularPrice={product.regularPrice}
                                     stock={product.stock}
                                     tags={product.tags}
                                 />
@@ -119,6 +119,14 @@ export default function MediaPage() {
                 </div>
             )}
         </div>
+    )
+}
+
+export default function MediaPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <MediaPageContent />
+        </Suspense>
     )
 }
 
