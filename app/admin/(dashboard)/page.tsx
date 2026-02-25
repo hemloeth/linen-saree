@@ -64,9 +64,9 @@ export default function AdminDashboard() {
                     icon={Package}
                 />
                 <StatsCard
-                    title="Active Customers"
-                    value="2,350"
-                    description="+43 new this week"
+                    title="Out of Stock Products"
+                    value="8"
+                    description="Products currently unavailable"
                     icon={Users}
                 />
             </div>

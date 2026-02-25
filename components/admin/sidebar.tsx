@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut, Plus } from "lucide-react"
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Plus, Images, FileText, Users, TicketPercent } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -18,6 +18,31 @@ const sidebarItems = [
         icon: Package,
     },
     {
+        title: "Media",
+        href: "/admin/media",
+        icon: Images,
+    },
+    {
+        title: "Customers",
+        href: "/admin/customers",
+        icon: Users,
+    },
+    {
+        title: "Coupons",
+        href: "/admin/coupons",
+        icon: TicketPercent,
+    },
+    {
+        title: "Blog",
+        href: "/admin/blog",
+        icon: FileText,
+    },
+    {
+        title: "Categories",
+        href: "/admin/categories",
+        icon: Package,
+    },
+    {
         title: "Add Product",
         href: "/admin/add-product",
         icon: Plus,
@@ -26,11 +51,6 @@ const sidebarItems = [
         title: "Orders",
         href: "/admin/orders",
         icon: ShoppingCart,
-    },
-    {
-        title: "Settings",
-        href: "/admin/settings",
-        icon: Settings,
     },
 ]
 

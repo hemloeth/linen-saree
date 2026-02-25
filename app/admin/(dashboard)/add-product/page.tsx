@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,6 +27,7 @@ const categories = [
 ]
 
 export default function AddProductPage() {
+    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [images, setImages] = useState<string[]>([])
     const [isDragging, setIsDragging] = useState(false)
@@ -33,8 +35,23 @@ export default function AddProductPage() {
     // Form State
     const [name, setName] = useState("")
     const [category, setCategory] = useState("")
+    const [sku, setSku] = useState("")
+    const [regularPrice, setRegularPrice] = useState("")
     const [price, setPrice] = useState("")
     const [stock, setStock] = useState("")
+    const [shortDescription, setShortDescription] = useState("")
+    const [tags, setTags] = useState("")
+    const [videoUrl, setVideoUrl] = useState("")
+    const [videoFile, setVideoFile] = useState<string | null>(null)
+
+    // Specification State
+    const [material, setMaterial] = useState("")
+    const [sareeSize, setSareeSize] = useState("")
+    const [blouseSize, setBlouseSize] = useState("")
+    const [washCare, setWashCare] = useState("")
+    const [dispatch, setDispatch] = useState("")
+    const [disclaimer, setDisclaimer] = useState("")
+    const [internationalNote, setInternationalNote] = useState("")
 
     const handleFiles = (files: FileList | File[]) => {
         if (images.length >= 4) return
@@ -81,17 +98,75 @@ export default function AddProductPage() {
         setImages(prev => prev.filter((_, i) => i !== index))
     }
 
+    const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            setVideoFile(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
+
+        const newProduct = {
+            id: Date.now(),
+            name,
+            sku,
+            category,
+            price,
+            regularPrice,
+            stock,
+            shortDescription,
+            tags,
+            videoUrl,
+            videoFile,
+            image: images[0] || null,
+            material,
+            sareeSize,
+            blouseSize,
+            washCare,
+            dispatch,
+            disclaimer,
+            internationalNote,
+        }
+
+        if (typeof window !== "undefined") {
+            try {
+                const existing = window.localStorage.getItem("adminProducts")
+                const parsed = existing ? JSON.parse(existing) : []
+                const updated = Array.isArray(parsed) ? [...parsed, newProduct] : [newProduct]
+                window.localStorage.setItem("adminProducts", JSON.stringify(updated))
+            } catch (err) {
+                console.error("Failed to save product to localStorage", err)
+            }
+        }
+
         // Simulate API call
         setTimeout(() => {
             setLoading(false)
             setImages([])
             setName("")
             setCategory("")
+            setSku("")
+            setRegularPrice("")
             setPrice("")
             setStock("")
+            setShortDescription("")
+            setTags("")
+            setVideoUrl("")
+            setVideoFile(null)
+            setMaterial("")
+            setSareeSize("")
+            setBlouseSize("")
+            setWashCare("")
+            setDispatch("")
+            setDisclaimer("")
+            setInternationalNote("")
             alert("Product added successfully!")
         }, 1000)
     }
@@ -161,17 +236,101 @@ export default function AddProductPage() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="category">Category</Label>
+                                <Label htmlFor="sku">SKU Code</Label>
                                 <Input
-                                    id="category"
-                                    value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    placeholder="e.g. Linen"
-                                    required
+                                    id="sku"
+                                    value={sku}
+                                    onChange={(e) => setSku(e.target.value)}
+                                    placeholder="e.g. LS-001"
                                 />
                             </div>
 
+                            <div className="grid gap-2">
+                                <Label htmlFor="short-description">Short Description</Label>
+                                <Input
+                                    id="short-description"
+                                    value={shortDescription}
+                                    onChange={(e) => setShortDescription(e.target.value)}
+                                    placeholder="e.g. Soft pure linen saree with zari border"
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="category">Category</Label>
+                                <Select
+                                    value={category}
+                                    onValueChange={(value) => {
+                                        if (value === "add-category") {
+                                            router.push("/admin/categories")
+                                            return
+                                        }
+                                        setCategory(value)
+                                    }}
+                                >
+                                    <SelectTrigger id="category" className="w-full">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat} value={cat}>
+                                                {cat}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="add-category">
+                                            + Add Category
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="tags">Tags</Label>
+                                <Input
+                                    id="tags"
+                                    value={tags}
+                                    onChange={(e) => setTags(e.target.value)}
+                                    placeholder="e.g. linen, summer, handloom"
+                                />
+                            </div>
+
+                            <div className="grid gap-3 border rounded-lg p-4 bg-muted/10">
+                                <Label>Product Video (optional)</Label>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="video-file" className="text-xs text-muted-foreground">
+                                        Upload video file
+                                    </Label>
+                                    <Input
+                                        id="video-file"
+                                        type="file"
+                                        accept="video/*"
+                                        onChange={handleVideoFileChange}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="video-url" className="text-xs text-muted-foreground">
+                                        Or paste video URL (YouTube, Vimeo, etc.)
+                                    </Label>
+                                    <Input
+                                        id="video-url"
+                                        value={videoUrl}
+                                        onChange={(e) => setVideoUrl(e.target.value)}
+                                        placeholder="https://..."
+                                    />
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="regular-price">Regular Price</Label>
+                                    <Input
+                                        id="regular-price"
+                                        type="number"
+                                        step="0.01"
+                                        value={regularPrice}
+                                        onChange={(e) => setRegularPrice(e.target.value)}
+                                        placeholder="0.00"
+                                    />
+                                </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="price">Price</Label>
                                     <Input
@@ -184,6 +343,9 @@ export default function AddProductPage() {
                                         required
                                     />
                                 </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
                                 <div className="grid gap-2">
                                     <Label htmlFor="stock">Stock</Label>
                                     <Input
@@ -193,6 +355,75 @@ export default function AddProductPage() {
                                         onChange={(e) => setStock(e.target.value)}
                                         placeholder="0"
                                         required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 border rounded-lg p-4 bg-muted/5">
+                                <h4 className="font-semibold text-primary/80">Product Specification</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="material">Material</Label>
+                                        <Input
+                                            id="material"
+                                            value={material}
+                                            onChange={(e) => setMaterial(e.target.value)}
+                                            placeholder="e.g. 100% Pure Linen"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="wash-care">Wash Care</Label>
+                                        <Input
+                                            id="wash-care"
+                                            value={washCare}
+                                            onChange={(e) => setWashCare(e.target.value)}
+                                            placeholder="e.g. Dry Clean Only"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="saree-size">Saree Size</Label>
+                                        <Input
+                                            id="saree-size"
+                                            value={sareeSize}
+                                            onChange={(e) => setSareeSize(e.target.value)}
+                                            placeholder="e.g. 5.5 Meters"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="blouse-size">Blouse Size</Label>
+                                        <Input
+                                            id="blouse-size"
+                                            value={blouseSize}
+                                            onChange={(e) => setBlouseSize(e.target.value)}
+                                            placeholder="e.g. 0.8 Meters"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="dispatch">Dispatch</Label>
+                                        <Input
+                                            id="dispatch"
+                                            value={dispatch}
+                                            onChange={(e) => setDispatch(e.target.value)}
+                                            placeholder="e.g. Within 2-3 business days"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="disclaimer">Disclaimer</Label>
+                                    <Input
+                                        id="disclaimer"
+                                        value={disclaimer}
+                                        onChange={(e) => setDisclaimer(e.target.value)}
+                                        placeholder="Color may slightly vary due to lighting"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="international-note">Note for International Orders</Label>
+                                    <Input
+                                        id="international-note"
+                                        value={internationalNote}
+                                        onChange={(e) => setInternationalNote(e.target.value)}
+                                        placeholder="Custom duties extra as per your country"
                                     />
                                 </div>
                             </div>
@@ -214,9 +445,12 @@ export default function AddProductPage() {
                             <ProductPreviewCard
                                 images={images}
                                 name={name}
+                                sku={sku}
                                 category={category}
                                 price={price}
+                                regularPrice={regularPrice}
                                 stock={stock}
+                                tags={tags}
                             />
                         </div>
                         <p className="text-sm text-muted-foreground text-center">
@@ -224,7 +458,7 @@ export default function AddProductPage() {
                         </p>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }

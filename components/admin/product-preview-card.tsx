@@ -11,13 +11,17 @@ import {
 interface ProductPreviewCardProps {
     images: string[]
     name: string
+    sku?: string
     category: string
     price: string
+    regularPrice?: string
     stock: string
+    tags?: string
 }
 
-export function ProductPreviewCard({ images, name, category, price, stock }: ProductPreviewCardProps) {
+export function ProductPreviewCard({ images, name, sku, category, price, regularPrice, stock, tags }: ProductPreviewCardProps) {
     const displayPrice = price ? parseFloat(price) : 0
+    const displayRegular = regularPrice ? parseFloat(regularPrice) : null
     const displayImages = images.length > 0 ? images : ["/placeholder.svg"]
 
     return (
@@ -84,9 +88,14 @@ export function ProductPreviewCard({ images, name, category, price, stock }: Pro
             </div>
 
             <div className="block">
-                <h3 className="font-medium text-sm leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                <h3 className="font-medium text-sm leading-tight mb-1 group-hover:text-primary transition-colors line-clamp-2">
                     {name || "Product Name"}
                 </h3>
+                {sku && (
+                    <p className="text-[11px] text-muted-foreground mb-2">
+                        SKU: {sku}
+                    </p>
+                )}
 
                 {/* Reviews */}
                 <div className="flex items-center gap-2 mb-2">
@@ -114,12 +123,31 @@ export function ProductPreviewCard({ images, name, category, price, stock }: Pro
 
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold">₹{displayPrice.toLocaleString()}</span>
+                    {displayRegular && displayRegular > displayPrice && (
+                        <span className="text-xs text-muted-foreground line-through">
+                            ₹{displayRegular.toLocaleString()}
+                        </span>
+                    )}
                 </div>
                 {/* Stock Category Helper */}
-                <div className="mt-1 text-xs text-muted-foreground flex gap-2">
-                    <span>{category || "Category"}</span>
-                    <span>•</span>
-                    <span>Stock: {stock || "0"}</span>
+                <div className="mt-1 text-xs text-muted-foreground flex flex-col gap-1">
+                    <div className="flex gap-2">
+                        <span>{category || "Category"}</span>
+                        <span>•</span>
+                        <span>Stock: {stock || "0"}</span>
+                    </div>
+                    {tags && (
+                        <div className="flex flex-wrap gap-1">
+                            {tags.split(",").map((tag) => (
+                                <span
+                                    key={tag.trim()}
+                                    className="px-2 py-0.5 rounded-full bg-muted text-[10px] uppercase tracking-wide"
+                                >
+                                    {tag.trim()}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

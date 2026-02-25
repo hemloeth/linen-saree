@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -14,12 +15,21 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Upload } from "lucide-react"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 export function AddProductModal() {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [image, setImage] = useState<string | null>(null)
     const [isDragging, setIsDragging] = useState(false)
+    const [category, setCategory] = useState("")
+    const router = useRouter()
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -134,14 +144,78 @@ export function AddProductModal() {
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="sku" className="text-right">
+                                SKU Code
+                            </Label>
+                            <Input
+                                id="sku"
+                                placeholder="e.g. LS-001"
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="short-description" className="text-right">
+                                Short Description
+                            </Label>
+                            <Input
+                                id="short-description"
+                                placeholder="Short description of the product"
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="category" className="text-right">
                                 Category
                             </Label>
+                            <Select
+                                value={category}
+                                onValueChange={(value) => {
+                                    if (value === "add-category") {
+                                        setOpen(false)
+                                        router.push("/admin/categories")
+                                        return
+                                    }
+                                    setCategory(value)
+                                }}
+                            >
+                                <SelectTrigger id="category" className="col-span-3">
+                                    <SelectValue placeholder="Select a category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Pure Linen">Pure Linen</SelectItem>
+                                    <SelectItem value="Banarasi Silk">Banarasi Silk</SelectItem>
+                                    <SelectItem value="Handloom">Handloom</SelectItem>
+                                    <SelectItem value="Silk Linen">Silk Linen</SelectItem>
+                                    <SelectItem value="Embroidery">Embroidery</SelectItem>
+                                    <SelectItem value="Kota Linen">Kota Linen</SelectItem>
+                                    <SelectItem value="Cotton Linen">Cotton Linen</SelectItem>
+                                    <SelectItem value="Bridal Collection">Bridal Collection</SelectItem>
+                                    <SelectItem value="add-category">
+                                        + Add Category
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="tags" className="text-right">
+                                Tags
+                            </Label>
                             <Input
-                                id="category"
-                                defaultValue="Linen"
+                                id="tags"
+                                placeholder="e.g. linen, festive, handloom"
                                 className="col-span-3"
-                                required
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="regular-price" className="text-right">
+                                Regular Price
+                            </Label>
+                            <Input
+                                id="regular-price"
+                                placeholder="0.00"
+                                className="col-span-3"
+                                type="number"
+                                step="0.01"
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">

@@ -19,6 +19,14 @@ export interface Product {
   // Review stats (computed dynamically)
   averageRating?: number
   totalReviews?: number
+  // Specification fields
+  material?: string
+  sareeSize?: string
+  blouseSize?: string
+  washCare?: string
+  dispatch?: string
+  disclaimer?: string
+  internationalNote?: string
 }
 
 export const products: Product[] = [
