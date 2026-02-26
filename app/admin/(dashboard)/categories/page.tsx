@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { X } from "lucide-react"
 
 const staticCategories = []
 
@@ -64,6 +65,14 @@ export default function CategoriesPage() {
         setImage(null)
     }
 
+    const deleteCategory = (categoryName: string) => {
+        const newCategories = categories.filter(c => c.name !== categoryName)
+        setCategories(newCategories)
+        if (typeof window !== "undefined") {
+            window.localStorage.setItem("adminCategories", JSON.stringify(newCategories))
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
@@ -82,7 +91,7 @@ export default function CategoriesPage() {
 
             <Card className="border-dashed">
                 <CardHeader>
-                    <CardTitle className="text-base">Add Category</CardTitle>
+                    <CardTitle className="text-base">Add New Category</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
@@ -114,12 +123,15 @@ export default function CategoriesPage() {
                         <div className="space-y-3">
                             <Label>Image</Label>
                             <div className="flex flex-col gap-3">
-                                <Input
-                                    id="category-image"
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                />
+                                <div className="grid w-full items-center gap-1.5">
+                                    <Input
+                                        id="category-image"
+                                        type="file"
+                                        accept="image/*"
+                                        className="cursor-pointer"
+                                        onChange={handleImageChange}
+                                    />
+                                </div>
                                 <div className="relative h-32 w-full overflow-hidden rounded-md border bg-muted">
                                     {image ? (
                                         // eslint-disable-next-line @next/next/no-img-element
@@ -129,8 +141,8 @@ export default function CategoriesPage() {
                                             className="h-full w-full object-cover"
                                         />
                                     ) : (
-                                        <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                                            Image preview will appear here
+                                        <div className="flex h-full items-center justify-center text-[10px] text-muted-foreground italic">
+                                            (Category image will appear here)
                                         </div>
                                     )}
                                 </div>
@@ -142,23 +154,29 @@ export default function CategoriesPage() {
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {categories.map((category) => (
-                    <Card key={category.name} className="overflow-hidden group">
-                        <div className="relative h-40 w-full overflow-hidden">
+                    <Card key={category.name} className="overflow-hidden group relative">
+                        <button
+                            onClick={() => deleteCategory(category.name)}
+                            className="absolute top-2 right-2 z-10 p-2 bg-destructive/90 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity translate-y-[-10px] group-hover:translate-y-0 duration-200 shadow-lg"
+                            title="Delete Category"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                        <div className="relative h-48 w-full overflow-hidden">
                             <Image
                                 src={category.image}
                                 alt={category.name}
                                 fill
-                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                className="object-cover transition-transform duration-700 group-hover:scale-110"
                             />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </div>
-                        <CardHeader>
-                            <CardTitle className="flex items-center justify-between text-base">
-                                <span>{category.name}</span>
-                            </CardTitle>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg font-serif">{category.name}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                                {category.description}
+                            <p className="text-sm text-muted-foreground line-clamp-2 italic">
+                                &ldquo;{category.description}&rdquo;
                             </p>
                         </CardContent>
                     </Card>

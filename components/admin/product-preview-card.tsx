@@ -1,5 +1,6 @@
 import Image from "next/image"
 import { Heart, ShoppingBag } from "lucide-react"
+import { StarRating } from "@/components/star-rating"
 import {
     Carousel,
     CarouselContent,
@@ -7,6 +8,7 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel"
+import { cn } from "@/lib/utils"
 
 interface ProductPreviewCardProps {
     images: string[]
@@ -27,13 +29,13 @@ export function ProductPreviewCard({ images, name, sku, category, price, regular
 
     return (
         <div className="group relative w-full">
-            <div className="relative w-full mb-4">
-                <div className="aspect-[2/3] overflow-hidden bg-muted rounded-sm relative">
+            <div className="relative w-full mb-3 md:mb-4">
+                <div className="aspect-[4/5] overflow-hidden bg-muted rounded-sm relative">
                     {displayImages.length > 1 ? (
                         <Carousel className="w-full h-full">
                             <CarouselContent>
                                 {displayImages.map((src, index) => (
-                                    <CarouselItem key={index} className="relative aspect-[2/3] w-full h-full">
+                                    <CarouselItem key={index} className="relative aspect-[4/5] w-full h-full">
                                         <Image
                                             src={src}
                                             alt={`${name} - Image ${index + 1}`}
@@ -58,103 +60,67 @@ export function ProductPreviewCard({ images, name, sku, category, price, regular
                         />
                     )}
 
-                    {/* Badge */}
-                    <div className="absolute top-2 left-2 flex-col gap-1 z-10 max-w-[calc(100%-3rem)] hidden md:flex pointer-events-none">
-                        <span className="bg-foreground text-background text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
-                            NEW
-                        </span>
+                    {/* Badge - Removed NEW */}
+                    <div className="absolute top-2 left-2 flex flex-col gap-2 z-20 pointer-events-none">
                     </div>
 
-                    {/* Quick Actions */}
-                    <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                    {/* Quick Actions (Wishlist) */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
                         <button
-                            className="p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm"
+                            className="p-2 bg-background/95 hover:bg-background rounded-full transition-all shadow-sm active:scale-95"
                             disabled
                         >
                             <Heart className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    {/* Add to Cart Button */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
-                        <button
-                            className="w-full bg-background/95 hover:bg-background py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-colors rounded-sm"
-                            disabled
-                        >
-                            <ShoppingBag className="w-4 h-4" />
-                            Add to Cart
                         </button>
                     </div>
                 </div>
             </div>
 
             <div className="block">
-                <h3 className="font-medium text-sm leading-tight mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                <h3 className="font-medium text-xs md:text-sm leading-tight mb-1 md:mb-2 transition-colors line-clamp-2">
                     {name || "Product Name"}
                 </h3>
-                {sku && (
-                    <p className="text-[11px] text-muted-foreground mb-2">
-                        SKU: {sku}
-                    </p>
-                )}
 
-                {/* Reviews */}
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="flex text-yellow-400">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                            <svg
-                                key={star}
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                className="w-3 h-3"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                        ))}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
+
+                {/* Reviews - Always visible */}
+                <div className="flex items-center gap-1 mb-1.5 md:mb-2">
+                    <StarRating
+                        rating={0}
+                        size="sm"
+                    />
+                    <span className="text-[9px] md:text-[10px] text-muted-foreground">
                         (0)
                     </span>
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold">₹{displayPrice.toLocaleString()}</span>
+                <div className="flex items-center gap-1.5 md:gap-2 flex-wrap mb-3 md:mb-4">
+                    <span className="font-bold text-xs md:text-base">₹{displayPrice.toLocaleString()}</span>
                     {displayRegular && displayRegular > displayPrice && (
-                        <span className="text-xs text-muted-foreground line-through">
-                            ₹{displayRegular.toLocaleString()}
-                        </span>
+                        <>
+                            <span className="text-[9px] md:text-xs text-muted-foreground line-through decoration-muted-foreground/50">
+                                ₹{displayRegular.toLocaleString()}
+                            </span>
+                            <span className="text-red-600 text-[9px] md:text-[10px] font-bold">
+                                -{Math.round(((displayRegular - displayPrice) / displayRegular) * 100)}%
+                            </span>
+                        </>
                     )}
                 </div>
-                {/* Stock Category Helper */}
-                <div className="mt-1 text-xs text-muted-foreground flex flex-col gap-1">
-                    <div className="flex gap-2">
-                        <span>{category || "Category"}</span>
-                        <span>•</span>
-                        <span>Stock: {stock || "0"}</span>
-                        {color && (
-                            <>
-                                <span>•</span>
-                                <span>Color: {color}</span>
-                            </>
-                        )}
-                    </div>
-                    {tags && (
-                        <div className="flex flex-wrap gap-1">
-                            {tags.split(",").map((tag) => (
-                                <span
-                                    key={tag.trim()}
-                                    className="px-2 py-0.5 rounded-full bg-muted text-[10px] uppercase tracking-wide"
-                                >
-                                    {tag.trim()}
-                                </span>
-                            ))}
-                        </div>
-                    )}
+
+                {/* Persistent Action Buttons - Asymmetric Layout */}
+                <div className="flex gap-1.5 md:gap-2 mb-4">
+                    <button
+                        className="w-10 md:w-12 bg-primary text-primary-foreground py-2 sm:py-2.5 flex items-center justify-center transition-all rounded-sm active:scale-95 shadow-sm"
+                        disabled
+                    >
+                        <ShoppingBag className="w-4 h-4" />
+                    </button>
+                    <button
+                        className="flex-1 bg-background border border-primary text-primary py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold transition-all rounded-sm active:scale-95 shadow-sm uppercase tracking-wider"
+                        disabled
+                    >
+                        Buy Now
+                    </button>
                 </div>
             </div>
         </div>
