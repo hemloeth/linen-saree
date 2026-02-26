@@ -28,10 +28,10 @@ export function ReviewSummary({ productId, className }: ReviewSummaryProps) {
   }
 
   return (
-    <div className={cn("bg-card border border-border rounded-lg p-6", className)}>
-      <h3 className="text-lg font-medium mb-6">Customer Reviews</h3>
-      
-      <div className="grid md:grid-cols-2 gap-8">
+    <div className={cn("bg-card border border-border rounded-lg p-3 sm:p-6", className)}>
+      <h3 className="text-base sm:text-lg font-medium mb-4 sm:mb-6">Customer Reviews</h3>
+
+      <div className="grid md:grid-cols-2 gap-4 sm:gap-8">
         {/* Overall Rating */}
         <div className="text-center">
           <div className="text-4xl font-bold text-foreground mb-2">
@@ -48,7 +48,7 @@ export function ReviewSummary({ productId, className }: ReviewSummaryProps) {
           {[5, 4, 3, 2, 1].map((rating) => {
             const count = stats.ratingDistribution[rating as keyof ReviewStats['ratingDistribution']]
             const percentage = getPercentage(count)
-            
+
             return (
               <div key={rating} className="flex items-center gap-3">
                 <div className="flex items-center gap-1 w-12">

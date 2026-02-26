@@ -74,8 +74,8 @@ export function ProductReviews({ productId, productName, className }: ProductRev
   ]
 
   return (
-    <section className={cn("py-8 lg:py-16", className)}>
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+    <section className={cn("py-4 sm:py-8 lg:py-16", className)}>
+      <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-8">
         <div className="space-y-8">
           {/* Review Summary */}
           <ReviewSummary productId={productId} />
@@ -107,10 +107,10 @@ export function ProductReviews({ productId, productName, className }: ProductRev
             <div className="space-y-6">
               {/* Filters and Sort */}
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <h3 className="text-xl font-medium">
+                <h3 className="text-lg sm:text-xl font-medium">
                   Reviews ({filteredReviews.length})
                 </h3>
-                
+
                 <div className="flex flex-col sm:flex-row gap-3">
                   {/* Filter Dropdown */}
                   <div className="relative">

@@ -98,17 +98,17 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   }
 
   return (
-    <section className="py-8 lg:py-16 px-4 lg:px-8">
+    <section className="py-2 sm:py-16 px-2 sm:px-4 lg:px-8">
       <div className="max-w-[1400px] mx-auto">
-        {/* Breadcrumb */}
-        <nav className="text-sm text-muted-foreground mb-8">
-          <Link href="/" className="hover:text-foreground">Home</Link>
-          <span className="mx-2">/</span>
-          <Link href="/collections" className="hover:text-foreground">Collections</Link>
-          <span className="mx-2">/</span>
-          <Link href={`/collections/${product.categorySlug}`} className="hover:text-foreground">{product.category}</Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">{product.name}</span>
+        {/* Breadcrumb - Further reduced size and spacing */}
+        <nav className="text-[9px] sm:text-xs sm:text-sm text-muted-foreground mb-3 flex flex-wrap items-center gap-y-0.5">
+          <Link href="/" className="hover:text-foreground inline-flex items-center min-w-fit">Home</Link>
+          <span className="mx-1 sm:mx-2 text-border">/</span>
+          <Link href="/collections" className="hover:text-foreground inline-flex items-center min-w-fit">Collections</Link>
+          <span className="mx-1 sm:mx-2 text-border">/</span>
+          <Link href={`/collections/${product.categorySlug}`} className="hover:text-foreground inline-flex items-center min-w-fit">Sarees</Link>
+          <span className="mx-1 sm:mx-2 text-border">/</span>
+          <span className="text-foreground line-clamp-1">{product.name}</span>
         </nav>
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
@@ -147,9 +147,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </div>
 
             {/* Main Media with Swipe Support */}
-            <div className="relative flex-1">
+            <div className="relative flex-1 w-full sm:px-0">
               <div
-                className="relative overflow-hidden bg-muted select-none"
+                className="relative overflow-hidden bg-white select-none w-fit max-w-full h-auto mx-auto rounded-lg md:rounded-sm border border-border/50"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -158,16 +158,16 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <Image
                     src={mediaItems[selectedMedia]?.src || "/placeholder.svg"}
                     alt={product.name}
-                    width={1000}
-                    height={1500}
-                    className="w-full h-auto object-contain"
+                    width={500}
+                    height={750}
+                    className="w-auto h-auto max-h-[50vh] sm:max-h-none object-contain"
                     priority
                     draggable={false}
                   />
                 ) : (
                   <video
                     src={mediaItems[selectedMedia]?.src}
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto max-h-[50vh] sm:max-h-none object-contain bg-black"
                     controls
                     autoPlay
                     muted
@@ -176,7 +176,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 )}
 
                 {product.isOnSale && (
-                  <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-sm px-3 py-1 font-medium z-10">
+                  <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] sm:text-sm px-2 py-0.5 sm:px-3 sm:py-1 font-medium z-10">
                     {discount}% OFF
                   </span>
                 )}
@@ -218,12 +218,12 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               </div>
 
               {/* Mobile Thumbnails - Below main image */}
-              <div className="flex lg:hidden gap-3 mt-4 overflow-x-auto pb-2">
+              <div className="grid lg:hidden grid-cols-5 gap-2 mt-4">
                 {mediaItems.map((media, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedMedia(index)}
-                    className={`relative w-16 h-20 flex-shrink-0 border-2 transition-colors ${selectedMedia === index ? "border-primary" : "border-transparent"
+                    className={`relative aspect-[4/5] border-2 transition-colors ${selectedMedia === index ? "border-primary" : "border-transparent"
                       }`}
                   >
                     {media.type === 'image' ? (
@@ -256,7 +256,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             <div className="flex items-center gap-4 mb-4">
               <Link
                 href={`/collections/${product.categorySlug}`}
-                className="text-sm text-muted-foreground hover:text-primary uppercase tracking-wide"
+                className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary uppercase tracking-wider"
               >
                 {product.category}
               </Link>
@@ -265,7 +265,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               )}
             </div>
 
-            <h1 className="font-serif text-3xl lg:text-4xl mb-4">{product.name}</h1>
+            <h1 className="font-serif text-lg sm:text-3xl lg:text-4xl mb-1 sm:mb-4 leading-tight">{product.name}</h1>
 
             {/* Reviews */}
             {reviewStats.totalReviews > 0 && (
@@ -281,8 +281,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             )}
 
             {/* Price */}
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-3xl font-semibold">₹{product.price.toLocaleString()}</span>
+            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
+              <span className="text-xl sm:text-3xl font-bold">₹{product.price.toLocaleString()}</span>
               {product.originalPrice > product.price && (
                 <>
                   <span className="text-xl text-muted-foreground line-through">
@@ -294,7 +294,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </div>
 
             {/* Description */}
-            <p className="text-muted-foreground leading-relaxed mb-8">
+            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-6 sm:mb-8">
               {product.description}
             </p>
 
@@ -304,61 +304,63 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </div>
 
             {/* Quantity */}
-            <div className="mb-6">
-              <p className="text-sm font-medium mb-3">Quantity</p>
+            <div className="mb-4 sm:mb-6">
+              <p className="text-xs sm:text-sm font-medium mb-2 sm:mb-3">Quantity</p>
               <div className="flex items-center border border-border w-fit">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-3 hover:bg-muted transition-colors"
+                  className="p-2 sm:p-3 hover:bg-muted transition-colors"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                 </button>
-                <span className="px-6 text-lg font-medium">{quantity}</span>
+                <span className="px-4 sm:px-6 text-base sm:text-lg font-medium">{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="p-3 hover:bg-muted transition-colors"
+                  className="p-2 sm:p-3 hover:bg-muted transition-colors"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                 </button>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
               <Button
                 size="lg"
-                className="flex-1 bg-primary hover:bg-primary/90 py-6 text-base"
+                className="flex-1 bg-primary hover:bg-primary/90 py-5 sm:py-6 text-sm sm:text-base order-1 sm:order-none"
                 onClick={handleAddToCart}
               >
                 {isAdded ? (
                   <>
                     <Check className="w-5 h-5 mr-2" />
-                    Added to Cart
+                    Added
                   </>
                 ) : (
                   "Add to Cart"
                 )}
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className={`p-6 bg-transparent ${isWishlisted ? 'text-primary border-primary' : ''}`}
-                onClick={handleWishlistClick}
-                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-              >
-                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-primary' : ''}`} />
-              </Button>
-              <Button size="lg" variant="outline" className="p-6 bg-transparent">
-                <Share2 className="w-5 h-5" />
-              </Button>
+              <div className="flex gap-2 sm:gap-3 order-2 sm:order-none">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className={`flex-1 sm:flex-none p-5 sm:p-6 bg-transparent ${isWishlisted ? 'text-primary border-primary' : ''}`}
+                  onClick={handleWishlistClick}
+                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-primary' : ''}`} />
+                </Button>
+                <Button size="lg" variant="outline" className="flex-1 sm:flex-none p-5 sm:p-6 bg-transparent">
+                  <Share2 className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
 
             {/* Buy Now */}
-            <Link href="/checkout">
+            <Link href="/checkout" className="block w-full">
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full py-6 text-base mb-8 bg-transparent"
+                className="w-full py-5 sm:py-6 text-sm sm:text-base mb-8 bg-transparent"
                 onClick={() => addToCart(product, quantity)}
               >
                 Buy Now
@@ -366,12 +368,12 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </Link>
 
             {/* Trust Badges */}
-            <div className="py-6 border-t border-b border-border mb-8">
+            <div className="py-4 sm:py-6 border-t border-b border-border mb-6 sm:mb-8">
               <TrustBadges
                 variant="horizontal"
                 showDescription={false}
-                iconSize="md"
-                className="justify-start"
+                iconSize="sm"
+                className="justify-start gap-4"
               />
             </div>
 

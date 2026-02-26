@@ -11,12 +11,12 @@ import { TrustBadgesCompact } from "@/components/trust-badges"
 import { cn } from "@/lib/utils"
 
 const navLinks = [
-  { 
-    name: "New Arrivals", 
+  {
+    name: "New Arrivals",
     href: "/collections/new-arrivals",
   },
-  { 
-    name: "Collections", 
+  {
+    name: "Collections",
     href: "/collections",
     submenu: [
       { name: "Pure Linen", href: "/collections/pure-linen" },
@@ -57,22 +57,22 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       {/* Top Bar */}
-      <div className="bg-foreground text-background">
-        <div className="max-w-[1500px] mx-auto px-4 lg:px-8 py-2">
-          <div className="flex items-center justify-between">
-            <div className="text-xs tracking-wide">
+      <div className="bg-foreground text-background overflow-hidden">
+        <div className="max-w-[1500px] mx-auto px-2 sm:px-4 lg:px-8 py-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-4 text-center sm:text-left">
+            <div className="text-[10px] sm:text-xs tracking-wide leading-tight">
               Free Shipping on orders above ₹999 | Hassle-Free Returns within 7 Days
             </div>
             <TrustBadgesCompact className="hidden md:flex text-background/90" />
           </div>
-          {/* Mobile Trust Badges */}
-          <div className="md:hidden pt-2 border-t border-background/20 mt-2">
-            <TrustBadgesCompact className="text-background/90 justify-center" />
+          {/* Mobile Trust Badges - Hidden on very small screens or made even more compact */}
+          <div className="md:hidden pt-1.5 border-t border-background/20 mt-1.5 overflow-hidden">
+            <TrustBadgesCompact className="text-background/90 justify-center gap-2" />
           </div>
         </div>
       </div>
-      
-      <div className="max-w-[1500px] mx-auto px-4 lg:px-8">
+
+      <div className="max-w-[1500px] mx-auto px-2 sm:px-4 lg:px-8">
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Left Side - Logo and Mobile Menu */}
           <div className="flex items-center gap-4">
@@ -116,7 +116,7 @@ export function Header() {
                     {link.name}
                     {link.submenu && <ChevronDown className="w-3 h-3" />}
                   </Link>
-                  
+
                   {/* Submenu */}
                   {link.submenu && activeSubmenu === link.name && (
                     <div className="absolute top-full left-0 pt-2">
@@ -139,14 +139,14 @@ export function Header() {
           </div>
 
           {/* Center - Brand Name */}
-          <Link href="/" className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-            <span className="font-serif text-xl lg:text-2xl font-semibold tracking-tight text-foreground">
+          <Link href="/" className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center z-10 w-fit max-w-[120px] sm:max-w-none">
+            <span className="font-serif text-xs sm:text-xl lg:text-2xl font-semibold tracking-tight text-foreground whitespace-nowrap">
               Linen Sarees
             </span>
           </Link>
 
           {/* Right Side - Navigation and Icons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-4 relative z-20">
             {/* Desktop Navigation Right */}
             <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
               {navLinks.slice(4).map((link) => (
@@ -164,25 +164,25 @@ export function Header() {
             </nav>
 
             {/* Icons */}
-            <div className="flex items-center gap-2 sm:gap-4">
-              <button 
-                className="hidden sm:flex p-2 hover:bg-muted rounded-full transition-colors group relative" 
+            <div className="flex items-center gap-0.5 sm:gap-2">
+              <button
+                className="hidden sm:flex p-2 hover:bg-muted rounded-full transition-colors group relative"
                 aria-label="Search (Ctrl+K)"
                 onClick={() => setIsSearchOpen(true)}
                 title="Search (Ctrl+K)"
               >
                 <Search className="w-5 h-5" />
               </button>
-              <Link href="/wishlist" className="p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist">
+              <Link href="/wishlist" className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist">
                 <Heart className="w-5 h-5" />
                 {wishlistHydrated && wishlistItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full">
+                  <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary text-primary-foreground text-[10px] sm:text-xs flex items-center justify-center rounded-full">
                     {wishlistItems}
                   </span>
                 )}
               </Link>
               <div className="relative group">
-                <Link href="/account" className="p-2 hover:bg-muted rounded-full transition-colors flex items-center" aria-label="Account">
+                <Link href="/account" className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors flex items-center" aria-label="Account">
                   <User className="w-5 h-5" />
                 </Link>
                 {/* Desktop dropdown - only show on hover for larger screens */}
@@ -209,14 +209,14 @@ export function Header() {
                   </div>
                 </div>
               </div>
-              <button 
-                className="p-2 hover:bg-muted rounded-full transition-colors relative" 
+              <button
+                className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors relative"
                 aria-label="Cart"
                 onClick={() => setIsCartOpen(true)}
               >
                 <ShoppingBag className="w-5 h-5" />
                 {isHydrated && totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full">
+                  <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary text-primary-foreground text-[10px] sm:text-xs flex items-center justify-center rounded-full">
                     {totalItems}
                   </span>
                 )}
@@ -277,7 +277,7 @@ export function Header() {
               Wishlist
             </Link>
           </div>
-          
+
           {navLinks.map((link) => (
             <div key={link.name}>
               <Link
