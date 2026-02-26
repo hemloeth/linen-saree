@@ -52,7 +52,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     <div className={cn("group relative w-full", className)}>
       <div className="relative w-full mb-4">
         <div
-          className="aspect-[4/5] overflow-hidden bg-muted rounded-sm relative"
+          className="aspect-[2/3] md:aspect-[4/5] overflow-hidden bg-muted rounded-sm relative"
           onMouseEnter={() => {
             if (!api) return
               ; (api.plugins() as any).autoplay.play()
