@@ -114,25 +114,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </Link>
           )}
 
-          {/* Badges - Hidden on mobile to avoid covering product face */}
-          <div className="absolute top-2 left-2 flex-col gap-1 z-10 max-w-[calc(100%-3rem)] hidden md:flex pointer-events-none">
-            {product.isOnSale && (
-              <span className="bg-primary text-primary-foreground text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
-                {discount}% OFF
-              </span>
-            )}
-            {product.isNew && (
-              <span className="bg-foreground text-background text-xs px-2 py-1 font-medium rounded-sm whitespace-nowrap inline-block">
-                NEW
-              </span>
-            )}
+          {/* Badges - Removed NEW, percentage is highlighted below */}
+          <div className="absolute top-2 left-2 flex flex-col gap-2 z-20 pointer-events-none">
           </div>
 
-          {/* Quick Actions */}
-          <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+          {/* Quick Actions (Wishlist) */}
+          <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
             <button
               onClick={(e) => { e.preventDefault(); handleWishlistClick(); }}
-              className={`p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${isWishlisted ? 'text-primary' : ''
+              className={`p-2 bg-background/95 hover:bg-background rounded-full transition-all shadow-sm active:scale-95 ${isWishlisted ? 'text-primary' : ''
                 }`}
               aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
@@ -140,49 +130,60 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </button>
           </div>
 
-          {/* Add to Cart Button */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
-            <button
-              onClick={(e) => { e.preventDefault(); addToCart(product); }}
-              className="w-full bg-background/95 hover:bg-background py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-medium transition-colors rounded-sm"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              Add to Cart
-            </button>
-          </div>
+
         </div>
       </div >
 
       <Link href={`/product/${product.slug}`} className="block">
-        <h3 className="font-medium text-sm leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+        <h3 className="font-medium text-xs md:text-sm leading-tight mb-1 md:mb-2 group-hover:text-primary transition-colors line-clamp-2">
           {product.name}
         </h3>
 
-        {/* Reviews */}
-        {reviewStats.totalReviews > 0 && (
-          <div className="flex items-center gap-2 mb-2">
-            <StarRating rating={reviewStats.averageRating} size="sm" />
-            <span className="text-xs text-muted-foreground">
-              ({reviewStats.totalReviews})
-            </span>
-          </div>
-        )}
+        {/* Reviews - Always visible */}
+        <div className="flex items-center gap-1 mb-1.5 md:mb-2">
+          <StarRating
+            rating={reviewStats.totalReviews > 0 ? reviewStats.averageRating : 0}
+            size="sm"
+          />
+          <span className="text-[9px] md:text-[10px] text-muted-foreground">
+            {reviewStats.totalReviews > 0 ? `(${reviewStats.totalReviews})` : "(0)"}
+          </span>
+        </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-semibold">₹{product.price.toLocaleString()}</span>
+        <div className="flex items-center gap-1.5 md:gap-2 flex-wrap mb-3 md:mb-4">
+          <span className="font-bold text-xs md:text-base">₹{product.price.toLocaleString()}</span>
           {product.originalPrice > product.price && (
             <>
-              <span className="text-sm text-muted-foreground line-through">
+              <span className="text-[9px] md:text-xs text-muted-foreground line-through decoration-muted-foreground/50">
                 ₹{product.originalPrice.toLocaleString()}
               </span>
-              {/* Show discount percentage on mobile below price */}
-              <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 font-medium rounded-sm md:hidden">
-                {discount}% OFF
+              <span className="text-red-600 text-[9px] md:text-[10px] font-bold">
+                -{discount}%
               </span>
             </>
           )}
         </div>
       </Link>
+
+      {/* Persistent Action Buttons - Asymmetric Layout */}
+      <div className="flex gap-1.5 md:gap-2">
+        <button
+          onClick={(e) => { e.preventDefault(); addToCart(product); }}
+          className="w-10 md:w-12 bg-primary text-primary-foreground hover:bg-primary/90 py-2 sm:py-2.5 flex items-center justify-center transition-all rounded-sm active:scale-95 shadow-sm"
+          title="Add to Cart"
+        >
+          <ShoppingBag className="w-4 h-4" />
+        </button>
+        <Link
+          href={`/checkout?product=${product.id}`}
+          className="flex-1"
+          onClick={() => addToCart(product)}
+        >
+          <button className="w-full h-full bg-background border border-primary text-primary hover:bg-primary/5 py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold transition-all rounded-sm active:scale-95 shadow-sm uppercase tracking-wider">
+            Buy Now
+          </button>
+        </Link>
+      </div>
     </div >
   )
 }

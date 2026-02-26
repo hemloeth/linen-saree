@@ -147,9 +147,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </div>
 
             {/* Main Media with Swipe Support */}
-            <div className="relative flex-1 w-full sm:px-0">
+            <div className="relative flex-1 w-full">
               <div
-                className="relative overflow-hidden bg-white select-none w-fit max-w-full h-auto mx-auto rounded-lg md:rounded-sm border border-border/50"
+                className="relative overflow-hidden bg-muted select-none w-full aspect-[4/5] rounded-sm border border-border/50"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -158,16 +158,16 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <Image
                     src={mediaItems[selectedMedia]?.src || "/placeholder.svg"}
                     alt={product.name}
-                    width={500}
-                    height={750}
-                    className="w-auto h-auto max-h-[50vh] sm:max-h-none object-contain"
+                    width={1000}
+                    height={1250}
+                    className="w-full h-full object-cover"
                     priority
                     draggable={false}
                   />
                 ) : (
                   <video
                     src={mediaItems[selectedMedia]?.src}
-                    className="w-full h-auto max-h-[50vh] sm:max-h-none object-contain bg-black"
+                    className="w-full h-full object-cover bg-black"
                     controls
                     autoPlay
                     muted
@@ -175,11 +175,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   />
                 )}
 
-                {product.isOnSale && (
-                  <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] sm:text-sm px-2 py-0.5 sm:px-3 sm:py-1 font-medium z-10">
-                    {discount}% OFF
-                  </span>
-                )}
+
 
                 {/* Navigation Arrows - Only show if more than 1 media item */}
                 {mediaItems.length > 1 && (
@@ -260,25 +256,27 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               >
                 {product.category}
               </Link>
-              {product.isNew && (
-                <span className="bg-foreground text-background text-xs px-2 py-1">NEW</span>
-              )}
             </div>
 
             <h1 className="font-serif text-lg sm:text-3xl lg:text-4xl mb-1 sm:mb-4 leading-tight">{product.name}</h1>
 
             {/* Reviews */}
-            {reviewStats.totalReviews > 0 && (
-              <div className="flex items-center gap-3 mb-6">
-                <StarRating rating={reviewStats.averageRating} size="md" showRating />
-                <Link
-                  href="#reviews"
-                  className="text-sm text-muted-foreground hover:text-primary underline"
-                >
-                  ({reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''})
-                </Link>
-              </div>
-            )}
+            <div className="flex items-center gap-3 mb-6">
+              <StarRating
+                rating={reviewStats.totalReviews > 0 ? reviewStats.averageRating : 0}
+                size="md"
+                showRating={reviewStats.totalReviews > 0}
+              />
+              <Link
+                href="#reviews"
+                className="text-sm text-muted-foreground hover:text-primary underline decoration-muted-foreground/30 underline-offset-4"
+              >
+                {reviewStats.totalReviews > 0
+                  ? `(${reviewStats.totalReviews} review${reviewStats.totalReviews !== 1 ? 's' : ''})`
+                  : "Be the first to review"
+                }
+              </Link>
+            </div>
 
             {/* Price */}
             <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
@@ -288,7 +286,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <span className="text-xl text-muted-foreground line-through">
                     ₹{product.originalPrice.toLocaleString()}
                   </span>
-                  <span className="text-primary font-medium">Save {discount}%</span>
+                  <span className="bg-red-600 text-white text-[10px] sm:text-xs px-2 py-1 font-bold rounded-full shadow-md animate-pulse">
+                    {discount}% OFF
+                  </span>
                 </>
               )}
             </div>
@@ -324,48 +324,49 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
-              <Button
-                size="lg"
-                className="flex-1 bg-primary hover:bg-primary/90 py-5 sm:py-6 text-sm sm:text-base order-1 sm:order-none"
-                onClick={handleAddToCart}
-              >
-                {isAdded ? (
-                  <>
-                    <Check className="w-5 h-5 mr-2" />
-                    Added
-                  </>
-                ) : (
-                  "Add to Cart"
-                )}
-              </Button>
-              <div className="flex gap-2 sm:gap-3 order-2 sm:order-none">
+            <div className="flex flex-col gap-3 sm:gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  size="lg"
+                  className="flex-1 bg-primary hover:bg-primary/90 py-7 text-sm sm:text-base font-bold tracking-wide transition-all active:scale-95"
+                  onClick={handleAddToCart}
+                >
+                  {isAdded ? (
+                    <>
+                      <Check className="w-5 h-5 mr-2" />
+                      Added to Cart
+                    </>
+                  ) : (
+                    "Add to Cart"
+                  )}
+                </Button>
+                <Link href="/checkout" className="flex-1">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full py-7 text-sm sm:text-base font-bold tracking-wide border-primary text-primary hover:bg-primary/5 transition-all active:scale-95 focus-visible:ring-primary"
+                    onClick={() => addToCart(product, quantity)}
+                  >
+                    Buy It Now
+                  </Button>
+                </Link>
+              </div>
+              <div className="flex gap-2">
                 <Button
                   size="lg"
                   variant="outline"
-                  className={`flex-1 sm:flex-none p-5 sm:p-6 bg-transparent ${isWishlisted ? 'text-primary border-primary' : ''}`}
+                  className={`flex-1 p-5 bg-transparent border-border hover:bg-muted transition-all ${isWishlisted ? 'text-primary border-primary bg-primary/5' : ''}`}
                   onClick={handleWishlistClick}
                   aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-primary' : ''}`} />
+                  <Heart className={`w-5 h-5 mr-2 ${isWishlisted ? 'fill-primary' : ''}`} />
+                  {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
                 </Button>
-                <Button size="lg" variant="outline" className="flex-1 sm:flex-none p-5 sm:p-6 bg-transparent">
+                <Button size="lg" variant="outline" className="p-5 bg-transparent border-border hover:bg-muted transition-all">
                   <Share2 className="w-5 h-5" />
                 </Button>
               </div>
             </div>
-
-            {/* Buy Now */}
-            <Link href="/checkout" className="block w-full">
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full py-5 sm:py-6 text-sm sm:text-base mb-8 bg-transparent"
-                onClick={() => addToCart(product, quantity)}
-              >
-                Buy Now
-              </Button>
-            </Link>
 
             {/* Trust Badges */}
             <div className="py-4 sm:py-6 border-t border-b border-border mb-6 sm:mb-8">
