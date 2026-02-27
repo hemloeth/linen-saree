@@ -7,16 +7,18 @@ import { WishlistProvider } from "@/context/wishlist-context"
 import { CartSidebar } from "@/components/cart-sidebar"
 import WhatsAppFloat from "@/components/whatsapp-float"
 import { ClientOnly } from "@/components/client-only"
+import SmoothScroll from "@/components/SmoothScroll"
 import './globals.css'
 
-const _cormorant = Cormorant_Garamond({ 
+const _cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"]
-});
-const _montserrat = Montserrat({ 
+})
+
+const _montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"]
-});
+})
 
 export const metadata: Metadata = {
   title: 'Linen Sarees | Premium Handcrafted Sarees',
@@ -49,15 +51,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <CartProvider>
-          <WishlistProvider>
-            {children}
-            <ClientOnly>
-              <CartSidebar />
-              <WhatsAppFloat />
-            </ClientOnly>
-          </WishlistProvider>
-        </CartProvider>
+        <SmoothScroll>
+          <CartProvider>
+            <WishlistProvider>
+              {children}
+              <ClientOnly>
+                <CartSidebar />
+                <WhatsAppFloat />
+              </ClientOnly>
+            </WishlistProvider>
+          </CartProvider>
+        </SmoothScroll>
         <Analytics />
       </body>
     </html>

@@ -121,10 +121,13 @@
   * {
     @apply border-border outline-ring/50;
   }
-  html, body {
+
+  html,
+  body {
     @apply overflow-x-hidden max-w-full;
     position: relative;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -144,4 +147,8 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+html {
+  scroll-behavior: auto;
 }
