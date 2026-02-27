@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, Share2, Minus, Plus, Check, Play, ChevronLeft, ChevronRight } from "lucide-react"
+import { Heart, Share2, Minus, Plus, Check, Play, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { Button } from "@/components/ui/button"
@@ -86,7 +86,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const handleAddToCart = () => {
     addToCart(product, quantity)
     setIsAdded(true)
-    setTimeout(() => setIsAdded(false), 2000)
+    setTimeout(() => setIsAdded(false), 2500)
   }
 
   const handleWishlistClick = () => {
@@ -328,23 +328,29 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   size="lg"
-                  className="flex-1 bg-primary hover:bg-primary/90 py-7 text-sm sm:text-base font-bold tracking-wide transition-all active:scale-95"
+                  className={`flex-1 h-auto py-3 sm:py-5 px-6 text-sm sm:text-base font-bold tracking-wide transition-all duration-300 active:scale-95 ${isAdded
+                    ? "bg-green-600 hover:bg-green-600 text-white scale-[1.02]"
+                    : "bg-primary hover:bg-primary/90"
+                    }`}
                   onClick={handleAddToCart}
                 >
                   {isAdded ? (
                     <>
-                      <Check className="w-5 h-5 mr-2" />
+                      <Check className="w-5 h-5 mr-2 animate-[bounceIn_0.4s_ease-out]" />
                       Added to Cart
                     </>
                   ) : (
-                    "Add to Cart"
+                    <>
+                      <ShoppingBag className="w-4 h-4 mr-2" />
+                      Add to Cart
+                    </>
                   )}
                 </Button>
                 <Link href="/checkout" className="flex-1">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full py-7 text-sm sm:text-base font-bold tracking-wide border-primary text-primary hover:bg-primary/5 transition-all active:scale-95 focus-visible:ring-primary"
+                    className="w-full h-auto py-3 sm:py-5 px-6 text-sm sm:text-base font-bold tracking-wide border-primary text-primary hover:bg-primary/5 transition-all active:scale-95 focus-visible:ring-primary"
                     onClick={() => addToCart(product, quantity)}
                   >
                     Buy It Now

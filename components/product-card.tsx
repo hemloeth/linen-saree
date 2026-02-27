@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, ShoppingBag } from "lucide-react"
+import { Heart, ShoppingBag, Check } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { StarRating } from "@/components/star-rating"
@@ -29,6 +29,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const [api, setApi] = useState<CarouselApi>()
+  const [isAdded, setIsAdded] = useState(false)
 
   useEffect(() => {
     if (!api) return
@@ -39,6 +40,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
   const reviewStats = getReviewStats(product.id)
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    addToCart(product)
+    setIsAdded(true)
+    setTimeout(() => setIsAdded(false), 2500)
+  }
 
   const handleWishlistClick = () => {
     if (isWishlisted) {
@@ -168,11 +176,18 @@ export function ProductCard({ product, className }: ProductCardProps) {
       {/* Persistent Action Buttons - Asymmetric Layout */}
       <div className="flex gap-1.5 md:gap-2">
         <button
-          onClick={(e) => { e.preventDefault(); addToCart(product); }}
-          className="w-10 md:w-12 bg-primary text-primary-foreground hover:bg-primary/90 py-2 sm:py-2.5 flex items-center justify-center transition-all rounded-sm active:scale-95 shadow-sm"
+          onClick={handleAddToCart}
+          className={`w-10 md:w-12 py-2 sm:py-2.5 flex items-center justify-center transition-all duration-300 rounded-sm active:scale-95 shadow-sm ${isAdded
+              ? "bg-green-600 text-white scale-105"
+              : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}
           title="Add to Cart"
         >
-          <ShoppingBag className="w-4 h-4" />
+          {isAdded ? (
+            <Check className="w-4 h-4 animate-[bounceIn_0.4s_ease-out]" />
+          ) : (
+            <ShoppingBag className="w-4 h-4" />
+          )}
         </button>
         <Link
           href={`/checkout?product=${product.id}`}

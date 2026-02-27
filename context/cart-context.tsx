@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react"
 import type { Product } from "@/lib/products"
 
 export interface CartItem {
@@ -19,6 +19,8 @@ interface CartContextType {
   isCartOpen: boolean
   setIsCartOpen: (open: boolean) => void
   isHydrated: boolean
+  toastProduct: Product | null
+  showToast: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -27,6 +29,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [toastProduct, setToastProduct] = useState<Product | null>(null)
+  const [showToast, setShowToast] = useState(false)
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -60,7 +65,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...currentItems, { product, quantity }]
     })
-    setIsCartOpen(true)
+    // Show toast notification
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    setToastProduct(product)
+    setShowToast(true)
+    toastTimerRef.current = setTimeout(() => setShowToast(false), 3000)
   }
 
   const removeFromCart = (productId: string) => {
@@ -98,7 +107,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalPrice,
         isCartOpen,
         setIsCartOpen,
-        isHydrated
+        isHydrated,
+        toastProduct,
+        showToast
       }}
     >
       {children}

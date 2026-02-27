@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from "@/context/cart-context"
 import { WishlistProvider } from "@/context/wishlist-context"
 import { CartSidebar } from "@/components/cart-sidebar"
+import { CartToast } from "@/components/cart-toast"
 import WhatsAppFloat from "@/components/whatsapp-float"
 import { ClientOnly } from "@/components/client-only"
 import SmoothScroll from "@/components/SmoothScroll"
@@ -56,6 +57,7 @@ export default function RootLayout({
             <WishlistProvider>
               {children}
               <ClientOnly>
+                <CartToast />
                 <CartSidebar />
                 <WhatsAppFloat />
               </ClientOnly>
