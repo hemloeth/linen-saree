@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload } from "lucide-react"
+import { useCategory } from "@/context/category-context"
 
 interface AddCategoryModalProps {
     isOpen: boolean
@@ -21,47 +21,36 @@ interface AddCategoryModalProps {
 }
 
 export function AddCategoryModal({ isOpen, onClose, onSuccess }: AddCategoryModalProps) {
+    const { addCategory, loading } = useCategory()
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
-    const [image, setImage] = useState<string | null>(null)
-    const [loading, setLoading] = useState(false)
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
-
-        const reader = new FileReader()
-        reader.onloadend = () => {
-            setImage(reader.result as string)
-        }
-        reader.readAsDataURL(file)
+        setImageFile(file)
+        setImagePreview(URL.createObjectURL(file))
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!name || !description || !image) return
+        if (!name || !description || !imageFile) return
 
-        setLoading(true)
-
-        // Simulate a small delay for better UX
-        setTimeout(() => {
-            const saved = window.localStorage.getItem("adminCategories")
-            const categories = saved ? JSON.parse(saved) : []
-
-            const newCategory = { name, description, image }
-            const updatedCategories = [...categories, newCategory]
-
-            window.localStorage.setItem("adminCategories", JSON.stringify(updatedCategories))
-
-            setLoading(false)
+        try {
+            await addCategory(name, description, imageFile)
             onSuccess(name)
 
             // Reset
             setName("")
             setDescription("")
-            setImage(null)
+            setImageFile(null)
+            setImagePreview(null)
             onClose()
-        }, 800)
+        } catch {
+            // error is handled in context
+        }
     }
 
     return (
@@ -102,13 +91,13 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: AddCategoryModa
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageChange}
-                                    required={!image}
+                                    required={!imageFile}
                                 />
-                                {image && (
+                                {imagePreview && (
                                     <div className="relative h-32 w-full overflow-hidden rounded-md border bg-muted">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
-                                            src={image}
+                                            src={imagePreview}
                                             alt="Preview"
                                             className="h-full w-full object-cover"
                                         />
@@ -130,3 +119,4 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: AddCategoryModa
         </Dialog>
     )
 }
+

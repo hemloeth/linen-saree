@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload, X, Plus } from "lucide-react"
+import { Upload, X, Plus, ArrowLeft } from "lucide-react"
 import { ProductPreviewCard } from "@/components/admin/product-preview-card"
 import { SuccessModal } from "@/components/admin/success-modal"
 import { Badge } from "@/components/ui/badge"
@@ -20,11 +20,13 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-// No hardcoded categories
-
-export default function AddProductPage() {
+export default function EditProductPage() {
     const router = useRouter()
-    const { addProduct, uploadVideo, loading } = useProduct()
+    const params = useParams()
+    const productId = params.id as string
+    const { products, updateProduct, uploadVideo, loading } = useProduct()
+    const { categories: dbCategories } = useCategory()
+
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [lastAddedName, setLastAddedName] = useState("")
     const [mainImage, setMainImage] = useState<string | null>(null)
@@ -48,7 +50,6 @@ export default function AddProductPage() {
     const [videoFileRaw, setVideoFileRaw] = useState<File | null>(null)
     const [color, setColor] = useState("")
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
-    const { categories: dbCategories } = useCategory()
 
     // Specification State
     const [material, setMaterial] = useState("")
@@ -58,6 +59,34 @@ export default function AddProductPage() {
     const [dispatch, setDispatch] = useState("")
     const [disclaimer, setDisclaimer] = useState("")
     const [internationalNote, setInternationalNote] = useState("")
+
+    // Pre-fill form with existing product data
+    useEffect(() => {
+        const product = products.find((p) => p._id === productId)
+        if (product) {
+            setName(product.name || "")
+            setSku(product.sku || "")
+            setCategory(product.category || "")
+            setRegularPrice(product.regularPrice?.toString() || "")
+            setPrice(product.price?.toString() || "")
+            setStock(product.stock?.toString() || "")
+            setShortDescription(product.shortDescription || "")
+            setTags(product.tags || "")
+            setVideoUrl(product.videoUrl || "")
+            setColor(product.color || "")
+            setMaterial(product.material || "")
+            setSareeSize(product.sareeSize || "")
+            setBlouseSize(product.blouseSize || "")
+            setWashCare(product.washCare || "")
+            setDispatch(product.dispatch || "")
+            setDisclaimer(product.disclaimer || "")
+            setInternationalNote(product.internationalNote || "")
+            // Set existing images as previews
+            if (product.mainImage) setMainImage(product.mainImage)
+            if (product.galleryImages?.length) setGalleryImages(product.galleryImages)
+            if (product.videoFile) setVideoFile(product.videoFile)
+        }
+    }, [productId, products])
 
     const handleMainImage = (files: FileList | File[]) => {
         const file = Array.from(files)[0]
@@ -104,7 +133,6 @@ export default function AddProductPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!mainImageFile) return
         setLastAddedName(name)
 
         try {
@@ -126,45 +154,26 @@ export default function AddProductPage() {
             formData.append("dispatch", dispatch)
             formData.append("disclaimer", disclaimer)
             formData.append("internationalNote", internationalNote)
-            formData.append("mainImage", mainImageFile)
-            galleryImageFiles.forEach((file) => formData.append("galleryImages", file))
 
-            const product = await addProduct(formData)
+            // Only append image files if new ones were selected
+            if (mainImageFile) {
+                formData.append("mainImage", mainImageFile)
+            }
+            if (galleryImageFiles.length > 0) {
+                galleryImageFiles.forEach((file) => formData.append("galleryImages", file))
+            }
 
-            // Upload video separately if present
+            const product = await updateProduct(productId, formData)
+
+            // Upload video separately if a new one was selected
             if (videoFileRaw && product?._id) {
                 await uploadVideo(product._id, videoFileRaw)
             }
 
-            // Clear all fields
-            setMainImage(null)
-            setMainImageFile(null)
-            setGalleryImages([])
-            setGalleryImageFiles([])
-            setName("")
-            setCategory("")
-            setSku("")
-            setRegularPrice("")
-            setPrice("")
-            setStock("")
-            setShortDescription("")
-            setTags("")
-            setVideoUrl("")
-            setVideoFile(null)
-            setVideoFileRaw(null)
-            setMaterial("")
-            setSareeSize("")
-            setBlouseSize("")
-            setWashCare("")
-            setDispatch("")
-            setDisclaimer("")
-            setInternationalNote("")
-            setColor("")
-
             // Show Success Modal
             setShowSuccessModal(true)
         } catch (err) {
-            console.error("Failed to add product", err)
+            console.error("Failed to update product", err)
         }
     }
 
@@ -172,8 +181,13 @@ export default function AddProductPage() {
         <div className="-m-4 md:-m-6">
             <SuccessModal
                 isOpen={showSuccessModal}
-                onClose={() => setShowSuccessModal(false)}
+                onClose={() => {
+                    setShowSuccessModal(false)
+                    router.push("/admin/products")
+                }}
                 productName={lastAddedName}
+                title="Product Updated!"
+                description="has been successfully updated in your catalog."
             />
             <AddCategoryModal
                 isOpen={isCategoryModalOpen}
@@ -185,9 +199,14 @@ export default function AddProductPage() {
 
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 border-b bg-background shrink-0">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight font-serif text-primary">Add Product</h2>
-                    <p className="text-xs text-muted-foreground">Create a new product in your catalog.</p>
+                <div className="flex items-center gap-3">
+                    <Button variant="ghost" size="icon" onClick={() => router.push("/admin/products")}>
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight font-serif text-primary">Edit Product</h2>
+                        <p className="text-xs text-muted-foreground">Update product details.</p>
+                    </div>
                 </div>
             </div>
 
@@ -210,10 +229,10 @@ export default function AddProductPage() {
                                         onDragOver={(e) => { e.preventDefault(); setIsDraggingMain(true); }}
                                         onDragLeave={() => setIsDraggingMain(false)}
                                         onDrop={(e) => { e.preventDefault(); setIsDraggingMain(false); if (e.dataTransfer.files) handleMainImage(e.dataTransfer.files); }}
-                                        onClick={() => document.getElementById("main-image-upload")?.click()}
+                                        onClick={() => document.getElementById("edit-main-image-upload")?.click()}
                                     >
                                         <Input
-                                            id="main-image-upload"
+                                            id="edit-main-image-upload"
                                             type="file"
                                             accept="image/*"
                                             className="hidden"
@@ -250,10 +269,10 @@ export default function AddProductPage() {
                                         onDragOver={(e) => { e.preventDefault(); setIsDraggingGallery(true); }}
                                         onDragLeave={() => setIsDraggingGallery(false)}
                                         onDrop={(e) => { e.preventDefault(); setIsDraggingGallery(false); if (e.dataTransfer.files) handleGalleryImages(e.dataTransfer.files); }}
-                                        onClick={() => document.getElementById("gallery-upload")?.click()}
+                                        onClick={() => document.getElementById("edit-gallery-upload")?.click()}
                                     >
                                         <Input
-                                            id="gallery-upload"
+                                            id="edit-gallery-upload"
                                             type="file"
                                             accept="image/*"
                                             multiple
@@ -388,10 +407,10 @@ export default function AddProductPage() {
                                     <Label className="text-xs font-bold">Upload Video File</Label>
                                     <div
                                         className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border-muted-foreground/20 bg-muted/30 hover:border-primary hover:bg-muted/50"
-                                        onClick={() => document.getElementById("video-upload")?.click()}
+                                        onClick={() => document.getElementById("edit-video-upload")?.click()}
                                     >
                                         <Input
-                                            id="video-upload"
+                                            id="edit-video-upload"
                                             type="file"
                                             accept="video/*"
                                             className="hidden"
@@ -408,7 +427,7 @@ export default function AddProductPage() {
                                                     <span className="text-xs text-green-600 font-semibold">Video uploaded</span>
                                                     <button
                                                         type="button"
-                                                        onClick={(e) => { e.stopPropagation(); setVideoFile(null); }}
+                                                        onClick={(e) => { e.stopPropagation(); setVideoFile(null); setVideoFileRaw(null); }}
                                                         className="text-xs text-destructive hover:underline"
                                                     >
                                                         Remove
@@ -444,9 +463,12 @@ export default function AddProductPage() {
                             </div>
                         </div>
 
-                        <div className="flex justify-end pb-8">
+                        <div className="flex justify-end gap-3 pb-8">
+                            <Button type="button" variant="outline" onClick={() => router.push("/admin/products")} size="lg" className="px-8 h-12 text-base font-bold">
+                                Cancel
+                            </Button>
                             <Button type="submit" disabled={loading} size="lg" className="px-10 h-12 text-base font-bold shadow-lg shadow-primary/20">
-                                {loading ? "Adding Product..." : "Create Product"}
+                                {loading ? "Updating Product..." : "Update Product"}
                             </Button>
                         </div>
                     </form>

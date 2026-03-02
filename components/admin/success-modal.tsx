@@ -16,9 +16,11 @@ interface SuccessModalProps {
     isOpen: boolean
     onClose: () => void
     productName: string
+    title?: string
+    description?: string
 }
 
-export function SuccessModal({ isOpen, onClose, productName }: SuccessModalProps) {
+export function SuccessModal({ isOpen, onClose, productName, title, description }: SuccessModalProps) {
     const router = useRouter()
 
     return (
@@ -28,9 +30,9 @@ export function SuccessModal({ isOpen, onClose, productName }: SuccessModalProps
                     <div className="rounded-full bg-primary/10 p-3 mb-4">
                         <CheckCircle2 className="h-10 w-10 text-primary" />
                     </div>
-                    <DialogTitle className="text-2xl font-serif text-center">Product Added!</DialogTitle>
+                    <DialogTitle className="text-2xl font-serif text-center">{title || "Product Added!"}</DialogTitle>
                     <DialogDescription className="text-center text-base pt-2">
-                        <span className="font-semibold text-primary">{productName}</span> has been successfully added to your catalog.
+                        <span className="font-semibold text-primary">{productName}</span> {description || "has been successfully added to your catalog."}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
