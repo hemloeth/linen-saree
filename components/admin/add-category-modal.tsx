@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useCategory } from "@/context/category-context"
 
 interface AddCategoryModalProps {
@@ -110,8 +112,32 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: AddCategoryModa
                         <Button type="button" variant="outline" onClick={onClose}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? "Adding..." : "Add Category"}
+                        <Button type="submit" disabled={loading} className="relative overflow-hidden">
+                            <AnimatePresence mode="wait">
+                                {loading ? (
+                                    <motion.span
+                                        key="loading"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <LoadingSpinner size="sm" />
+                                        Adding...
+                                    </motion.span>
+                                ) : (
+                                    <motion.span
+                                        key="idle"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        Add Category
+                                    </motion.span>
+                                )}
+                            </AnimatePresence>
                         </Button>
                     </DialogFooter>
                 </form>

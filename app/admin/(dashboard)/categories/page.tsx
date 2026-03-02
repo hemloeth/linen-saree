@@ -2,20 +2,22 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2, AlertTriangle, Check } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Trash2, AlertTriangle, Check, X } from "lucide-react"
 import { useCategory } from "@/context/category-context"
+
+interface Toast {
+    id: number
+    type: "added" | "deleted"
+    name: string
+}
+
+let toastId = 0
 
 export default function CategoriesPage() {
     const { categories, addCategory, deleteCategory, loading, error } = useCategory()
@@ -24,14 +26,20 @@ export default function CategoriesPage() {
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<{ _id: string; name: string } | null>(null)
-    const [successToast, setSuccessToast] = useState<string | null>(null)
+    const [toasts, setToasts] = useState<Toast[]>([])
+    const [isDeleting, setIsDeleting] = useState(false)
 
-    useEffect(() => {
-        if (successToast) {
-            const timer = setTimeout(() => setSuccessToast(null), 3000)
-            return () => clearTimeout(timer)
-        }
-    }, [successToast])
+    const showToast = (type: "added" | "deleted", toastName: string) => {
+        const id = ++toastId
+        setToasts((prev) => [...prev, { id, type, name: toastName }])
+        setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== id))
+        }, 3000)
+    }
+
+    const dismissToast = (id: number) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id))
+    }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -46,7 +54,7 @@ export default function CategoriesPage() {
 
         try {
             await addCategory(name, description, imageFile)
-            setSuccessToast(name)
+            showToast("added", name)
             setName("")
             setDescription("")
             setImageFile(null)
@@ -56,31 +64,74 @@ export default function CategoriesPage() {
         }
     }
 
-    const confirmDelete = () => {
-        if (deleteTarget) {
-            deleteCategory(deleteTarget._id)
+    const confirmDelete = async () => {
+        if (!deleteTarget) return
+        const deletedName = deleteTarget.name
+        setIsDeleting(true)
+
+        try {
+            await deleteCategory(deleteTarget._id)
             setDeleteTarget(null)
+            showToast("deleted", deletedName)
+        } catch {
+            // error is handled in context
+        } finally {
+            setIsDeleting(false)
         }
     }
 
     return (
         <div className="space-y-6">
-            {/* Success Toast */}
-            <div
-                className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-out ${successToast
-                        ? "opacity-100 translate-y-0 scale-100"
-                        : "opacity-0 -translate-y-4 scale-95 pointer-events-none"
-                    }`}
-            >
-                <div className="bg-background border border-border shadow-2xl rounded-xl px-5 py-3 flex items-center gap-3 min-w-[280px] max-w-[90vw] sm:min-w-[340px]">
-                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-green-600 dark:text-green-400">Category Added</p>
-                        <p className="text-xs text-muted-foreground truncate">&ldquo;{successToast}&rdquo; has been created successfully</p>
-                    </div>
-                </div>
+            {/* Animated Toasts */}
+            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center">
+                <AnimatePresence mode="popLayout">
+                    {toasts.map((toast) => (
+                        <motion.div
+                            key={toast.id}
+                            layout
+                            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 25,
+                            }}
+                            className="bg-background border border-border shadow-2xl rounded-xl px-5 py-3 flex items-center gap-3 min-w-[280px] max-w-[90vw] sm:min-w-[340px]"
+                        >
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.1 }}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${toast.type === "added" ? "bg-green-500" : "bg-red-500"
+                                    }`}
+                            >
+                                {toast.type === "added" ? (
+                                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                                ) : (
+                                    <Trash2 className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                                )}
+                            </motion.div>
+                            <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-semibold ${toast.type === "added"
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-red-600 dark:text-red-400"
+                                    }`}>
+                                    {toast.type === "added" ? "Category Added" : "Category Deleted"}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                    &ldquo;{toast.name}&rdquo; has been {toast.type === "added" ? "created" : "deleted"} successfully
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => dismissToast(toast.id)}
+                                className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0"
+                            >
+                                <X className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
             </div>
 
             <div className="flex items-center justify-between gap-4">
@@ -130,8 +181,32 @@ export default function CategoriesPage() {
                                     required
                                 />
                             </div>
-                            <Button type="submit" className="mt-2 w-full md:w-auto" disabled={loading}>
-                                {loading ? "Adding..." : "Add Category"}
+                            <Button type="submit" className="mt-2 w-full md:w-auto relative overflow-hidden" disabled={loading}>
+                                <AnimatePresence mode="wait">
+                                    {loading ? (
+                                        <motion.span
+                                            key="loading"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <LoadingSpinner size="sm" />
+                                            Adding...
+                                        </motion.span>
+                                    ) : (
+                                        <motion.span
+                                            key="idle"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            Add Category
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
                             </Button>
                         </div>
                         <div className="space-y-3">
@@ -212,27 +287,129 @@ export default function CategoriesPage() {
             </div>
 
             {/* Delete Confirmation Modal */}
-            <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mb-2">
-                            <AlertTriangle className="h-6 w-6 text-destructive" />
-                        </div>
-                        <DialogTitle className="text-center">Delete Category</DialogTitle>
-                        <DialogDescription className="text-center">
-                            Are you sure you want to delete <strong>&ldquo;{deleteTarget?.name}&rdquo;</strong>? This action cannot be undone.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="flex gap-2 sm:justify-center pt-2">
-                        <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-                            Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={confirmDelete}>
-                            Delete
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <AnimatePresence>
+                {deleteTarget && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+                            onClick={() => !isDeleting && setDeleteTarget(null)}
+                        />
+
+                        {/* Modal */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 28,
+                            }}
+                            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm"
+                        >
+                            <div className="bg-background rounded-2xl border shadow-2xl p-6 mx-4">
+                                {/* Animated icon */}
+                                <div className="flex justify-center mb-5">
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 500,
+                                            damping: 20,
+                                            delay: 0.1,
+                                        }}
+                                        className="relative"
+                                    >
+                                        <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
+                                            <AlertTriangle className="h-7 w-7 text-destructive" />
+                                        </div>
+                                        <motion.div
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: 1.4, opacity: 0 }}
+                                            transition={{
+                                                duration: 1.5,
+                                                repeat: Infinity,
+                                                ease: "easeOut",
+                                            }}
+                                            className="absolute inset-0 rounded-full border-2 border-destructive/30"
+                                        />
+                                    </motion.div>
+                                </div>
+
+                                {/* Text */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.15, duration: 0.3 }}
+                                    className="text-center mb-6"
+                                >
+                                    <h3 className="text-lg font-semibold mb-1.5">Delete Category</h3>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                        Are you sure you want to delete <strong className="text-foreground">&ldquo;{deleteTarget.name}&rdquo;</strong>?
+                                        <br />
+                                        <span className="text-xs">This action cannot be undone.</span>
+                                    </p>
+                                </motion.div>
+
+                                {/* Buttons */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2, duration: 0.3 }}
+                                    className="flex gap-3"
+                                >
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 h-10 rounded-xl"
+                                        onClick={() => setDeleteTarget(null)}
+                                        disabled={isDeleting}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        className="flex-1 h-10 rounded-xl relative overflow-hidden"
+                                        onClick={confirmDelete}
+                                        disabled={isDeleting}
+                                    >
+                                        <AnimatePresence mode="wait">
+                                            {isDeleting ? (
+                                                <motion.span
+                                                    key="deleting"
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -10 }}
+                                                    transition={{ duration: 0.2 }}
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <LoadingSpinner size="sm" />
+                                                    Deleting...
+                                                </motion.span>
+                                            ) : (
+                                                <motion.span
+                                                    key="idle"
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: -10 }}
+                                                    transition={{ duration: 0.2 }}
+                                                >
+                                                    Delete
+                                                </motion.span>
+                                            )}
+                                        </AnimatePresence>
+                                    </Button>
+                                </motion.div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

@@ -2,9 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Upload, X, Plus } from "lucide-react"
 import { ProductPreviewCard } from "@/components/admin/product-preview-card"
 import { SuccessModal } from "@/components/admin/success-modal"
@@ -445,8 +447,32 @@ export default function AddProductPage() {
                         </div>
 
                         <div className="flex justify-end pb-8">
-                            <Button type="submit" disabled={loading} size="lg" className="px-10 h-12 text-base font-bold shadow-lg shadow-primary/20">
-                                {loading ? "Adding Product..." : "Create Product"}
+                            <Button type="submit" disabled={loading} size="lg" className="px-10 h-12 text-base font-bold shadow-lg shadow-primary/20 relative overflow-hidden">
+                                <AnimatePresence mode="wait">
+                                    {loading ? (
+                                        <motion.span
+                                            key="loading"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <LoadingSpinner size="sm" />
+                                            Adding Product...
+                                        </motion.span>
+                                    ) : (
+                                        <motion.span
+                                            key="idle"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            Create Product
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
                             </Button>
                         </div>
                     </form>

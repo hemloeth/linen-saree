@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { AdminSidebar } from "@/components/admin/sidebar"
 import { AdminHeader } from "@/components/admin/header"
+import { PageTransition } from "@/components/admin/page-transition"
 import { CategoryProvider } from "@/context/category-context"
 import { ProductProvider } from "@/context/product-context"
 import { BlogProvider } from "@/context/blog-context"
@@ -25,7 +26,9 @@ export default function AdminLayout({
                                 <AdminHeader onMenuClick={() => setIsSidebarOpen(true)} />
                             </div>
                             <main className="flex-1 p-4 md:p-6 w-full object-contain">
-                                {children}
+                                <PageTransition>
+                                    {children}
+                                </PageTransition>
                             </main>
                         </div>
                     </div>
@@ -34,3 +37,4 @@ export default function AdminLayout({
         </CategoryProvider>
     )
 }
+
