@@ -315,18 +315,18 @@ export default function AddProductPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="regular-price" className="text-xs font-bold">Regular Price (₹)</Label>
-                                    <Input id="regular-price" type="number" step="0.01" value={regularPrice} onChange={(e) => setRegularPrice(e.target.value)} placeholder="0.00" required className="h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                    <Input id="regular-price" type="number" step="0.01" value={regularPrice} onChange={(e) => setRegularPrice(e.target.value)} onWheel={(e) => (e.target as HTMLInputElement).blur()} placeholder="0.00" required className="h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="price" className="text-xs font-bold">Sale Price (₹)</Label>
-                                    <Input id="price" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" required className="h-9 border-primary/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                    <Input id="price" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} onWheel={(e) => (e.target as HTMLInputElement).blur()} placeholder="0.00" required className="h-9 border-primary/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="stock" className="text-xs font-bold">Available Stock</Label>
-                                    <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="0" required className="h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                    <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} onWheel={(e) => (e.target as HTMLInputElement).blur()} placeholder="0" required className="h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="tags" className="text-xs font-bold">Tags</Label>
