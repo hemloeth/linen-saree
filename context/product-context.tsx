@@ -2,6 +2,14 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
+export interface ImageInfo {
+    url: string
+    title: string
+    description: string
+    alt: string
+    caption: string
+}
+
 interface Product {
     _id: string
     name: string
@@ -13,7 +21,8 @@ interface Product {
     shortDescription: string
     tags: string
     mainImage: string
-    galleryImages: string[]
+    mainImageInfo?: ImageInfo
+    galleryImages: ImageInfo[]
     color: string
     material: string
     sareeSize: string
@@ -33,6 +42,8 @@ interface ProductContextType {
     updateProduct: (id: string, formData: FormData) => Promise<Product | null>
     uploadVideo: (productId: string, videoFile: File) => Promise<void>
     deleteProduct: (id: string) => Promise<void>
+    deleteMultipleProducts: (ids: string[]) => Promise<number>
+    updateGalleryImageInfo: (productId: string, imageIndex: number, info: Partial<ImageInfo>) => Promise<void>
     loading: boolean
     error: string | null
 }
@@ -163,6 +174,56 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    const deleteMultipleProducts = async (ids: string[]): Promise<number> => {
+        setLoading(true)
+        setError(null)
+
+        try {
+            const res = await fetch(`${API_URL}/api/product/bulk-delete`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.message || "Failed to delete products")
+            }
+
+            const idSet = new Set(ids)
+            setProducts((prev) => prev.filter((p) => !idSet.has(p._id)))
+            return data.deletedCount
+        } catch (err: any) {
+            setError(err.message || "Something went wrong")
+            throw err
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const updateGalleryImageInfo = async (productId: string, imageIndex: number, info: Partial<ImageInfo>) => {
+        try {
+            const res = await fetch(`${API_URL}/api/product/${productId}/gallery-image-info`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ imageIndex, ...info }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.message || "Failed to update image info")
+            }
+
+            setProducts((prev) =>
+                prev.map((p) => (p._id === productId ? data.product : p))
+            )
+        } catch (err: any) {
+            console.error("Image info update failed", err)
+        }
+    }
+
     return (
         <ProductContext.Provider
             value={{
@@ -171,6 +232,8 @@ export function ProductProvider({ children }: { children: ReactNode }) {
                 updateProduct,
                 uploadVideo,
                 deleteProduct,
+                deleteMultipleProducts,
+                updateGalleryImageInfo,
                 loading,
                 error,
             }}

@@ -57,9 +57,9 @@ export default function AddProductPage() {
     const [sareeSize, setSareeSize] = useState("")
     const [blouseSize, setBlouseSize] = useState("")
     const [washCare, setWashCare] = useState("")
-    const [dispatch, setDispatch] = useState("")
-    const [disclaimer, setDisclaimer] = useState("")
-    const [internationalNote, setInternationalNote] = useState("")
+    const [dispatch, setDispatch] = useState("2-3 days")
+    const [disclaimer, setDisclaimer] = useState("Color variance note")
+    const [internationalNote, setInternationalNote] = useState("Custom duties")
 
     const handleMainImage = (files: FileList | File[]) => {
         const file = Array.from(files)[0]
@@ -158,9 +158,9 @@ export default function AddProductPage() {
             setSareeSize("")
             setBlouseSize("")
             setWashCare("")
-            setDispatch("")
-            setDisclaimer("")
-            setInternationalNote("")
+            setDispatch("2-3 days")
+            setDisclaimer("Color variance note")
+            setInternationalNote("Custom duties")
             setColor("")
 
             // Show Success Modal
@@ -295,7 +295,7 @@ export default function AddProductPage() {
                                 </div>
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="sku" className="text-xs font-bold">SKU Code</Label>
-                                    <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="e.g. LS-001" className="h-9" />
+                                    <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="e.g. LS-001" required className="h-9" />
                                 </div>
                             </div>
 
@@ -314,8 +314,7 @@ export default function AddProductPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-1.5">
-                                    <Label htmlFor="regular-price" className="text-xs font-bold">Regular Price (₹)</Label>
-                                    <Input id="regular-price" type="number" step="0.01" value={regularPrice} onChange={(e) => setRegularPrice(e.target.value)} placeholder="0.00" className="h-9" />
+                                    <Input id="regular-price" type="number" step="0.01" value={regularPrice} onChange={(e) => setRegularPrice(e.target.value)} placeholder="0.00" required className="h-9" />
                                 </div>
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="price" className="text-xs font-bold">Sale Price (₹)</Label>
@@ -330,8 +329,13 @@ export default function AddProductPage() {
                                 </div>
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="tags" className="text-xs font-bold">Tags</Label>
-                                    <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g. linen, summer" className="h-9" />
+                                    <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="e.g. linen, summer" required className="h-9" />
                                 </div>
+                            </div>
+
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="short-description" className="text-xs font-bold">Short Description</Label>
+                                <textarea id="short-description" value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} placeholder="Brief description of the product" required rows={3} className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none" />
                             </div>
 
                             <div className="space-y-4 border rounded-xl p-5 bg-muted/10 border-primary/10">
@@ -341,37 +345,37 @@ export default function AddProductPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="material" className="text-[10px] uppercase text-muted-foreground font-bold">Material</Label>
-                                        <Input id="material" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="Pure Linen" className="h-8 text-xs" />
+                                        <Input id="material" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="Pure Linen" required className="h-8 text-xs" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="wash-care" className="text-[10px] uppercase text-muted-foreground font-bold">Wash Care</Label>
-                                        <Input id="wash-care" value={washCare} onChange={(e) => setWashCare(e.target.value)} placeholder="Dry Clean" className="h-8 text-xs" />
+                                        <Input id="wash-care" value={washCare} onChange={(e) => setWashCare(e.target.value)} placeholder="Dry Clean" required className="h-8 text-xs" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="color" className="text-[10px] uppercase text-muted-foreground font-bold">Color</Label>
-                                        <Input id="color" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Royal Blue" className="h-8 text-xs" />
+                                        <Input id="color" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Royal Blue" required className="h-8 text-xs" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="saree-size" className="text-[10px] uppercase text-muted-foreground font-bold">Saree Size</Label>
-                                        <Input id="saree-size" value={sareeSize} onChange={(e) => setSareeSize(e.target.value)} placeholder="5.5m" className="h-8 text-xs" />
+                                        <Input id="saree-size" value={sareeSize} onChange={(e) => setSareeSize(e.target.value)} placeholder="5.5m" required className="h-8 text-xs" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="blouse-size" className="text-[10px] uppercase text-muted-foreground font-bold">Blouse Size</Label>
-                                        <Input id="blouse-size" value={blouseSize} onChange={(e) => setBlouseSize(e.target.value)} placeholder="0.8m" className="h-8 text-xs" />
+                                        <Input id="blouse-size" value={blouseSize} onChange={(e) => setBlouseSize(e.target.value)} placeholder="0.8m" required className="h-8 text-xs" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="dispatch" className="text-[10px] uppercase text-muted-foreground font-bold">Dispatch</Label>
-                                        <Input id="dispatch" value={dispatch} onChange={(e) => setDispatch(e.target.value)} placeholder="2-3 days" className="h-8 text-xs" />
+                                        <Input id="dispatch" value={dispatch} readOnly className="h-8 text-xs bg-muted/50 cursor-not-allowed" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="disclaimer" className="text-[10px] uppercase text-muted-foreground font-bold">Disclaimer</Label>
-                                        <Input id="disclaimer" value={disclaimer} onChange={(e) => setDisclaimer(e.target.value)} placeholder="Color variance note" className="h-8 text-xs" />
+                                        <Input id="disclaimer" value={disclaimer} readOnly className="h-8 text-xs bg-muted/50 cursor-not-allowed" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="international-note" className="text-[10px] uppercase text-muted-foreground font-bold">Intl Note</Label>
-                                        <Input id="international-note" value={internationalNote} onChange={(e) => setInternationalNote(e.target.value)} placeholder="Custom duties" className="h-8 text-xs" />
+                                        <Input id="international-note" value={internationalNote} readOnly className="h-8 text-xs bg-muted/50 cursor-not-allowed" />
                                     </div>
                                 </div>
                             </div>
