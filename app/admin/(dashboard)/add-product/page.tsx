@@ -58,7 +58,7 @@ export default function AddProductPage() {
     const [blouseSize, setBlouseSize] = useState("")
     const [washCare, setWashCare] = useState("")
     const [dispatch, setDispatch] = useState("2-3 days")
-    const [disclaimer, setDisclaimer] = useState("Color variance note")
+    const [disclaimer, setDisclaimer] = useState("Actual product color may differ slightly from the images due to lighting and display differences.")
     const [internationalNote, setInternationalNote] = useState("Custom duties")
 
     const handleMainImage = (files: FileList | File[]) => {
@@ -159,7 +159,7 @@ export default function AddProductPage() {
             setBlouseSize("")
             setWashCare("")
             setDispatch("2-3 days")
-            setDisclaimer("Color variance note")
+            setDisclaimer("Actual product color may differ slightly from the images due to lighting and display differences.")
             setInternationalNote("Custom duties")
             setColor("")
 
@@ -314,18 +314,19 @@ export default function AddProductPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-1.5">
-                                    <Input id="regular-price" type="number" step="0.01" value={regularPrice} onChange={(e) => setRegularPrice(e.target.value)} placeholder="0.00" required className="h-9" />
+                                    <Label htmlFor="regular-price" className="text-xs font-bold">Regular Price (₹)</Label>
+                                    <Input id="regular-price" type="number" step="0.01" value={regularPrice} onChange={(e) => setRegularPrice(e.target.value)} placeholder="0.00" required className="h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="price" className="text-xs font-bold">Sale Price (₹)</Label>
-                                    <Input id="price" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" required className="h-9 border-primary/50" />
+                                    <Input id="price" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" required className="h-9 border-primary/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="stock" className="text-xs font-bold">Available Stock</Label>
-                                    <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="0" required className="h-9" />
+                                    <Input id="stock" type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder="0" required className="h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="tags" className="text-xs font-bold">Tags</Label>
