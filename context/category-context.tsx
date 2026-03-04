@@ -12,6 +12,7 @@ interface Category {
 interface CategoryContextType {
     categories: Category[]
     addCategory: (name: string, sortDesc: string, imageFile: File) => Promise<void>
+    updateCategory: (id: string, name: string, sortDesc: string, imageFile?: File) => Promise<void>
     deleteCategory: (id: string) => void
     loading: boolean
     error: string | null
@@ -93,11 +94,46 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    const updateCategory = async (id: string, name: string, sortDesc: string, imageFile?: File) => {
+        setLoading(true)
+        setError(null)
+
+        try {
+            const formData = new FormData()
+            formData.append("name", name)
+            formData.append("sortDesc", sortDesc)
+            if (imageFile) {
+                formData.append("image", imageFile)
+            }
+
+            const res = await fetch(`${API_URL}/api/category/${id}`, {
+                method: "PUT",
+                body: formData,
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.message || "Failed to update category")
+            }
+
+            setCategories((prev) =>
+                prev.map((cat) => (cat._id === id ? data.category : cat))
+            )
+        } catch (err: any) {
+            setError(err.message || "Something went wrong")
+            throw err
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <CategoryContext.Provider
             value={{
                 categories,
                 addCategory,
+                updateCategory,
                 deleteCategory,
                 loading,
                 error,

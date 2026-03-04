@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { Trash2, AlertTriangle } from "lucide-react"
+import { Trash2, Pencil, AlertTriangle } from "lucide-react"
 import { useCategory } from "@/context/category-context"
 import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
 import { ConfirmModal } from "@/components/admin/confirm-modal"
+import { EditCategoryModal } from "@/components/admin/edit-category-modal"
 
 let toastId = 0
 
@@ -22,6 +23,7 @@ export default function CategoriesPage() {
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<{ _id: string; name: string } | null>(null)
+    const [editTarget, setEditTarget] = useState<{ _id: string; name: string; sortDesc: string; image: string } | null>(null)
     const [toasts, setToasts] = useState<ToastItem[]>([])
     const [isDeleting, setIsDeleting] = useState(false)
 
@@ -204,14 +206,23 @@ export default function CategoriesPage() {
                             {/* Overlay with modern gradient */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
 
-                            {/* Delete button */}
-                            <button
-                                onClick={() => setDeleteTarget({ _id: category._id, name: category.name })}
-                                className="absolute top-2 right-2 z-10 p-2 bg-destructive/90 text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-[-10px] group-hover:translate-y-0 shadow-lg hover:bg-destructive"
-                                title="Delete Category"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+                            {/* Edit & Delete buttons */}
+                            <div className="absolute top-2 right-2 z-10 flex gap-1.5">
+                                <button
+                                    onClick={() => setEditTarget(category)}
+                                    className="p-2 bg-primary/90 text-primary-foreground rounded-full transition-all duration-200 shadow-lg hover:bg-primary"
+                                    title="Edit Category"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setDeleteTarget({ _id: category._id, name: category.name })}
+                                    className="p-2 bg-destructive/90 text-destructive-foreground rounded-full transition-all duration-200 shadow-lg hover:bg-destructive"
+                                    title="Delete Category"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
 
                             {/* Content */}
                             <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-4 md:p-6 text-white">
@@ -249,6 +260,13 @@ export default function CategoriesPage() {
                 }
                 confirmLabel="Delete"
                 loadingLabel="Deleting..."
+            />
+
+            {/* Edit Category Modal */}
+            <EditCategoryModal
+                isOpen={!!editTarget}
+                onClose={() => setEditTarget(null)}
+                category={editTarget}
             />
         </div>
     )
