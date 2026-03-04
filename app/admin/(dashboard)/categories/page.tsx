@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -8,14 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { Trash2, AlertTriangle, Check, X } from "lucide-react"
+import { Trash2, AlertTriangle } from "lucide-react"
 import { useCategory } from "@/context/category-context"
-
-interface Toast {
-    id: number
-    type: "added" | "deleted"
-    name: string
-}
+import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
+import { ConfirmModal } from "@/components/admin/confirm-modal"
 
 let toastId = 0
 
@@ -26,12 +22,12 @@ export default function CategoriesPage() {
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [deleteTarget, setDeleteTarget] = useState<{ _id: string; name: string } | null>(null)
-    const [toasts, setToasts] = useState<Toast[]>([])
+    const [toasts, setToasts] = useState<ToastItem[]>([])
     const [isDeleting, setIsDeleting] = useState(false)
 
-    const showToast = (type: "added" | "deleted", toastName: string) => {
+    const showToast = (title: string, message: string) => {
         const id = ++toastId
-        setToasts((prev) => [...prev, { id, type, name: toastName }])
+        setToasts((prev) => [...prev, { id, title, message }])
         setTimeout(() => {
             setToasts((prev) => prev.filter((t) => t.id !== id))
         }, 3000)
@@ -54,7 +50,7 @@ export default function CategoriesPage() {
 
         try {
             await addCategory(name, description, imageFile)
-            showToast("added", name)
+            showToast("Category Added", `"${name}" has been created successfully`)
             setName("")
             setDescription("")
             setImageFile(null)
@@ -72,7 +68,7 @@ export default function CategoriesPage() {
         try {
             await deleteCategory(deleteTarget._id)
             setDeleteTarget(null)
-            showToast("deleted", deletedName)
+            showToast("Category Deleted", `"${deletedName}" has been deleted successfully`)
         } catch {
             // error is handled in context
         } finally {
@@ -82,57 +78,7 @@ export default function CategoriesPage() {
 
     return (
         <div className="space-y-6">
-            {/* Animated Toasts */}
-            <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center">
-                <AnimatePresence mode="popLayout">
-                    {toasts.map((toast) => (
-                        <motion.div
-                            key={toast.id}
-                            layout
-                            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            transition={{
-                                type: "spring",
-                                stiffness: 400,
-                                damping: 25,
-                            }}
-                            className="bg-background border border-border shadow-2xl rounded-xl px-5 py-3 flex items-center gap-3 min-w-[280px] max-w-[90vw] sm:min-w-[340px]"
-                        >
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.1 }}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${toast.type === "added" ? "bg-green-500" : "bg-red-500"
-                                    }`}
-                            >
-                                {toast.type === "added" ? (
-                                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                                ) : (
-                                    <Trash2 className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                                )}
-                            </motion.div>
-                            <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-semibold ${toast.type === "added"
-                                    ? "text-green-600 dark:text-green-400"
-                                    : "text-red-600 dark:text-red-400"
-                                    }`}>
-                                    {toast.type === "added" ? "Category Added" : "Category Deleted"}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                    &ldquo;{toast.name}&rdquo; has been {toast.type === "added" ? "created" : "deleted"} successfully
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => dismissToast(toast.id)}
-                                className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0"
-                            >
-                                <X className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-            </div>
+            <AdminToast toasts={toasts} onDismiss={dismissToast} />
 
             <div className="flex items-center justify-between gap-4">
                 <div>
@@ -287,129 +233,23 @@ export default function CategoriesPage() {
             </div>
 
             {/* Delete Confirmation Modal */}
-            <AnimatePresence>
-                {deleteTarget && (
-                    <>
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-                            onClick={() => !isDeleting && setDeleteTarget(null)}
-                        />
-
-                        {/* Modal */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                            transition={{
-                                type: "spring",
-                                stiffness: 400,
-                                damping: 28,
-                            }}
-                            className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm"
-                        >
-                            <div className="bg-background rounded-2xl border shadow-2xl p-6 mx-4">
-                                {/* Animated icon */}
-                                <div className="flex justify-center mb-5">
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{
-                                            type: "spring",
-                                            stiffness: 500,
-                                            damping: 20,
-                                            delay: 0.1,
-                                        }}
-                                        className="relative"
-                                    >
-                                        <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
-                                            <AlertTriangle className="h-7 w-7 text-destructive" />
-                                        </div>
-                                        <motion.div
-                                            initial={{ scale: 0.8, opacity: 0 }}
-                                            animate={{ scale: 1.4, opacity: 0 }}
-                                            transition={{
-                                                duration: 1.5,
-                                                repeat: Infinity,
-                                                ease: "easeOut",
-                                            }}
-                                            className="absolute inset-0 rounded-full border-2 border-destructive/30"
-                                        />
-                                    </motion.div>
-                                </div>
-
-                                {/* Text */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.15, duration: 0.3 }}
-                                    className="text-center mb-6"
-                                >
-                                    <h3 className="text-lg font-semibold mb-1.5">Delete Category</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Are you sure you want to delete <strong className="text-foreground">&ldquo;{deleteTarget.name}&rdquo;</strong>?
-                                        <br />
-                                        <span className="text-xs">This action cannot be undone.</span>
-                                    </p>
-                                </motion.div>
-
-                                {/* Buttons */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2, duration: 0.3 }}
-                                    className="flex gap-3"
-                                >
-                                    <Button
-                                        variant="outline"
-                                        className="flex-1 h-10 rounded-xl"
-                                        onClick={() => setDeleteTarget(null)}
-                                        disabled={isDeleting}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        className="flex-1 h-10 rounded-xl relative overflow-hidden"
-                                        onClick={confirmDelete}
-                                        disabled={isDeleting}
-                                    >
-                                        <AnimatePresence mode="wait">
-                                            {isDeleting ? (
-                                                <motion.span
-                                                    key="deleting"
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -10 }}
-                                                    transition={{ duration: 0.2 }}
-                                                    className="flex items-center gap-2"
-                                                >
-                                                    <LoadingSpinner size="sm" />
-                                                    Deleting...
-                                                </motion.span>
-                                            ) : (
-                                                <motion.span
-                                                    key="idle"
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -10 }}
-                                                    transition={{ duration: 0.2 }}
-                                                >
-                                                    Delete
-                                                </motion.span>
-                                            )}
-                                        </AnimatePresence>
-                                    </Button>
-                                </motion.div>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+            <ConfirmModal
+                isOpen={!!deleteTarget}
+                onClose={() => setDeleteTarget(null)}
+                onConfirm={confirmDelete}
+                isLoading={isDeleting}
+                icon={<AlertTriangle className="h-7 w-7 text-destructive" />}
+                title="Delete Category"
+                description={
+                    <p>
+                        Are you sure you want to delete <strong className="text-foreground">&ldquo;{deleteTarget?.name}&rdquo;</strong>?
+                        <br />
+                        <span className="text-xs">This action cannot be undone.</span>
+                    </p>
+                }
+                confirmLabel="Delete"
+                loadingLabel="Deleting..."
+            />
         </div>
     )
 }

@@ -20,16 +20,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { MoreHorizontal, Search, AlertTriangle, Trash2, X, CheckSquare, Square, ListChecks } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useProduct } from "@/context/product-context"
-
-interface Toast {
-  id: number
-  message: string
-  count?: number
-}
+import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
+import { ConfirmModal } from "@/components/admin/confirm-modal"
 
 let toastId = 0
 
@@ -39,7 +34,7 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [toasts, setToasts] = useState<ToastItem[]>([])
 
   // Multi-select state
   const [selectionMode, setSelectionMode] = useState(false)
@@ -62,9 +57,9 @@ export default function AdminProductsPage() {
     return "In Stock"
   }
 
-  const showToast = (message: string, count?: number) => {
+  const showToast = (title: string, message: string) => {
     const id = ++toastId
-    setToasts((prev) => [...prev, { id, message, count }])
+    setToasts((prev) => [...prev, { id, title, message }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
     }, 3000)
@@ -83,7 +78,7 @@ export default function AdminProductsPage() {
     try {
       await deleteProduct(deleteTarget.id)
       setDeleteTarget(null)
-      showToast(`"${deletedName}" has been deleted successfully`)
+      showToast("Product Deleted", `"${deletedName}" has been deleted successfully`)
     } catch {
       // error handled in context
     } finally {
@@ -122,7 +117,10 @@ export default function AdminProductsPage() {
       const ids = Array.from(selectedIds)
       const deletedCount = await deleteMultipleProducts(ids)
       setShowBulkDeleteModal(false)
-      showToast(`${deletedCount} product(s) deleted successfully`, deletedCount)
+      showToast(
+        `${deletedCount} Product${deletedCount > 1 ? "s" : ""} Deleted`,
+        `${deletedCount} product(s) deleted successfully`
+      )
       exitSelectionMode()
     } catch {
       // error handled in context
@@ -133,49 +131,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Animated Toasts */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center">
-        <AnimatePresence mode="popLayout">
-          {toasts.map((toast) => (
-            <motion.div
-              key={toast.id}
-              layout
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 25,
-              }}
-              className="bg-background border border-border shadow-2xl rounded-xl px-5 py-3 flex items-center gap-3 min-w-[280px] max-w-[90vw] sm:min-w-[340px]"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.1 }}
-                className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-              </motion.div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-red-600 dark:text-red-400">
-                  Product{(toast.count ?? 1) > 1 ? "s" : ""} Deleted
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {toast.message}
-                </p>
-              </div>
-              <button
-                onClick={() => dismissToast(toast.id)}
-                className="p-1 rounded-full hover:bg-muted transition-colors flex-shrink-0"
-              >
-                <X className="w-3.5 h-3.5 text-muted-foreground" />
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+      <AdminToast toasts={toasts} onDismiss={dismissToast} />
 
       <div className="flex items-center justify-between">
         <div>
@@ -383,8 +339,8 @@ export default function AdminProductsPage() {
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 500, damping: 20 }}
                   className={`text-xs font-bold rounded-full w-7 h-7 flex items-center justify-center ${selectedIds.size > 0
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
                     }`}
                 >
                   {selectedIds.size}
@@ -422,254 +378,42 @@ export default function AdminProductsPage() {
       </AnimatePresence>
 
       {/* Single Delete Confirmation Modal */}
-      <AnimatePresence>
-        {deleteTarget && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-              onClick={() => !isDeleting && setDeleteTarget(null)}
-            />
-
-            {/* Modal */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 28,
-              }}
-              className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm"
-            >
-              <div className="bg-background rounded-2xl border shadow-2xl p-6 mx-4">
-                {/* Animated icon */}
-                <div className="flex justify-center mb-5">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 20,
-                      delay: 0.1,
-                    }}
-                    className="relative"
-                  >
-                    <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
-                      <AlertTriangle className="h-7 w-7 text-destructive" />
-                    </div>
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1.4, opacity: 0 }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeOut",
-                      }}
-                      className="absolute inset-0 rounded-full border-2 border-destructive/30"
-                    />
-                  </motion.div>
-                </div>
-
-                {/* Text */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.3 }}
-                  className="text-center mb-6"
-                >
-                  <h3 className="text-lg font-semibold mb-1.5">Delete Product</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Are you sure you want to delete <strong className="text-foreground">&ldquo;{deleteTarget.name}&rdquo;</strong>?
-                    <br />
-                    <span className="text-xs">This action cannot be undone.</span>
-                  </p>
-                </motion.div>
-
-                {/* Buttons */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.3 }}
-                  className="flex gap-3"
-                >
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-10 rounded-xl"
-                    onClick={() => setDeleteTarget(null)}
-                    disabled={isDeleting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1 h-10 rounded-xl relative overflow-hidden"
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                  >
-                    <AnimatePresence mode="wait">
-                      {isDeleting ? (
-                        <motion.span
-                          key="deleting"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                          className="flex items-center gap-2"
-                        >
-                          <LoadingSpinner size="sm" />
-                          Deleting...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="idle"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          Delete
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Button>
-                </motion.div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        icon={<AlertTriangle className="h-7 w-7 text-destructive" />}
+        title="Delete Product"
+        description={
+          <p>
+            Are you sure you want to delete <strong className="text-foreground">&ldquo;{deleteTarget?.name}&rdquo;</strong>?
+            <br />
+            <span className="text-xs">This action cannot be undone.</span>
+          </p>
+        }
+        confirmLabel="Delete"
+        loadingLabel="Deleting..."
+      />
 
       {/* Bulk Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showBulkDeleteModal && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-              onClick={() => !isBulkDeleting && setShowBulkDeleteModal(false)}
-            />
-
-            {/* Modal */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 28,
-              }}
-              className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm"
-            >
-              <div className="bg-background rounded-2xl border shadow-2xl p-6 mx-4">
-                {/* Animated icon */}
-                <div className="flex justify-center mb-5">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 20,
-                      delay: 0.1,
-                    }}
-                    className="relative"
-                  >
-                    <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
-                      <AlertTriangle className="h-7 w-7 text-destructive" />
-                    </div>
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1.4, opacity: 0 }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeOut",
-                      }}
-                      className="absolute inset-0 rounded-full border-2 border-destructive/30"
-                    />
-                  </motion.div>
-                </div>
-
-                {/* Text */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.3 }}
-                  className="text-center mb-6"
-                >
-                  <h3 className="text-lg font-semibold mb-1.5">Delete {selectedIds.size} Product{selectedIds.size > 1 ? "s" : ""}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Are you sure you want to delete <strong className="text-foreground">{selectedIds.size} product{selectedIds.size > 1 ? "s" : ""}</strong>?
-                    <br />
-                    <span className="text-xs">This action cannot be undone.</span>
-                  </p>
-                </motion.div>
-
-                {/* Buttons */}
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.3 }}
-                  className="flex gap-3"
-                >
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-10 rounded-xl"
-                    onClick={() => setShowBulkDeleteModal(false)}
-                    disabled={isBulkDeleting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1 h-10 rounded-xl relative overflow-hidden"
-                    onClick={handleBulkDelete}
-                    disabled={isBulkDeleting}
-                  >
-                    <AnimatePresence mode="wait">
-                      {isBulkDeleting ? (
-                        <motion.span
-                          key="bulk-deleting"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                          className="flex items-center gap-2"
-                        >
-                          <LoadingSpinner size="sm" />
-                          Deleting...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="bulk-idle"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          Delete {selectedIds.size}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Button>
-                </motion.div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <ConfirmModal
+        isOpen={showBulkDeleteModal}
+        onClose={() => setShowBulkDeleteModal(false)}
+        onConfirm={handleBulkDelete}
+        isLoading={isBulkDeleting}
+        icon={<AlertTriangle className="h-7 w-7 text-destructive" />}
+        title={`Delete ${selectedIds.size} Product${selectedIds.size > 1 ? "s" : ""}`}
+        description={
+          <p>
+            Are you sure you want to delete <strong className="text-foreground">{selectedIds.size} product{selectedIds.size > 1 ? "s" : ""}</strong>?
+            <br />
+            <span className="text-xs">This action cannot be undone.</span>
+          </p>
+        }
+        confirmLabel={`Delete ${selectedIds.size}`}
+        loadingLabel="Deleting..."
+      />
     </div>
   )
 }
