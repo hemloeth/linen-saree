@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+
 import { X, Plus, Minus, ShoppingBag, Trash2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -7,9 +9,26 @@ import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
 import { TrustBadgesCompact } from "@/components/trust-badges"
 import { cn } from "@/lib/utils"
+import { useLenis } from "@/components/SmoothScroll"
 
 export function CartSidebar() {
   const { items, removeFromCart, updateQuantity, totalPrice, isCartOpen, setIsCartOpen, isHydrated } = useCart()
+  const lenis = useLenis()
+
+  // Lock body scroll & stop Lenis smooth scroll when cart is open
+  useEffect(() => {
+    if (isCartOpen) {
+      document.body.style.overflow = 'hidden'
+      lenis.stop()
+    } else {
+      document.body.style.overflow = ''
+      lenis.start()
+    }
+    return () => {
+      document.body.style.overflow = ''
+      lenis.start()
+    }
+  }, [isCartOpen, lenis])
 
   // Don't render anything until hydrated to prevent hydration mismatch
   if (!isHydrated) {
@@ -33,6 +52,7 @@ export function CartSidebar() {
           "fixed right-0 top-0 h-full w-full max-w-md bg-background z-50 shadow-2xl transition-transform duration-300 flex flex-col",
           isCartOpen ? "translate-x-0" : "translate-x-full"
         )}
+        onWheel={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
@@ -46,7 +66,7 @@ export function CartSidebar() {
         </div>
 
         {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-6">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <ShoppingBag className="w-16 h-16 text-muted-foreground mb-4" />
@@ -59,16 +79,18 @@ export function CartSidebar() {
             <div className="space-y-6">
               {items.map((item) => (
                 <div key={item.product.id} className="flex gap-4">
-                  <div className="relative w-24 h-32 flex-shrink-0">
+                  <Link href={`/product/${item.product.slug}`} onClick={() => setIsCartOpen(false)} className="relative w-24 h-32 flex-shrink-0 block">
                     <Image
                       src={item.product.image || "/placeholder.svg"}
                       alt={item.product.name}
                       fill
                       className="object-cover"
                     />
-                  </div>
+                  </Link>
                   <div className="flex-1 flex flex-col">
-                    <h3 className="font-medium text-sm leading-tight">{item.product.name}</h3>
+                    <Link href={`/product/${item.product.slug}`} onClick={() => setIsCartOpen(false)} className="hover:text-primary transition-colors">
+                      <h3 className="font-medium text-sm leading-tight">{item.product.name}</h3>
+                    </Link>
                     <p className="text-xs text-muted-foreground mt-1">{item.product.category}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="font-semibold">₹{item.product.price.toLocaleString()}</span>
@@ -116,12 +138,12 @@ export function CartSidebar() {
               <span className="font-semibold text-lg">₹{totalPrice.toLocaleString()}</span>
             </div>
             <p className="text-xs text-muted-foreground">Shipping and taxes calculated at checkout</p>
-            
+
             {/* Trust Badges */}
             <div className="py-3 border-t border-border">
               <TrustBadgesCompact className="justify-center text-xs" />
             </div>
-            
+
             <div className="space-y-2">
               <Link href="/checkout" onClick={() => setIsCartOpen(false)}>
                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">

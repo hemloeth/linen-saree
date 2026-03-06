@@ -6,6 +6,7 @@ import Image from "next/image"
 import { Menu, X, Search, ShoppingBag, User, Heart, ChevronDown } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
+import { useAuth } from "@/context/auth-context"
 import { SearchModal } from "@/components/search-modal"
 import { TrustBadgesCompact } from "@/components/trust-badges"
 import { cn } from "@/lib/utils"
@@ -40,6 +41,7 @@ export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const { totalItems, setIsCartOpen, isHydrated } = useCart()
   const { totalItems: wishlistItems, isHydrated: wishlistHydrated } = useWishlist()
+  const { isAuthenticated, isHydrated: authHydrated, user, logout } = useAuth()
 
   // Handle keyboard shortcut for search (Ctrl/Cmd + K)
   useEffect(() => {
@@ -182,30 +184,56 @@ export function Header() {
                 )}
               </Link>
               <div className="relative group">
-                <Link href="/account" className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors flex items-center" aria-label="Account">
+                <Link href={authHydrated && isAuthenticated ? "/account" : "/account/login"} className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors flex items-center" aria-label="Account">
                   <User className="w-5 h-5" />
                 </Link>
                 {/* Desktop dropdown - only show on hover for larger screens */}
                 <div className="hidden sm:block absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <div className="bg-background border border-border shadow-lg py-2 min-w-[160px]">
-                    <Link
-                      href="/account"
-                      className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
-                    >
-                      My Account
-                    </Link>
-                    <Link
-                      href="/orders"
-                      className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
-                    >
-                      My Orders
-                    </Link>
-                    <Link
-                      href="/track-order"
-                      className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
-                    >
-                      Track Order
-                    </Link>
+                    {authHydrated && isAuthenticated ? (
+                      <>
+                        <Link
+                          href="/account"
+                          className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                        >
+                          My Account
+                        </Link>
+                        <Link
+                          href="/orders"
+                          className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                        >
+                          My Orders
+                        </Link>
+                        <Link
+                          href="/track-order"
+                          className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                        >
+                          Track Order
+                        </Link>
+                        <div className="border-t border-border my-1" />
+                        <button
+                          onClick={() => { logout(); window.location.href = '/account/login'; }}
+                          className="block w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted transition-colors"
+                        >
+                          Sign Out
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          href="/account/login"
+                          className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                        >
+                          Login
+                        </Link>
+                        <Link
+                          href="/account/login"
+                          className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                        >
+                          Sign Up
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -248,27 +276,47 @@ export function Header() {
 
           {/* Mobile Account Links */}
           <div className="border-t border-border pt-4 mt-2">
-            <Link
-              href="/account"
-              className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              My Account
-            </Link>
-            <Link
-              href="/orders"
-              className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              My Orders
-            </Link>
-            <Link
-              href="/track-order"
-              className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Track Order
-            </Link>
+            {authHydrated && isAuthenticated ? (
+              <>
+                <Link
+                  href="/account"
+                  className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Account
+                </Link>
+                <Link
+                  href="/orders"
+                  className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Orders
+                </Link>
+                <Link
+                  href="/track-order"
+                  className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Track Order
+                </Link>
+                <button
+                  onClick={() => { logout(); setIsMenuOpen(false); window.location.href = '/account/login'; }}
+                  className="text-lg font-sans tracking-wide text-destructive hover:text-destructive/80 transition-colors py-2 block"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/account/login"
+                  className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login / Sign Up
+                </Link>
+              </>
+            )}
             <Link
               href="/wishlist"
               className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"

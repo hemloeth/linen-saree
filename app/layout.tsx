@@ -4,6 +4,7 @@ import { Cormorant_Garamond, Montserrat } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from "@/context/cart-context"
 import { WishlistProvider } from "@/context/wishlist-context"
+import { AuthProvider } from "@/context/auth-context"
 import { CartSidebar } from "@/components/cart-sidebar"
 import { CartToast } from "@/components/cart-toast"
 import WhatsAppFloat from "@/components/whatsapp-float"
@@ -53,16 +54,18 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans antialiased">
         <SmoothScroll>
-          <CartProvider>
-            <WishlistProvider>
-              {children}
-              <ClientOnly>
-                <CartToast />
-                <CartSidebar />
-                <WhatsAppFloat />
-              </ClientOnly>
-            </WishlistProvider>
-          </CartProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                {children}
+                <ClientOnly>
+                  <CartToast />
+                  <CartSidebar />
+                  <WhatsAppFloat />
+                </ClientOnly>
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
         </SmoothScroll>
         <Analytics />
       </body>

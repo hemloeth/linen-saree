@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { Play, X } from "lucide-react"
+import Link from "next/link"
+import { Play, X, Minus, Plus, Trash2 } from "lucide-react"
 import type { Product } from "@/lib/products"
+import { useCart } from "@/context/cart-context"
 
 interface CheckoutProductMediaProps {
   product: Product
@@ -19,6 +21,7 @@ type MediaItem = {
 export function CheckoutProductMedia({ product, quantity }: CheckoutProductMediaProps) {
   const [selectedMedia, setSelectedMedia] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const { updateQuantity, removeFromCart } = useCart()
 
   // Combine images and videos into a single media array
   const mediaItems: MediaItem[] = [
@@ -37,7 +40,7 @@ export function CheckoutProductMedia({ product, quantity }: CheckoutProductMedia
   return (
     <>
       <div className="flex gap-4">
-        <div className="relative w-16 h-20 flex-shrink-0 bg-muted cursor-pointer" onClick={handleMediaClick}>
+        <Link href={`/product/${product.slug}`} className="relative w-16 h-20 flex-shrink-0 bg-muted block">
           {mediaItems[0]?.type === 'image' ? (
             <Image
               src={mediaItems[0]?.src || "/placeholder.svg"}
@@ -57,22 +60,41 @@ export function CheckoutProductMedia({ product, quantity }: CheckoutProductMedia
               </div>
             </div>
           )}
-          <span className="absolute -top-2 -right-2 w-5 h-5 bg-foreground text-background text-xs rounded-full flex items-center justify-center">
-            {quantity}
-          </span>
-          {mediaItems.length > 1 && (
-            <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
-              +{mediaItems.length - 1}
-            </span>
-          )}
-        </div>
+        </Link>
         <div className="flex-1">
-          <p className="text-sm font-medium line-clamp-2">{product.name}</p>
+          <Link href={`/product/${product.slug}`} className="hover:text-primary transition-colors">
+            <p className="text-sm font-medium line-clamp-2">{product.name}</p>
+          </Link>
           <p className="text-xs text-muted-foreground">{product.color}</p>
         </div>
-        <p className="font-medium">
-          ₹{(product.price * quantity).toLocaleString()}
-        </p>
+        <div className="text-right flex flex-col items-end gap-1">
+          <p className="font-medium">
+            ₹{(product.price * quantity).toLocaleString()}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (quantity <= 1) {
+                  removeFromCart(product.id)
+                } else {
+                  updateQuantity(product.id, quantity - 1)
+                }
+              }}
+              className="w-6 h-6 flex items-center justify-center border border-primary/30 rounded text-primary hover:bg-primary/10 transition-colors"
+            >
+              {quantity <= 1 ? <Trash2 className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+            </button>
+            <span className="text-sm text-primary font-medium min-w-[16px] text-center">{quantity}</span>
+            <button
+              type="button"
+              onClick={() => updateQuantity(product.id, quantity + 1)}
+              className="w-6 h-6 flex items-center justify-center border border-primary/30 rounded text-primary hover:bg-primary/10 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Media Modal */}
@@ -88,7 +110,7 @@ export function CheckoutProductMedia({ product, quantity }: CheckoutProductMedia
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-4">
               <div className="flex gap-4">
                 {/* Thumbnails */}
@@ -97,9 +119,8 @@ export function CheckoutProductMedia({ product, quantity }: CheckoutProductMedia
                     <button
                       key={index}
                       onClick={() => setSelectedMedia(index)}
-                      className={`relative w-16 h-20 flex-shrink-0 border-2 transition-colors ${
-                        selectedMedia === index ? "border-primary" : "border-transparent"
-                      }`}
+                      className={`relative w-16 h-20 flex-shrink-0 border-2 transition-colors ${selectedMedia === index ? "border-primary" : "border-transparent"
+                        }`}
                     >
                       {media.type === 'image' ? (
                         <Image
