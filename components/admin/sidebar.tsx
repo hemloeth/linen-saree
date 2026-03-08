@@ -58,6 +58,11 @@ const sidebarItems = [
         href: "/admin/orders",
         icon: ShoppingCart,
     },
+    {
+        title: "Hero Section",
+        href: "/admin/hero",
+        icon: Images,
+    },
 ]
 
 export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {

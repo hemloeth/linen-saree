@@ -2,14 +2,26 @@
 
 import { useState, useEffect } from "react"
 import { ChevronDown, X, Filter } from "lucide-react"
-import { 
-  FilterOptions, 
-  SortOption, 
-  getUniqueColors, 
-  getUniqueFabrics, 
+import {
+  FilterOptions,
+  SortOption,
+  getUniqueColors,
+  getUniqueFabrics,
   getPriceRange,
-  categories 
+  type Product
 } from "@/lib/products"
+
+interface BackendCategory {
+  _id: string
+  name: string
+  sortDesc: string
+  image: string
+}
+
+interface FilterCategory {
+  slug: string
+  name: string
+}
 
 interface ProductFiltersProps {
   filters: FilterOptions
@@ -18,6 +30,7 @@ interface ProductFiltersProps {
   onSortChange: (sortBy: SortOption) => void
   showFilters?: boolean
   onToggleFilters?: () => void
+  products: Product[]
 }
 
 export function ProductFilters({
@@ -26,15 +39,54 @@ export function ProductFilters({
   onFiltersChange,
   onSortChange,
   showFilters = false, // Reverted back to false
-  onToggleFilters
+  onToggleFilters,
+  products
 }: ProductFiltersProps) {
-  const [colors] = useState(getUniqueColors())
-  const [fabrics] = useState(getUniqueFabrics())
-  const [priceRange] = useState(getPriceRange())
+  const [colors, setColors] = useState<string[]>([])
+  const [fabrics, setFabrics] = useState<string[]>([])
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 10000 })
   const [localPriceRange, setLocalPriceRange] = useState({
-    min: filters.priceRange?.min ?? priceRange.min,
-    max: filters.priceRange?.max ?? priceRange.max
+    min: filters.priceRange?.min ?? 0,
+    max: filters.priceRange?.max ?? 10000
   })
+  const [categories, setCategories] = useState<FilterCategory[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/category/allcategory`)
+        const data = await res.json()
+        if (data.success && data.categories) {
+          const mapped = data.categories.map((c: BackendCategory) => ({
+            slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+            name: c.name,
+          }))
+          setCategories(mapped)
+        }
+      } catch (err) {
+        console.error("Failed to fetch product filter categories:", err)
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    if (products.length > 0) {
+      setColors(getUniqueColors(products))
+      setFabrics(getUniqueFabrics(products))
+
+      const newRange = getPriceRange(products)
+      setPriceRange(newRange)
+      setLocalPriceRange({
+        min: filters.priceRange?.min ?? newRange.min,
+        max: filters.priceRange?.max ?? newRange.max
+      })
+    }
+  }, [products])
 
   // Update local price range when filters change
   useEffect(() => {
@@ -49,7 +101,7 @@ export function ProductFilters({
     const newCategories = checked
       ? [...currentCategories, categorySlug]
       : currentCategories.filter(c => c !== categorySlug)
-    
+
     onFiltersChange({
       ...filters,
       categories: newCategories.length > 0 ? newCategories : undefined
@@ -61,7 +113,7 @@ export function ProductFilters({
     const newColors = checked
       ? [...currentColors, color]
       : currentColors.filter(c => c !== color)
-    
+
     onFiltersChange({
       ...filters,
       colors: newColors.length > 0 ? newColors : undefined
@@ -73,7 +125,7 @@ export function ProductFilters({
     const newFabrics = checked
       ? [...currentFabrics, fabric]
       : currentFabrics.filter(f => f !== fabric)
-    
+
     onFiltersChange({
       ...filters,
       fabrics: newFabrics.length > 0 ? newFabrics : undefined
@@ -122,7 +174,7 @@ export function ProductFilters({
               )}
             </button>
           )}
-          
+
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
@@ -160,17 +212,27 @@ export function ProductFilters({
           <div>
             <h3 className="font-medium mb-3">Categories</h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {categories.map((category) => (
-                <label key={category.slug} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={filters.categories?.includes(category.slug) || false}
-                    onChange={(e) => handleCategoryChange(category.slug, e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <span className="text-sm">{category.name}</span>
-                </label>
-              ))}
+              {loadingCategories ? (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div className="h-4 bg-muted rounded w-5/6"></div>
+                </div>
+              ) : categories.length > 0 ? (
+                categories.map((category) => (
+                  <label key={category.slug} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filters.categories?.includes(category.slug) || false}
+                      onChange={(e) => handleCategoryChange(category.slug, e.target.checked)}
+                      className="rounded border-border"
+                    />
+                    <span className="text-sm">{category.name}</span>
+                  </label>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">No categories</span>
+              )}
             </div>
           </div>
 

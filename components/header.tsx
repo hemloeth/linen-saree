@@ -141,11 +141,7 @@ export function Header() {
           </div>
 
           {/* Center - Brand Name */}
-          <Link href="/" className="absolute left-1/2 transform -translate-x-1/2 flex flex-col items-center z-10 w-fit max-w-[120px] sm:max-w-none">
-            <span className="font-serif text-xs sm:text-xl lg:text-2xl font-semibold tracking-tight text-foreground whitespace-nowrap">
-              Linen Sarees
-            </span>
-          </Link>
+
 
           {/* Right Side - Navigation and Icons */}
           <div className="flex items-center gap-1 sm:gap-4 relative z-20">

@@ -1,37 +1,52 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
 
-const categories = [
-  {
-    name: "Handloom",
-    description: "Traditional weaves",
-    image: "/images/handloom-saree.jpg",
-    href: "#handloom",
-  },
-  {
-    name: "Designer",
-    description: "Contemporary elegance",
-    image: "/images/designer-saree.jpg",
-    href: "#designer",
-  },
-  {
-    name: "Bridal",
-    description: "Wedding collection",
-    image: "/images/bridal-saree.jpg",
-    href: "#bridal",
-  },
-  {
-    name: "Casual",
-    description: "Everyday luxury",
-    image: "/images/casual-saree.jpg",
-    href: "#casual",
-  },
-]
+interface BackendCategory {
+  _id: string
+  name: string
+  sortDesc: string
+  image: string
+}
+
+interface CuratedCategory {
+  name: string
+  description: string
+  image: string
+  href: string
+}
 
 export function CuratedSection() {
+  const [categories, setCategories] = useState<CuratedCategory[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/category/allcategory`)
+        const data = await res.json()
+        if (data.success && data.categories) {
+          const mapped = data.categories.slice(0, 4).map((c: BackendCategory) => ({
+            name: c.name,
+            description: c.sortDesc,
+            image: c.image,
+            href: `/collections/${c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+          }))
+          setCategories(mapped)
+        }
+      } catch (err) {
+        console.error("Failed to fetch curated categories:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
   return (
     <section id="collections" className="py-20 lg:py-32 bg-background">
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
@@ -52,7 +67,11 @@ export function CuratedSection() {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {categories.map((category, index) => (
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-sm" />
+            ))
+          ) : categories.map((category, index) => (
             <Link
               key={category.name}
               href={category.href}
@@ -65,10 +84,10 @@ export function CuratedSection() {
                 src={category.image || "/placeholder.svg"}
                 alt={category.name}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              
+
               {/* Content */}
               <div className="absolute inset-x-0 bottom-0 p-6 text-white">
                 <p className="font-sans text-xs tracking-widest uppercase opacity-70 mb-2">

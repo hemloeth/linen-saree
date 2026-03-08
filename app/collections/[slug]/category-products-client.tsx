@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 import { ProductCard } from "@/components/product-card"
 import { ProductFilters } from "@/components/product-filters"
-import { 
-  Product,
-  FilterOptions,
-  SortOption,
+import {
+  type Product,
+  type FilterOptions,
+  type SortOption,
   filterProducts,
   sortProducts
 } from "@/lib/products"
@@ -17,9 +17,9 @@ interface CategoryProductsClientProps {
   pageTitle: string
 }
 
-export function CategoryProductsClient({ 
-  initialProducts, 
-  pageTitle 
+export function CategoryProductsClient({
+  initialProducts,
+  pageTitle
 }: CategoryProductsClientProps) {
   const [filters, setFilters] = useState<FilterOptions>({})
   const [sortBy, setSortBy] = useState<SortOption>('featured')
@@ -51,6 +51,7 @@ export function CategoryProductsClient({
           onSortChange={handleSortChange}
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters(!showFilters)}
+          products={initialProducts}
         />
 
         {/* Results Count */}
@@ -70,7 +71,7 @@ export function CategoryProductsClient({
         ) : (
           <div className="text-center py-20">
             <p className="text-muted-foreground text-lg mb-4">
-              {Object.keys(filters).length > 0 
+              {Object.keys(filters).length > 0
                 ? "No products match your current filters"
                 : "No products found in this collection"
               }

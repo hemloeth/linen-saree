@@ -14,8 +14,8 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Header />
-      <div className="pt-[128px] lg:pt-[136px]">
-        <AutoScrollHero />
+      <AutoScrollHero />
+      <div>
         <NewCollections />
         <CategoryGrid />
         <CollectionBanners />

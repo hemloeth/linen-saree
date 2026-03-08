@@ -2,7 +2,8 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { searchProducts, FilterOptions, SortOption } from "@/lib/products"
+import { FilterOptions, SortOption } from "@/lib/products"
+import { useProducts } from "@/context/product-context"
 import { SearchResults } from "@/components/search-results"
 import { PageHeroSlider } from "@/components/page-hero-slider"
 import { Header } from "@/components/header"
@@ -37,18 +38,19 @@ const searchSlides = [
 ]
 
 function SearchContent() {
+  const { searchProducts } = useProducts()
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [filters, setFilters] = useState<FilterOptions>({})
   const [sortBy, setSortBy] = useState<SortOption>('featured')
-  const [results, setResults] = useState(searchProducts(query, filters, sortBy))
+  const [results, setResults] = useState(() => searchProducts(query, filters, sortBy))
 
   useEffect(() => {
     const searchQuery = searchParams.get('q') || ''
     setQuery(searchQuery)
     const newResults = searchProducts(searchQuery, filters, sortBy)
     setResults(newResults)
-    
+
     // Update page title
     if (searchQuery) {
       document.title = `Search: ${searchQuery} - Linen Sarees`
@@ -61,7 +63,7 @@ function SearchContent() {
     e.preventDefault()
     const newResults = searchProducts(query, filters, sortBy)
     setResults(newResults)
-    
+
     // Update URL without page reload
     const url = new URL(window.location.href)
     if (query.trim()) {
@@ -76,7 +78,7 @@ function SearchContent() {
     setQuery(suggestion)
     const newResults = searchProducts(suggestion, filters, sortBy)
     setResults(newResults)
-    
+
     // Update URL
     const url = new URL(window.location.href)
     url.searchParams.set('q', suggestion)
@@ -122,7 +124,7 @@ function SearchContent() {
           <div className="mb-8">
             {query && (
               <p className="text-muted-foreground text-center">
-                {results.length > 0 
+                {results.length > 0
                   ? `Found ${results.length} result${results.length === 1 ? '' : 's'} for "${query}"`
                   : `No results found for "${query}"`
                 }
@@ -131,9 +133,9 @@ function SearchContent() {
           </div>
 
           {/* Results */}
-          <SearchResults 
-            products={results} 
-            query={query} 
+          <SearchResults
+            products={results}
+            query={query}
             onSuggestionClick={handleSuggestionClick}
             onFiltersChange={handleFiltersChange}
           />
@@ -147,7 +149,7 @@ export default function SearchPage() {
   return (
     <main className="min-h-screen">
       <Header />
-      
+
       <Suspense fallback={
         <div className="mt-[96px] lg:mt-[104px] min-h-[50vh] flex items-center justify-center">
           <div className="text-center">

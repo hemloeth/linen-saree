@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, Share2, Minus, Plus, Check, Play, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react"
@@ -66,10 +66,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
     if (Math.abs(swipeDistance) > minSwipeDistance) {
       if (swipeDistance > 0) {
-        // Swipe left - next image
         setSelectedMedia(prev => (prev + 1) % mediaItems.length)
       } else {
-        // Swipe right - previous image
         setSelectedMedia(prev => (prev - 1 + mediaItems.length) % mediaItems.length)
       }
     }
@@ -100,7 +98,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   return (
     <section className="py-2 sm:py-16 px-2 sm:px-4 lg:px-8">
       <div className="max-w-[1400px] mx-auto">
-        {/* Breadcrumb - Further reduced size and spacing */}
+        {/* Breadcrumb */}
         <nav className="text-[9px] sm:text-xs sm:text-sm text-muted-foreground mb-3 flex flex-wrap items-center gap-y-0.5">
           <Link href="/" className="hover:text-foreground inline-flex items-center min-w-fit">Home</Link>
           <span className="mx-1 sm:mx-2 text-border">/</span>
@@ -114,8 +112,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
           {/* Image Gallery */}
           <div className="flex flex-col-reverse lg:flex-row gap-4">
-            {/* Thumbnails - Hidden on mobile, shown on desktop */}
-            <div className="hidden lg:flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible">
+            {/* Thumbnails - Vertical on left side (desktop) */}
+            <div className="hidden lg:flex lg:flex-col gap-3">
               {mediaItems.map((media, index) => (
                 <button
                   key={index}
@@ -149,7 +147,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             {/* Main Media with Swipe Support */}
             <div className="relative flex-1 w-full">
               <div
-                className="relative overflow-hidden bg-muted select-none w-full aspect-[4/5] rounded-sm border border-border/50"
+                className="relative overflow-hidden select-none w-full aspect-[9/8] rounded-sm"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -160,22 +158,20 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     alt={product.name}
                     width={1000}
                     height={1250}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     priority
                     draggable={false}
                   />
                 ) : (
                   <video
                     src={mediaItems[selectedMedia]?.src}
-                    className="w-full h-full object-cover bg-black"
+                    className="w-full h-full object-contain"
                     controls
                     autoPlay
                     muted
                     loop
                   />
                 )}
-
-
 
                 {/* Navigation Arrows - Only show if more than 1 media item */}
                 {mediaItems.length > 1 && (
@@ -328,7 +324,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   size="lg"
-                  className={`flex-1 h-auto py-3 sm:py-5 px-6 text-sm sm:text-base font-bold tracking-wide transition-all duration-300 active:scale-95 ${isAdded
+                  className={`flex-1 h-auto py-3 sm:py-3 px-6 text-sm sm:text-base font-bold tracking-wide transition-all duration-300 active:scale-95 ${isAdded
                     ? "bg-green-600 hover:bg-green-600 text-white scale-[1.02]"
                     : "bg-primary hover:bg-primary/90"
                     }`}
@@ -350,7 +346,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full h-auto py-3 sm:py-5 px-6 text-sm sm:text-base font-bold tracking-wide border-primary text-primary hover:bg-primary/5 transition-all active:scale-95 focus-visible:ring-primary"
+                    className="w-full h-auto py-3 sm:py-3 px-6 text-sm sm:text-base font-bold tracking-wide border-primary text-primary hover:bg-primary/5 transition-all active:scale-95 focus-visible:ring-primary"
                     onClick={() => addToCart(product, quantity)}
                   >
                     Buy It Now

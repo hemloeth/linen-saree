@@ -13,7 +13,7 @@ import { SuccessModal } from "@/components/admin/success-modal"
 import { Badge } from "@/components/ui/badge"
 import { AddCategoryModal } from "@/components/admin/add-category-modal"
 import { useCategory } from "@/context/category-context"
-import { useProduct } from "@/context/product-context"
+import { useProducts } from "@/context/product-context"
 import {
     Select,
     SelectContent,
@@ -26,7 +26,7 @@ import {
 
 export default function AddProductPage() {
     const router = useRouter()
-    const { addProduct, uploadVideo, loading } = useProduct()
+    const { addProduct, uploadVideo, loading } = useProducts()
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [lastAddedName, setLastAddedName] = useState("")
     const [mainImage, setMainImage] = useState<string | null>(null)

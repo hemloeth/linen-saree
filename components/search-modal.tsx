@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Search, X } from "lucide-react"
-import { searchProducts } from "@/lib/products"
+import { useProducts } from "@/context/product-context"
 import { ProductCard } from "@/components/product-card"
 import { cn } from "@/lib/utils"
 
@@ -13,8 +13,9 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
+  const { searchProducts } = useProducts()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState(searchProducts(''))
+  const [results, setResults] = useState(() => searchProducts(''))
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -26,7 +27,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         setResults(searchProducts(query))
         setIsLoading(false)
       }, 150)
-      
+
       return () => clearTimeout(timeoutId)
     } else {
       setResults([])
@@ -109,7 +110,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               <p className="text-sm text-muted-foreground mt-2">Searching...</p>
             </div>
           )}
-          
+
           {!isLoading && results.length > 0 && (
             <div className="max-h-96 overflow-y-auto">
               <p className="text-sm text-muted-foreground mb-4">

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { ShoppingBag, Heart, Play, Pause, ChevronLeft, ChevronRight } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
-import { products } from "@/lib/products"
+import { useProducts } from "@/context/product-context"
 import { Header } from "@/components/header"
 import Link from "next/link"
 
@@ -23,8 +23,9 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
   const [isPlaying, setIsPlaying] = useState(true)
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
-  
-  const product = products.find(p => p.id === productId) || products[0]
+  const { mappedProducts } = useProducts()
+
+  const product = mappedProducts.find(p => p.id === productId) || mappedProducts[0] || ({} as any)
   const discount = Math.round(((originalPrice - price) / originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
 
@@ -61,10 +62,10 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onLoadedData={() => setIsPlaying(true)}
           />
-          
+
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
+
           {/* Badges */}
           <div className="absolute top-1 left-1 md:top-2 md:left-2 flex flex-col gap-1 z-10 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)]">
             <span className="bg-primary text-primary-foreground text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1 font-medium rounded-sm whitespace-nowrap inline-block">
@@ -96,9 +97,8 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
                 e.stopPropagation()
                 handleWishlistClick()
               }}
-              className={`p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${
-                isWishlisted ? 'text-primary' : ''
-              }`}
+              className={`p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${isWishlisted ? 'text-primary' : ''
+                }`}
               aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
               <Heart className={`w-3 h-3 md:w-4 md:h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
@@ -224,7 +224,7 @@ const extendedVideoCards = [
     productId: "11",
     category: "Silk"
   },
-  
+
   // Banarasi Collection
   {
     title: "Traditional Banarasi Gold",
@@ -250,7 +250,7 @@ const extendedVideoCards = [
     productId: "14",
     category: "Banarasi"
   },
-  
+
   // Handloom Collection
   {
     title: "Artisan Handloom Special",
@@ -276,7 +276,7 @@ const extendedVideoCards = [
     productId: "17",
     category: "Handloom"
   },
-  
+
   // Linen Collection
   {
     title: "Organic Linen Comfort",
@@ -302,7 +302,7 @@ const extendedVideoCards = [
     productId: "20",
     category: "Linen"
   },
-  
+
   // Dupatta Collection
   {
     title: "Embroidered Dupatta Set",
@@ -328,7 +328,7 @@ const extendedVideoCards = [
     productId: "23",
     category: "Dupatta"
   },
-  
+
   // Festive Collection
   {
     title: "Wedding Special Saree",
@@ -354,7 +354,7 @@ const extendedVideoCards = [
     productId: "26",
     category: "Festive"
   },
-  
+
   // Contemporary Collection
   {
     title: "Modern Drape Style",
@@ -389,19 +389,19 @@ function VideoCollectionContent() {
   const categoryFromUrl = searchParams.get('category')
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "All")
   const [currentHeroVideo, setCurrentHeroVideo] = useState(0)
-  
+
   // Update selected category when URL parameter changes
   useEffect(() => {
     if (categoryFromUrl && categories.includes(categoryFromUrl)) {
       setSelectedCategory(categoryFromUrl)
     }
   }, [categoryFromUrl])
-  
+
   // Create comprehensive video collection by combining base and extended videos
   const videoCards = [...baseVideoCards, ...extendedVideoCards]
-  
-  const filteredVideos = selectedCategory === "All" 
-    ? videoCards 
+
+  const filteredVideos = selectedCategory === "All"
+    ? videoCards
     : videoCards.filter(card => card.category === selectedCategory)
 
   const heroVideos = [
@@ -440,9 +440,8 @@ function VideoCollectionContent() {
           {heroVideos.map((video, index) => (
             <div
               key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ${
-                index === currentHeroVideo ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentHeroVideo ? 'opacity-100' : 'opacity-0'
+                }`}
             >
               <video
                 autoPlay
@@ -454,10 +453,10 @@ function VideoCollectionContent() {
               />
             </div>
           ))}
-          
+
           {/* Dark Overlay */}
           <div className="absolute inset-0 bg-black/40" />
-          
+
           {/* Navigation Arrows */}
           <button
             onClick={goToPrevious}
@@ -473,7 +472,7 @@ function VideoCollectionContent() {
           >
             <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
           </button>
-          
+
           {/* Hero Content */}
           <div className="absolute inset-0 flex items-center justify-center text-center text-white z-10">
             <div className="max-w-4xl px-4">
@@ -488,7 +487,7 @@ function VideoCollectionContent() {
               <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed mb-8">
                 Experience the beauty and elegance of our premium saree collection through immersive video showcases
               </p>
-              <button 
+              <button
                 onClick={() => {
                   document.getElementById('video-grid')?.scrollIntoView({ behavior: 'smooth' })
                 }}
@@ -525,11 +524,10 @@ function VideoCollectionContent() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-                    selectedCategory === category
+                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${selectedCategory === category
                       ? 'bg-primary text-primary-foreground shadow-lg scale-105'
                       : 'bg-white hover:bg-gray-50 text-gray-700 shadow-md hover:shadow-lg hover:scale-105'
-                  }`}
+                    }`}
                 >
                   {category}
                 </button>
@@ -549,7 +547,7 @@ function VideoCollectionContent() {
                 {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''} available
               </p>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
               {filteredVideos.map((card, index) => (
                 <VideoCard
@@ -563,7 +561,7 @@ function VideoCollectionContent() {
                 />
               ))}
             </div>
-            
+
             {filteredVideos.length === 0 && (
               <div className="text-center py-16">
                 <p className="text-xl text-muted-foreground">No videos found for the selected category.</p>
@@ -583,13 +581,13 @@ function VideoCollectionContent() {
                 Explore our complete range of premium sarees, from traditional handlooms to contemporary designs
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Link 
+                <Link
                   href="/"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-full font-semibold transition-colors duration-300 inline-block"
                 >
                   View All Products
                 </Link>
-                <Link 
+                <Link
                   href="/contact"
                   className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-3 rounded-full font-semibold border border-gray-200 transition-colors duration-300 inline-block"
                 >

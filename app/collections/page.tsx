@@ -1,7 +1,7 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { PageHeroSlider } from "@/components/page-hero-slider"
-import { products, categories } from "@/lib/products"
+import { categories } from "@/lib/products"
 import Link from "next/link"
 import { CollectionsClient } from "./collections-client"
 
@@ -41,7 +41,7 @@ export default function CollectionsPage() {
   return (
     <main className="min-h-screen">
       <Header />
-      
+
       {/* Hero Banner with Auto-Scroll */}
       <div className="mt-[96px] lg:mt-[104px]">
         <PageHeroSlider slides={collectionSlides} height="40vh" />
@@ -71,7 +71,7 @@ export default function CollectionsPage() {
       </section>
 
       {/* Products Section - Client Component */}
-      <CollectionsClient initialProducts={products} />
+      <CollectionsClient />
 
       <Footer />
     </main>

@@ -57,10 +57,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
   }
 
   return (
-    <div className={cn("group relative w-full", className)}>
+    <div className={cn("group relative w-full max-w-[280px] mx-auto", className)}>
       <div className="relative w-full mb-4">
         <div
-          className="aspect-[2/3] md:aspect-[4/5] overflow-hidden bg-muted rounded-sm relative"
+          className="relative overflow-hidden rounded-sm"
           onMouseEnter={() => {
             if (!api) return
               ; (api.plugins() as any).autoplay.play()
@@ -83,12 +83,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
               <CarouselContent className="-ml-0 h-full">
                 {product.images.map((img, index) => (
                   <CarouselItem key={index} className="pl-0 basis-full">
-                    <Link href={`/product/${product.slug}`} className="block w-full h-full relative">
+                    <Link href={`/product/${product.slug}`} className="block w-full">
                       <Image
-                        src={img}
+                        src={img || "/placeholder.svg"}
                         alt={`${product.name} - Image ${index + 1}`}
-                        fill
-                        className="object-cover object-top"
+                        width={500}
+                        height={650}
+                        className="w-full h-auto block transition-transform duration-500 group-hover:scale-105"
                       />
                     </Link>
                   </CarouselItem>
@@ -112,12 +113,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
               />
             </Carousel>
           ) : (
-            <Link href={`/product/${product.slug}`}>
+            <Link href={`/product/${product.slug}`} className="block w-full">
               <Image
                 src={product.image || "/placeholder.svg"}
                 alt={product.name}
-                fill
-                className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                width={500}
+                height={650}
+                className="w-full h-auto block transition-transform duration-500 group-hover:scale-105"
               />
             </Link>
           )}
@@ -178,8 +180,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <button
           onClick={handleAddToCart}
           className={`w-10 md:w-12 py-2 sm:py-2.5 flex items-center justify-center transition-all duration-300 rounded-sm active:scale-95 shadow-sm ${isAdded
-              ? "bg-green-600 text-white scale-105"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
+            ? "bg-green-600 text-white scale-105"
+            : "bg-primary text-primary-foreground hover:bg-primary/90"
             }`}
           title="Add to Cart"
         >

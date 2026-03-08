@@ -29,7 +29,64 @@ export interface Product {
   internationalNote?: string
 }
 
-export const products: Product[] = [
+// Map a backend product to the frontend Product interface
+function mapProductFromDB(dbProduct: any): Product {
+  const isVideoStr = typeof dbProduct.videoFile === "string" || typeof dbProduct.videoUrl === "string";
+
+  return {
+    id: dbProduct._id.toString(),
+    name: dbProduct.name,
+    slug: dbProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+    category: dbProduct.category,
+    categorySlug: dbProduct.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+    price: dbProduct.price,
+    originalPrice: dbProduct.regularPrice || dbProduct.price,
+    image: dbProduct.mainImage,
+    images: dbProduct.galleryImages ? dbProduct.galleryImages.map((img: any) => img.url) : [],
+    videos: isVideoStr ? [dbProduct.videoFile || dbProduct.videoUrl].filter(Boolean) : [],
+    description: dbProduct.shortDescription || "",
+    details: [
+      dbProduct.material ? `Material: ${dbProduct.material}` : "",
+      dbProduct.sareeSize ? `Saree Size: ${dbProduct.sareeSize}` : "",
+      dbProduct.blouseSize ? `Blouse Size: ${dbProduct.blouseSize}` : "",
+      dbProduct.washCare ? `Care: ${dbProduct.washCare}` : ""
+    ].filter(Boolean),
+    fabric: dbProduct.material || "Linen",
+    color: dbProduct.color || "Multicolor",
+    isOnSale: !!dbProduct.regularPrice && dbProduct.regularPrice > dbProduct.price,
+    isFeatured: true, // We can make this dynamic later if the backend supports it
+    isNew: true,       // We can make this dynamic later
+    material: dbProduct.material,
+    sareeSize: dbProduct.sareeSize,
+    blouseSize: dbProduct.blouseSize,
+    washCare: dbProduct.washCare,
+    dispatch: dbProduct.dispatch,
+    disclaimer: dbProduct.disclaimer,
+    internationalNote: dbProduct.internationalNote
+  };
+}
+
+// Fetch all products from the backend and map them
+export async function fetchProductsFromDB(): Promise<Product[]> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/product/allproducts`, {
+      cache: 'no-store' // Fetch fresh data on every request
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch products");
+
+    const data = await res.json();
+    if (data.success && data.products) {
+      return data.products.map(mapProductFromDB);
+    }
+  } catch (error) {
+    console.error("Error fetching products from DB, using fallbacks:", error);
+  }
+
+  return fallbackProducts;
+}
+
+export const fallbackProducts: Product[] = [
   {
     id: "1",
     name: "Brown Color Pure Linen Saree",
@@ -357,36 +414,33 @@ export const categories = [
   }
 ]
 
-export function getProductBySlug(slug: string): Product | undefined {
-  return products.find(p => p.slug === slug)
+export function getProductBySlug(productsList: Product[], slug: string): Product | undefined {
+  return productsList.find(p => p.slug === slug)
 }
 
-export function getProductsByCategory(categorySlug: string): Product[] {
-  return products.filter(p => p.categorySlug === categorySlug)
+export function getProductsByCategory(productsList: Product[], categorySlug: string): Product[] {
+  return productsList.filter(p => p.categorySlug === categorySlug)
 }
 
-export function getFeaturedProducts(): Product[] {
-  return products.filter(p => p.isFeatured)
+export function getFeaturedProducts(productsList: Product[]): Product[] {
+  return productsList.filter(p => p.isFeatured)
 }
 
-export function getNewProducts(): Product[] {
-  return products.filter(p => p.isNew)
+export function getNewProducts(productsList: Product[]): Product[] {
+  return productsList.filter(p => p.isNew)
 }
 
-export function getBestSellers(): Product[] {
-  // Get best sellers based on featured products and sales
-  return products
+export function getBestSellers(productsList: Product[]): Product[] {
+  return productsList
     .filter(p => p.isFeatured || p.isOnSale)
     .sort((a, b) => {
-      // Prioritize featured products
       if (a.isFeatured && !b.isFeatured) return -1
       if (!a.isFeatured && b.isFeatured) return 1
-      // Then by discount percentage
       const aDiscount = ((a.originalPrice - a.price) / a.originalPrice) * 100
       const bDiscount = ((b.originalPrice - b.price) / b.originalPrice) * 100
       return bDiscount - aDiscount
     })
-    .slice(0, 12) // Limit to top 12 best sellers
+    .slice(0, 12)
 }
 
 // Filter and Sort Types
@@ -406,18 +460,17 @@ export interface FilterOptions {
 }
 
 // Get unique values for filters
-export function getUniqueColors(): string[] {
-  const colors = [...new Set(products.map(p => p.color))].sort()
-  return colors
+export function getUniqueColors(productsList: Product[]): string[] {
+  return [...new Set(productsList.map(p => p.color))].sort()
 }
 
-export function getUniqueFabrics(): string[] {
-  const fabrics = [...new Set(products.map(p => p.fabric))].sort()
-  return fabrics
+export function getUniqueFabrics(productsList: Product[]): string[] {
+  return [...new Set(productsList.map(p => p.fabric))].sort()
 }
 
-export function getPriceRange(): { min: number; max: number } {
-  const prices = products.map(p => p.price)
+export function getPriceRange(productsList: Product[]): { min: number; max: number } {
+  const prices = productsList.map(p => p.price)
+  if (prices.length === 0) return { min: 0, max: 0 }
   return {
     min: Math.min(...prices),
     max: Math.max(...prices)
@@ -526,17 +579,18 @@ export function sortProducts(products: Product[], sortBy: SortOption): Product[]
 
 // Enhanced search with filters and sorting
 export function searchProducts(
+  productsList: Product[],
   query: string,
   filters?: FilterOptions,
   sortBy: SortOption = 'featured'
 ): Product[] {
-  let results = products
+  let results = productsList
 
   // Apply text search if query provided
   if (query.trim()) {
     const searchTerm = query.toLowerCase().trim()
 
-    results = products.filter(product => {
+    results = productsList.filter(product => {
       // Exact matches get higher priority
       const exactMatches = [
         product.name.toLowerCase().includes(searchTerm),

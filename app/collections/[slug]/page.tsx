@@ -1,9 +1,9 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { PageHeroSlider } from "@/components/page-hero-slider"
-import { 
-  products, 
-  categories, 
+import {
+  fetchProductsFromDB,
+  categories,
   getProductsByCategory
 } from "@/lib/products"
 import Link from "next/link"
@@ -49,7 +49,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Modern designs with traditional charm"
         }
       ]
-    
+
     case "handloom":
       return [
         ...baseSlides,
@@ -66,7 +66,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Each piece tells a story of skilled craftsmanship"
         }
       ]
-    
+
     case "banarasi-silk":
       return [
         ...baseSlides,
@@ -83,7 +83,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Perfect for weddings and grand celebrations"
         }
       ]
-    
+
     case "silk-linen":
       return [
         ...baseSlides,
@@ -100,7 +100,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Timeless colors for elegant styling"
         }
       ]
-    
+
     case "embroidery":
       return [
         ...baseSlides,
@@ -117,7 +117,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Hand-embroidered motifs and patterns"
         }
       ]
-    
+
     case "kota-linen":
       return [
         ...baseSlides,
@@ -134,7 +134,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Perfect for warm weather styling"
         }
       ]
-    
+
     case "cotton-linen":
       return [
         ...baseSlides,
@@ -151,7 +151,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Soft textures for all-day comfort"
         }
       ]
-    
+
     case "new-arrivals":
       return [
         {
@@ -173,7 +173,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Beautiful new styles for everyday elegance"
         }
       ]
-    
+
     case "sale":
       return [
         {
@@ -195,7 +195,7 @@ const getCollectionSlides = (slug: string, category: any) => {
           subtitle: "Premium celebration wear on special offer"
         }
       ]
-    
+
     default:
       return baseSlides
   }
@@ -204,7 +204,7 @@ const getCollectionSlides = (slug: string, category: any) => {
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params
   const category = categories.find(c => c.slug === slug)
-  
+
   if (!category) {
     return {
       title: "Collection Not Found | Linen Sarees"
@@ -219,20 +219,22 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params
-  
+
+  const allProducts = await fetchProductsFromDB()
+
   // Handle special slugs
-  let categoryProducts = getProductsByCategory(slug)
+  let categoryProducts = getProductsByCategory(allProducts, slug)
   let category = categories.find(c => c.slug === slug)
   let pageTitle = category?.name || "Collection"
   let pageDescription = category?.description || ""
 
   // Special cases
   if (slug === "new-arrivals") {
-    categoryProducts = products.filter(p => p.isNew)
+    categoryProducts = allProducts.filter(p => p.isNew)
     pageTitle = "New Arrivals"
     pageDescription = "Discover our latest collection of handcrafted linen sarees"
   } else if (slug === "sale") {
-    categoryProducts = products.filter(p => p.isOnSale)
+    categoryProducts = allProducts.filter(p => p.isOnSale)
     pageTitle = "Sale"
     pageDescription = "Exclusive discounts on premium linen sarees"
   }
@@ -254,12 +256,12 @@ export default async function CategoryPage({ params }: Props) {
   return (
     <main className="min-h-screen">
       <Header />
-      
+
       {/* Hero Banner with Auto-Scroll */}
       <div className="mt-[96px] lg:mt-[104px]">
-        <PageHeroSlider 
-          slides={collectionSlides} 
-          height="40vh" 
+        <PageHeroSlider
+          slides={collectionSlides}
+          height="40vh"
           breadcrumbs={breadcrumbs}
         />
       </div>
@@ -278,11 +280,10 @@ export default async function CategoryPage({ params }: Props) {
               <Link
                 key={cat.slug}
                 href={`/collections/${cat.slug}`}
-                className={`px-5 py-2 text-sm tracking-wide transition-colors ${
-                  cat.slug === slug
+                className={`px-5 py-2 text-sm tracking-wide transition-colors ${cat.slug === slug
                     ? "bg-foreground text-background"
                     : "border border-border hover:bg-foreground hover:text-background"
-                }`}
+                  }`}
               >
                 {cat.name}
               </Link>
@@ -292,7 +293,7 @@ export default async function CategoryPage({ params }: Props) {
       </section>
 
       {/* Products Section - Client Component */}
-      <CategoryProductsClient 
+      <CategoryProductsClient
         initialProducts={categoryProducts}
         pageTitle={pageTitle}
       />

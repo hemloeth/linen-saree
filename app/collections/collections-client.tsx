@@ -3,29 +3,25 @@
 import { useState, useEffect } from "react"
 import { ProductCard } from "@/components/product-card"
 import { ProductFilters } from "@/components/product-filters"
-import { 
-  Product,
-  FilterOptions,
-  SortOption,
-  filterProducts,
-  sortProducts
+import {
+  type Product,
+  type FilterOptions,
+  type SortOption
 } from "@/lib/products"
+import { useProducts } from "@/context/product-context"
 
-interface CollectionsClientProps {
-  initialProducts: Product[]
-}
-
-export function CollectionsClient({ initialProducts }: CollectionsClientProps) {
+export function CollectionsClient() {
+  const { mappedProducts, filterProducts, sortProducts } = useProducts()
   const [filters, setFilters] = useState<FilterOptions>({})
   const [sortBy, setSortBy] = useState<SortOption>('featured')
-  const [showFilters, setShowFilters] = useState(false) // Reverted back to false
-  const [filteredProducts, setFilteredProducts] = useState(initialProducts)
+  const [showFilters, setShowFilters] = useState(false)
+  const [filteredProducts, setFilteredProducts] = useState(mappedProducts)
 
   useEffect(() => {
-    let result = filterProducts(initialProducts, filters)
+    let result = filterProducts(filters)
     result = sortProducts(result, sortBy)
     setFilteredProducts(result)
-  }, [initialProducts, filters, sortBy])
+  }, [mappedProducts, filters, sortBy])
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
     setFilters(newFilters)
@@ -46,12 +42,13 @@ export function CollectionsClient({ initialProducts }: CollectionsClientProps) {
           onSortChange={handleSortChange}
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters(!showFilters)}
+          products={mappedProducts}
         />
 
         {/* Results Count */}
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
-            Showing {filteredProducts.length} of {initialProducts.length} products
+            Showing {filteredProducts.length} of {mappedProducts.length} products
           </p>
         </div>
 

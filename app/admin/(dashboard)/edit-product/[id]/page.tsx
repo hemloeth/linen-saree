@@ -11,7 +11,7 @@ import { SuccessModal } from "@/components/admin/success-modal"
 import { Badge } from "@/components/ui/badge"
 import { AddCategoryModal } from "@/components/admin/add-category-modal"
 import { useCategory } from "@/context/category-context"
-import { useProduct } from "@/context/product-context"
+import { useProducts } from "@/context/product-context"
 import {
     Select,
     SelectContent,
@@ -24,7 +24,7 @@ export default function EditProductPage() {
     const router = useRouter()
     const params = useParams()
     const productId = params.id as string
-    const { products, updateProduct, uploadVideo, loading } = useProduct()
+    const { products, updateProduct, uploadVideo, loading } = useProducts()
     const { categories: dbCategories } = useCategory()
 
     const [showSuccessModal, setShowSuccessModal] = useState(false)

@@ -5,7 +5,7 @@ import { useRef, useState } from "react"
 import { Heart, ShoppingBag, Play, Pause } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
-import { products } from "@/lib/products"
+import { useProducts } from "@/context/product-context"
 
 interface VideoCardProps {
   title: string
@@ -21,8 +21,9 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
   const [isPlaying, setIsPlaying] = useState(true)
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
-  
-  const product = products.find(p => p.id === productId) || products[0]
+  const { mappedProducts } = useProducts()
+
+  const product = mappedProducts.find(p => p.id === productId) || mappedProducts[0]
   const discount = Math.round(((originalPrice - price) / originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
 
@@ -59,10 +60,10 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onLoadedData={() => setIsPlaying(true)}
           />
-          
+
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
+
           {/* Badges */}
           <div className="absolute top-1 left-1 md:top-2 md:left-2 flex flex-col gap-1 z-10 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)]">
             <span className="bg-primary text-primary-foreground text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1 font-medium rounded-sm whitespace-nowrap inline-block">
@@ -97,9 +98,8 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
                 e.stopPropagation()
                 handleWishlistClick()
               }}
-              className={`p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${
-                isWishlisted ? 'text-primary' : ''
-              }`}
+              className={`p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${isWishlisted ? 'text-primary' : ''
+                }`}
               aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
               <Heart className={`w-3 h-3 md:w-4 md:h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
@@ -256,7 +256,7 @@ export function VideoSection() {
             </p>
             <div className="h-px w-16 bg-gradient-to-l from-transparent to-border" />
           </div>
-          <Link 
+          <Link
             href="/video-collection"
             className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-full font-semibold transition-colors duration-300"
           >

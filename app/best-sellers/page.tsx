@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 import Link from "next/link"
-import { getBestSellers } from "@/lib/products"
+import { getBestSellers, fetchProductsFromDB } from "@/lib/products"
 import { ProductCard } from "@/components/product-card"
 
 export const metadata: Metadata = {
@@ -8,8 +8,9 @@ export const metadata: Metadata = {
   description: "Discover our most popular and best-selling linen sarees. Handpicked favorites loved by our customers.",
 }
 
-export default function BestSellersPage() {
-  const bestSellers = getBestSellers()
+export default async function BestSellersPage() {
+  const products = await fetchProductsFromDB()
+  const bestSellers = getBestSellers(products)
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,7 +22,7 @@ export default function BestSellersPage() {
               Best Sellers
             </h1>
             <p className="text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Discover our most loved sarees - handpicked favorites that have won the hearts of our customers. 
+              Discover our most loved sarees - handpicked favorites that have won the hearts of our customers.
               From elegant pure linen to luxurious Banarasi silk, these are the pieces everyone is talking about.
             </p>
           </div>
@@ -47,7 +48,7 @@ export default function BestSellersPage() {
               Why Our Customers Love These
             </h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -60,7 +61,7 @@ export default function BestSellersPage() {
                 Handpicked for their exceptional fabric quality and craftsmanship that stands the test of time.
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +73,7 @@ export default function BestSellersPage() {
                 These sarees have received the most love from our customers with outstanding reviews and repeat purchases.
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,19 +99,19 @@ export default function BestSellersPage() {
             Discover our complete range of handcrafted sarees, from traditional handloom to luxurious silk blends.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link 
+            <Link
               href="/collections/pure-linen"
               className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-sm font-medium transition-colors"
             >
               Pure Linen Collection
             </Link>
-            <Link 
+            <Link
               href="/collections/banarasi-silk"
               className="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 py-3 rounded-sm font-medium transition-colors"
             >
               Banarasi Silk Collection
             </Link>
-            <Link 
+            <Link
               href="/collections"
               className="border border-border hover:bg-muted px-6 py-3 rounded-sm font-medium transition-colors"
             >

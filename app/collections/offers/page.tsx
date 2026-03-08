@@ -1,7 +1,7 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { PageHeroSlider } from "@/components/page-hero-slider"
-import { products } from "@/lib/products"
+import { fetchProductsFromDB } from "@/lib/products"
 import { ProductCard } from "@/components/product-card"
 
 export const metadata = {
@@ -30,21 +30,23 @@ const offerSlides = [
   }
 ]
 
-// Filter products for offers - all products with enhanced discount display
-const offerProducts = products.map(product => {
-  const discountPercentage = Math.floor(((product.originalPrice - product.price) / product.originalPrice) * 100)
-  return {
-    ...product,
-    discount: discountPercentage,
-    isOnSale: true
-  }
-}).filter(product => product.discount > 0) // Only show products with actual discounts
+export default async function OffersCollectionPage() {
+  const allProducts = await fetchProductsFromDB()
 
-export default function OffersCollectionPage() {
+  // Filter products for offers - all products with enhanced discount display
+  const offerProducts = allProducts.map(product => {
+    const discountPercentage = Math.floor(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    return {
+      ...product,
+      discount: discountPercentage,
+      isOnSale: true
+    }
+  }).filter(product => product.discount > 0) // Only show products with actual discounts
+
   return (
     <main className="min-h-screen">
       <Header />
-      
+
       {/* Hero Banner */}
       <div className="mt-[96px] lg:mt-[104px]">
         <PageHeroSlider slides={offerSlides} height="50vh" />
@@ -67,8 +69,8 @@ export default function OffersCollectionPage() {
         <div className="max-w-[1400px] mx-auto text-center">
           <h2 className="text-3xl lg:text-4xl font-light mb-6">Special Offers</h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Don't miss out on these incredible deals! Our special offers collection features 
-            premium linen sarees at unbeatable prices. From everyday elegance to special 
+            Don't miss out on these incredible deals! Our special offers collection features
+            premium linen sarees at unbeatable prices. From everyday elegance to special
             occasion wear, find your perfect saree while stocks last.
           </p>
         </div>
@@ -81,7 +83,7 @@ export default function OffersCollectionPage() {
             {offerProducts.map((product) => (
               <div key={product.id} className="relative">
                 {/* Discount Badge */}
-                
+
                 <ProductCard product={product} />
                 {/* Price Display with Original Price */}
                 <div className="mt-2 text-center">

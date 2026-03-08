@@ -22,14 +22,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Search, AlertTriangle, Trash2, X, CheckSquare, Square, ListChecks } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { useProduct } from "@/context/product-context"
+import { useProducts } from "@/context/product-context"
 import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
 import { ConfirmModal } from "@/components/admin/confirm-modal"
 
 let toastId = 0
 
 export default function AdminProductsPage() {
-  const { products, deleteProduct, deleteMultipleProducts } = useProduct()
+  const { products, deleteProduct, deleteMultipleProducts } = useProducts()
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)

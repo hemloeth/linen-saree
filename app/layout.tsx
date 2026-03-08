@@ -10,6 +10,8 @@ import { CartToast } from "@/components/cart-toast"
 import WhatsAppFloat from "@/components/whatsapp-float"
 import { ClientOnly } from "@/components/client-only"
 import SmoothScroll from "@/components/SmoothScroll"
+import { ProductProvider } from "@/context/product-context"
+import { fetchProductsFromDB } from "@/lib/products"
 import './globals.css'
 
 const _cormorant = Cormorant_Garamond({
@@ -45,26 +47,31 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Fetch products on the Server to preserve SEO
+  const initialProducts = await fetchProductsFromDB()
+
   return (
     <html lang="en">
       <body className="font-sans antialiased">
         <SmoothScroll>
           <AuthProvider>
-            <CartProvider>
-              <WishlistProvider>
-                {children}
-                <ClientOnly>
-                  <CartToast />
-                  <CartSidebar />
-                  <WhatsAppFloat />
-                </ClientOnly>
-              </WishlistProvider>
-            </CartProvider>
+            <ProductProvider initialProducts={initialProducts}>
+              <CartProvider>
+                <WishlistProvider>
+                  {children}
+                  <ClientOnly>
+                    <CartToast />
+                    <CartSidebar />
+                    <WhatsAppFloat />
+                  </ClientOnly>
+                </WishlistProvider>
+              </CartProvider>
+            </ProductProvider>
           </AuthProvider>
         </SmoothScroll>
         <Analytics />

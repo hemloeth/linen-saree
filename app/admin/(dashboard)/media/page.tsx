@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useProduct } from "@/context/product-context"
+import { useProducts } from "@/context/product-context"
 import type { ImageInfo } from "@/context/product-context"
 import { Copy, Check, X, Save, Loader2, ImageIcon } from "lucide-react"
 
@@ -21,7 +21,7 @@ interface SelectedImage {
 }
 
 function MediaPageContent() {
-    const { products, loading, updateGalleryImageInfo } = useProduct()
+    const { products, loading, updateGalleryImageInfo } = useProducts()
     const router = useRouter()
     const searchParams = useSearchParams()
     const selectMode = searchParams.get("select")

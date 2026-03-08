@@ -1,6 +1,22 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react"
+import {
+    type Product as FrontendProduct,
+    type FilterOptions,
+    type SortOption,
+    getProductBySlug,
+    getProductsByCategory,
+    getFeaturedProducts,
+    getNewProducts,
+    getBestSellers,
+    getUniqueColors,
+    getUniqueFabrics,
+    getPriceRange,
+    filterProducts,
+    sortProducts,
+    searchProducts
+} from "@/lib/products"
 
 export interface ImageInfo {
     url: string
@@ -46,13 +62,28 @@ interface ProductContextType {
     updateGalleryImageInfo: (productId: string, imageIndex: number, info: Partial<ImageInfo>) => Promise<void>
     loading: boolean
     error: string | null
+
+    // Frontend Mapped Products & Helpers
+    mappedProducts: FrontendProduct[]
+    getProductBySlug: (slug: string) => FrontendProduct | undefined
+    getProductsByCategory: (categorySlug: string) => FrontendProduct[]
+    getFeaturedProducts: () => FrontendProduct[]
+    getNewProducts: () => FrontendProduct[]
+    getBestSellers: () => FrontendProduct[]
+    getUniqueColors: () => string[]
+    getUniqueFabrics: () => string[]
+    getPriceRange: () => { min: number; max: number }
+    filterProducts: (filters: FilterOptions) => FrontendProduct[]
+    sortProducts: (list: FrontendProduct[], sortBy: SortOption) => FrontendProduct[]
+    searchProducts: (query: string, filters?: FilterOptions, sort?: SortOption) => FrontendProduct[]
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined)
 
-export function ProductProvider({ children }: { children: ReactNode }) {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL
+export function ProductProvider({ children, initialProducts = [] }: { children: ReactNode, initialProducts?: FrontendProduct[] }) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     const [products, setProducts] = useState<Product[]>([])
+    const [ssrProducts] = useState<FrontendProduct[]>(initialProducts)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -224,6 +255,48 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    // Map the raw DB products to the frontend expected format
+    const mappedProducts = useMemo(() => {
+        if (products.length === 0 && ssrProducts.length > 0) {
+            return ssrProducts;
+        }
+
+        return products.map(dbProduct => {
+            const isVideoStr = typeof dbProduct.videoFile === "string" || typeof dbProduct.videoUrl === "string";
+            return {
+                id: dbProduct._id.toString(),
+                name: dbProduct.name,
+                slug: dbProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+                category: dbProduct.category,
+                categorySlug: dbProduct.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+                price: dbProduct.price,
+                originalPrice: dbProduct.regularPrice || dbProduct.price,
+                image: dbProduct.mainImage,
+                images: dbProduct.galleryImages ? dbProduct.galleryImages.map((img: any) => img.url) : [],
+                videos: isVideoStr ? [dbProduct.videoFile || dbProduct.videoUrl].filter(Boolean) : [],
+                description: dbProduct.shortDescription || "",
+                details: [
+                    dbProduct.material ? `Material: ${dbProduct.material}` : "",
+                    dbProduct.sareeSize ? `Saree Size: ${dbProduct.sareeSize}` : "",
+                    dbProduct.blouseSize ? `Blouse Size: ${dbProduct.blouseSize}` : "",
+                    dbProduct.washCare ? `Care: ${dbProduct.washCare}` : ""
+                ].filter(Boolean),
+                fabric: dbProduct.material || "Linen",
+                color: dbProduct.color || "Multicolor",
+                isOnSale: !!dbProduct.regularPrice && dbProduct.regularPrice > dbProduct.price,
+                isFeatured: true, // Mocked for now
+                isNew: true,      // Mocked for now
+                material: dbProduct.material,
+                sareeSize: dbProduct.sareeSize,
+                blouseSize: dbProduct.blouseSize,
+                washCare: dbProduct.washCare,
+                dispatch: dbProduct.dispatch,
+                disclaimer: dbProduct.disclaimer,
+                internationalNote: dbProduct.internationalNote
+            } as FrontendProduct;
+        })
+    }, [products, ssrProducts]);
+
     return (
         <ProductContext.Provider
             value={{
@@ -236,6 +309,20 @@ export function ProductProvider({ children }: { children: ReactNode }) {
                 updateGalleryImageInfo,
                 loading,
                 error,
+
+                // Frontend Helpers
+                mappedProducts,
+                getProductBySlug: (slug) => getProductBySlug(mappedProducts, slug),
+                getProductsByCategory: (cat) => getProductsByCategory(mappedProducts, cat),
+                getFeaturedProducts: () => getFeaturedProducts(mappedProducts),
+                getNewProducts: () => getNewProducts(mappedProducts),
+                getBestSellers: () => getBestSellers(mappedProducts),
+                getUniqueColors: () => getUniqueColors(mappedProducts),
+                getUniqueFabrics: () => getUniqueFabrics(mappedProducts),
+                getPriceRange: () => getPriceRange(mappedProducts),
+                filterProducts: (filters) => filterProducts(mappedProducts, filters),
+                sortProducts: (list, sortBy) => sortProducts(list, sortBy),
+                searchProducts: (query, filters, sort) => searchProducts(mappedProducts, query, filters, sort)
             }}
         >
             {children}
@@ -243,10 +330,10 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     )
 }
 
-export function useProduct() {
+export function useProducts() {
     const context = useContext(ProductContext)
     if (context === undefined) {
-        throw new Error("useProduct must be used within a ProductProvider")
+        throw new Error("useProducts must be used within a ProductProvider")
     }
     return context
 }
