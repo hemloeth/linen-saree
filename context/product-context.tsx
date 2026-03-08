@@ -92,12 +92,16 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
         const fetchProducts = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/product/allproducts`)
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch products: ${res.status}`)
+                }
                 const data = await res.json()
-                if (res.ok && data.products) {
+                if (data.products) {
                     setProducts(data.products)
                 }
             } catch (err) {
                 console.error("Failed to fetch products", err)
+                setError(err instanceof Error ? err.message : "Failed to fetch products")
             }
         }
         fetchProducts()
@@ -272,7 +276,10 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
                 price: dbProduct.price,
                 originalPrice: dbProduct.regularPrice || dbProduct.price,
                 image: dbProduct.mainImage,
-                images: dbProduct.galleryImages ? dbProduct.galleryImages.map((img: any) => img.url) : [],
+                images: [
+                    dbProduct.mainImage,
+                    ...(dbProduct.galleryImages ? dbProduct.galleryImages.map((img: any) => img.url) : [])
+                ].filter(Boolean),
                 videos: isVideoStr ? [dbProduct.videoFile || dbProduct.videoUrl].filter(Boolean) : [],
                 description: dbProduct.shortDescription || "",
                 details: [

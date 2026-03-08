@@ -27,8 +27,9 @@ export function CategoryGrid() {
     const fetchCategories = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/category/allcategory`)
+        if (!res.ok) throw new Error(`Failed to fetch categories: ${res.status}`)
         const data = await res.json()
-        if (data.success && data.categories) {
+        if (data.categories) {
           const mapped = data.categories.map((c: BackendCategory) => ({
             slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
             name: c.name,

@@ -42,6 +42,7 @@ export function AutoScrollHero() {
     const fetchSlides = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/hero`)
+        if (!res.ok) throw new Error(`Failed to fetch slides: ${res.status}`)
         const data = await res.json()
         if (data.success && data.slides && data.slides.length > 0) {
           setSlides(data.slides)

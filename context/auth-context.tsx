@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify({ name, email, phone, password }),
             })
 
-            const data = await res.json()
+            const data = await res.json().catch(() => ({ message: "Invalid server response" }))
 
             if (!res.ok) {
                 return { success: false, error: data.message || "Registration failed" }
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify({ email, password }),
             })
 
-            const data = await res.json()
+            const data = await res.json().catch(() => ({ message: "Invalid server response" }))
 
             if (!res.ok) {
                 return { success: false, error: data.message || "Invalid email or password" }

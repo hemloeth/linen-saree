@@ -30,6 +30,7 @@ export function BlogProvider({ children }: { children: ReactNode }) {
         try {
             setLoading(true)
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/allblogs`)
+            if (!response.ok) throw new Error(`Failed to fetch blogs: ${response.status}`)
             const data = await response.json()
             if (data.success) {
                 setBlogs(data.blogs)

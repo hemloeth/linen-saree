@@ -42,7 +42,10 @@ function mapProductFromDB(dbProduct: any): Product {
     price: dbProduct.price,
     originalPrice: dbProduct.regularPrice || dbProduct.price,
     image: dbProduct.mainImage,
-    images: dbProduct.galleryImages ? dbProduct.galleryImages.map((img: any) => img.url) : [],
+    images: [
+      dbProduct.mainImage,
+      ...(dbProduct.galleryImages ? dbProduct.galleryImages.map((img: any) => img.url) : [])
+    ].filter(Boolean),
     videos: isVideoStr ? [dbProduct.videoFile || dbProduct.videoUrl].filter(Boolean) : [],
     description: dbProduct.shortDescription || "",
     details: [

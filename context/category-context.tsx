@@ -30,8 +30,9 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         const fetchCategories = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/category/allcategory`)
+                if (!res.ok) throw new Error(`Failed to fetch categories: ${res.status}`)
                 const data = await res.json()
-                if (res.ok && data.categories) {
+                if (data.categories) {
                     setCategories(data.categories)
                 }
             } catch (err) {
