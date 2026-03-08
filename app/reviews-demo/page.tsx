@@ -2,12 +2,13 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ProductReviews } from "@/components/product-reviews"
 import { StarRating } from "@/components/star-rating"
-import { getProductBySlug } from "@/lib/products"
+import { getProductBySlug, fetchProductsFromDB } from "@/lib/products"
 import { getReviewStats } from "@/lib/reviews"
 
-export default function ReviewsDemoPage() {
+export default async function ReviewsDemoPage() {
   // Get a sample product for demonstration
-  const sampleProduct = getProductBySlug("brown-pure-linen-saree")
+  const allProducts = await fetchProductsFromDB()
+  const sampleProduct = getProductBySlug(allProducts, "brown-pure-linen-saree")
   const reviewStats = getReviewStats("1")
 
   if (!sampleProduct) {
@@ -17,7 +18,7 @@ export default function ReviewsDemoPage() {
   return (
     <main className="min-h-screen">
       <Header />
-      
+
       <div className="pt-[96px] lg:pt-[104px]">
         <section className="py-16 px-4 lg:px-8">
           <div className="max-w-[1400px] mx-auto">
@@ -28,7 +29,7 @@ export default function ReviewsDemoPage() {
               <p className="text-xl text-muted-foreground mb-8">
                 Experience our comprehensive review system with image and video support
               </p>
-              
+
               {/* Star Rating Examples */}
               <div className="bg-card border border-border rounded-lg p-8 mb-8">
                 <h2 className="text-2xl font-medium mb-6">Star Rating Component</h2>
@@ -76,9 +77,9 @@ export default function ReviewsDemoPage() {
             </div>
 
             {/* Full Reviews Section */}
-            <ProductReviews 
-              productId={sampleProduct.id} 
-              productName={sampleProduct.name} 
+            <ProductReviews
+              productId={sampleProduct.id}
+              productName={sampleProduct.name}
             />
           </div>
         </section>
