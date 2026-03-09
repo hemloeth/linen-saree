@@ -6,6 +6,7 @@ import { Images, Loader2, Upload, Trash2, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
 import Image from "next/image"
+import imageCompression from "browser-image-compression"
 
 interface HeroSlide {
     _id: string
@@ -98,15 +99,21 @@ export default function HeroAdminPage() {
 
         setIsSaving(true)
 
-        const submitData = new FormData()
-        submitData.append("title", formData.title)
-        submitData.append("subtitle", formData.subtitle)
-        submitData.append("description", formData.description)
-        submitData.append("category", formData.category)
-        submitData.append("link", "/collections")
-        submitData.append("image", selectedFile)
-
         try {
+            const compressionOptions = {
+                maxSizeMB: 2,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+            };
+            const compressedImage = await imageCompression(selectedFile, compressionOptions);
+
+            const submitData = new FormData()
+            submitData.append("title", formData.title)
+            submitData.append("subtitle", formData.subtitle)
+            submitData.append("description", formData.description)
+            submitData.append("category", formData.category)
+            submitData.append("link", "/collections")
+            submitData.append("image", compressedImage, compressedImage.name)
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/hero`, {
                 method: "POST",
                 body: submitData

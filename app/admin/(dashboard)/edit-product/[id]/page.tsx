@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
+import imageCompression from "browser-image-compression"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -142,6 +143,12 @@ export default function EditProductPage() {
         setLastAddedName(name)
 
         try {
+            const compressionOptions = {
+                maxSizeMB: 2,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+            };
+
             const formData = new FormData()
             formData.append("name", name)
             formData.append("sku", sku)
@@ -163,10 +170,14 @@ export default function EditProductPage() {
 
             // Only append image files if new ones were selected
             if (mainImageFile) {
-                formData.append("mainImage", mainImageFile)
+                const compressedMainImage = await imageCompression(mainImageFile, compressionOptions);
+                formData.append("mainImage", compressedMainImage, compressedMainImage.name)
             }
             if (galleryImageFiles.length > 0) {
-                galleryImageFiles.forEach((file) => formData.append("galleryImages", file))
+                const compressedGalleryImages = await Promise.all(
+                    galleryImageFiles.map(file => imageCompression(file, compressionOptions))
+                );
+                compressedGalleryImages.forEach((file) => formData.append("galleryImages", file, file.name))
             }
 
             const product = await updateProduct(productId, formData)

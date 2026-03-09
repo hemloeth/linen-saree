@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import imageCompression from "browser-image-compression"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -110,6 +111,17 @@ export default function AddProductPage() {
         setLastAddedName(name)
 
         try {
+            const compressionOptions = {
+                maxSizeMB: 2,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+            };
+
+            const compressedMainImage = await imageCompression(mainImageFile, compressionOptions);
+            const compressedGalleryImages = await Promise.all(
+                galleryImageFiles.map(file => imageCompression(file, compressionOptions))
+            );
+
             const formData = new FormData()
             formData.append("name", name)
             formData.append("sku", sku)
@@ -128,8 +140,8 @@ export default function AddProductPage() {
             formData.append("dispatch", dispatch)
             formData.append("disclaimer", disclaimer)
             formData.append("internationalNote", internationalNote)
-            formData.append("mainImage", mainImageFile)
-            galleryImageFiles.forEach((file) => formData.append("galleryImages", file))
+            formData.append("mainImage", compressedMainImage, compressedMainImage.name)
+            compressedGalleryImages.forEach((file) => formData.append("galleryImages", file, file.name))
 
             const product = await addProduct(formData)
 
