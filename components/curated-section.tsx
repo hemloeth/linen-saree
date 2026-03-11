@@ -26,9 +26,8 @@ export function CuratedSection() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/category/allcategory`)
-        if (!res.ok) throw new Error(`Failed to fetch categories: ${res.status}`)
-        const data = await res.json()
+        const { apiGet } = await import("@/lib/api")
+        const data = await apiGet('/api/category/allcategory')
         if (data.categories) {
           const mapped = data.categories.slice(0, 4).map((c: BackendCategory) => ({
             name: c.name,

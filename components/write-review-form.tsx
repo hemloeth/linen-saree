@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Upload, X, Play, Image as ImageIcon } from "lucide-react"
 import { StarRating } from "@/components/star-rating"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -24,35 +23,11 @@ export function WriteReviewForm({
   const [rating, setRating] = useState(0)
   const [title, setTitle] = useState("")
   const [comment, setComment] = useState("")
-  const [userName, setUserName] = useState("")
-  const [userEmail, setUserEmail] = useState("")
-  const [images, setImages] = useState<File[]>([])
-  const [videos, setVideos] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
-    const imageFiles = files.filter(file => file.type.startsWith('image/'))
-    setImages(prev => [...prev, ...imageFiles].slice(0, 5)) // Limit to 5 images
-  }
-
-  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
-    const videoFiles = files.filter(file => file.type.startsWith('video/'))
-    setVideos(prev => [...prev, ...videoFiles].slice(0, 2)) // Limit to 2 videos
-  }
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index))
-  }
-
-  const removeVideo = (index: number) => {
-    setVideos(prev => prev.filter((_, i) => i !== index))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (rating === 0) {
       alert('Please select a rating')
       return
@@ -66,37 +41,29 @@ export function WriteReviewForm({
     setIsSubmitting(true)
 
     try {
-      const reviewData = {
-        productId,
+      const { apiPost } = await import("@/lib/api")
+
+      const payload = {
         rating,
         title: title.trim(),
         comment: comment.trim(),
-        userName: userName.trim(),
-        userEmail: userEmail.trim(),
-        images,
-        videos
       }
 
-      // In a real app, this would upload files and submit to API
-      console.log('Review submitted:', reviewData)
-      
+      await apiPost(`/api/review/product/${productId}`, payload)
+
       if (onSubmit) {
-        onSubmit(reviewData)
+        onSubmit(payload)
       }
 
       // Reset form
       setRating(0)
       setTitle("")
       setComment("")
-      setUserName("")
-      setUserEmail("")
-      setImages([])
-      setVideos([])
-      
+
       alert('Review submitted successfully!')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting review:', error)
-      alert('Error submitting review. Please try again.')
+      alert(error.message || 'Error submitting review. Please make sure you are logged in and haven\'t already reviewed this product.')
     } finally {
       setIsSubmitting(false)
     }
@@ -127,55 +94,6 @@ export function WriteReviewForm({
           </p>
         </div>
 
-        {/* User Info */}
-        <div className="grid md:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="userName" className="block text-sm font-medium mb-1">
-              Your Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="userName"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-              placeholder="Enter your name"
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="userEmail" className="block text-sm font-medium mb-1">
-              Email Address <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              id="userEmail"
-              value={userEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-        </div>
-
-        {/* Review Title */}
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-1">
-            Review Title <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-            placeholder="Give your review a title"
-            maxLength={100}
-            required
-          />
-        </div>
-
         {/* Review Comment */}
         <div>
           <label htmlFor="comment" className="block text-sm font-medium mb-1">
@@ -194,100 +112,6 @@ export function WriteReviewForm({
           <p className="text-xs text-muted-foreground mt-1">
             {comment.length}/1000 characters
           </p>
-        </div>
-
-        {/* Media Upload */}
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Add Photos (Optional)
-            </label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 px-3 py-2 border border-border rounded-md cursor-pointer hover:bg-muted transition-colors text-sm">
-                <ImageIcon className="w-4 h-4" />
-                <span>Upload Images</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-xs text-muted-foreground">
-                Max 5 images, up to 5MB each
-              </p>
-            </div>
-            
-            {/* Image Previews */}
-            {images.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {images.map((image, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={URL.createObjectURL(image)}
-                      alt={`Preview ${index + 1}`}
-                      className="w-16 h-16 object-cover rounded-md border border-border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Add Videos (Optional)
-            </label>
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 px-3 py-2 border border-border rounded-md cursor-pointer hover:bg-muted transition-colors text-sm">
-                <Play className="w-4 h-4" />
-                <span>Upload Videos</span>
-                <input
-                  type="file"
-                  accept="video/*"
-                  multiple
-                  onChange={handleVideoUpload}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-xs text-muted-foreground">
-                Max 2 videos, up to 50MB each
-              </p>
-            </div>
-            
-            {/* Video Previews */}
-            {videos.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {videos.map((video, index) => (
-                  <div key={index} className="relative">
-                    <video
-                      src={URL.createObjectURL(video)}
-                      className="w-16 h-16 object-cover rounded-md border border-border"
-                      muted
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeVideo(index)}
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Play className="w-4 h-4 text-white drop-shadow-lg" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Submit Buttons */}

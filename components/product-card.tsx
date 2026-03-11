@@ -7,7 +7,6 @@ import { Heart, ShoppingBag, Check } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { StarRating } from "@/components/star-rating"
-import { getReviewStats } from "@/lib/reviews"
 import type { Product } from "@/lib/products"
 import { cn } from "@/lib/utils"
 import {
@@ -19,7 +18,6 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
-
 interface ProductCardProps {
   product: Product
   className?: string
@@ -39,7 +37,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
-  const reviewStats = getReviewStats(product.id)
+
+  const avgRating = product.averageRating || 0
+  const totalReviews = product.totalReviews || 0
+  const outOfStock = product.stock !== undefined && product.stock <= 0
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -76,7 +77,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               className="w-full h-full group/carousel"
               setApi={setApi}
               plugins={[
-                Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: false })
+                Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: false }) as any
               ]}
               opts={{ loop: true }}
             >
@@ -126,6 +127,16 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
           {/* Badges - Removed NEW, percentage is highlighted below */}
           <div className="absolute top-2 left-2 flex flex-col gap-2 z-20 pointer-events-none">
+            {outOfStock && (
+              <span className="bg-black/80 text-white text-[10px] font-bold px-2 py-1 rounded-sm uppercase tracking-wider backdrop-blur-sm shadow-sm hidden md:inline-block">
+                Out of Stock
+              </span>
+            )}
+            {outOfStock && (
+              <span className="bg-black/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider backdrop-blur-sm shadow-sm md:hidden text-center leading-none">
+                Sold Out
+              </span>
+            )}
           </div>
 
           {/* Quick Actions (Wishlist) */}
@@ -152,11 +163,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {/* Reviews - Always visible */}
         <div className="flex items-center gap-1 mb-1.5 md:mb-2">
           <StarRating
-            rating={reviewStats.totalReviews > 0 ? reviewStats.averageRating : 0}
+            rating={totalReviews > 0 ? avgRating : 0}
             size="sm"
           />
           <span className="text-[9px] md:text-[10px] text-muted-foreground">
-            {reviewStats.totalReviews > 0 ? `(${reviewStats.totalReviews})` : "(0)"}
+            {totalReviews > 0 ? `(${totalReviews})` : "(0)"}
           </span>
         </div>
 
@@ -179,11 +190,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
       <div className="flex gap-1.5 md:gap-2">
         <button
           onClick={handleAddToCart}
-          className={`w-10 md:w-12 py-2 sm:py-2.5 flex items-center justify-center transition-all duration-300 rounded-sm active:scale-95 shadow-sm ${isAdded
-            ? "bg-green-600 text-white scale-105"
-            : "bg-primary text-primary-foreground hover:bg-primary/90"
+          disabled={outOfStock}
+          className={`w-10 md:w-12 py-2 sm:py-2.5 flex items-center justify-center transition-all duration-300 rounded-sm active:scale-95 shadow-sm ${outOfStock
+            ? "bg-muted text-muted-foreground cursor-not-allowed active:scale-100"
+            : isAdded
+              ? "bg-green-600 text-white scale-105"
+              : "bg-primary text-primary-foreground hover:bg-primary/90"
             }`}
-          title="Add to Cart"
+          title={outOfStock ? "Out of Stock" : "Add to Cart"}
         >
           {isAdded ? (
             <Check className="w-4 h-4 animate-[bounceIn_0.4s_ease-out]" />
@@ -191,15 +205,21 @@ export function ProductCard({ product, className }: ProductCardProps) {
             <ShoppingBag className="w-4 h-4" />
           )}
         </button>
-        <Link
-          href={`/checkout?product=${product.id}`}
-          className="flex-1"
-          onClick={() => addToCart(product)}
-        >
-          <button className="w-full h-full bg-background border border-primary text-primary hover:bg-primary/5 py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold transition-all rounded-sm active:scale-95 shadow-sm uppercase tracking-wider">
-            Buy Now
-          </button>
-        </Link>
+        {outOfStock ? (
+          <div className="flex-1 flex items-center justify-center bg-muted/50 border border-muted text-muted-foreground py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold rounded-sm uppercase tracking-wider cursor-not-allowed">
+            Out of Stock
+          </div>
+        ) : (
+          <Link
+            href={`/checkout?product=${product.id}`}
+            className="flex-1"
+            onClick={() => addToCart(product)}
+          >
+            <button className="w-full h-full bg-background border border-primary text-primary hover:bg-primary/5 py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold transition-all rounded-sm active:scale-95 shadow-sm uppercase tracking-wider">
+              Buy Now
+            </button>
+          </Link>
+        )}
       </div>
     </div >
   )

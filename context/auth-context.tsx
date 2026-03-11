@@ -1,8 +1,10 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { apiPost } from "@/lib/api"
 
 interface User {
+    _id?: string
     name: string
     email: string
     phone: string
@@ -12,6 +14,7 @@ interface AuthContextType {
     user: User | null
     isAuthenticated: boolean
     isHydrated: boolean
+    loginEvent: number  // Increments on each login — cart/wishlist watch this
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
     signup: (name: string, email: string, phone: string, password: string) => Promise<{ success: boolean; error?: string }>
     logout: () => void
@@ -20,16 +23,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-interface StoredUser {
-    name: string
-    email: string
-    phone: string
-    password: string
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [isHydrated, setIsHydrated] = useState(false)
+    const [loginEvent, setLoginEvent] = useState(0)
 
     // Load user from localStorage on mount
     useEffect(() => {
@@ -37,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (savedUser) {
             try {
                 const parsed = JSON.parse(savedUser)
-                setUser({ name: parsed.name, email: parsed.email, phone: parsed.phone })
+                setUser({ _id: parsed._id, name: parsed.name, email: parsed.email, phone: parsed.phone })
             } catch {
                 setUser(null)
             }
@@ -47,51 +44,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const signup = async (name: string, email: string, phone: string, password: string) => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, phone, password }),
-            })
+            const data = await apiPost('/api/user/register', { name, email, phone, password })
 
-            const data = await res.json().catch(() => ({ message: "Invalid server response" }))
-
-            if (!res.ok) {
-                return { success: false, error: data.message || "Registration failed" }
-            }
-
-            const userData = { name: data.name, email: data.email, phone: data.phone }
+            const userData = { _id: data._id, name: data.name, email: data.email, phone: data.phone }
             setUser(userData)
             localStorage.setItem("auth_user", JSON.stringify(userData))
             localStorage.setItem("auth_token", data.token)
 
+            // Signal cart/wishlist to sync
+            setLoginEvent(prev => prev + 1)
+
             return { success: true }
-        } catch (error) {
-            return { success: false, error: "Something went wrong. Please try again." }
+        } catch (error: any) {
+            return { success: false, error: error.message || "Something went wrong. Please try again." }
         }
     }
 
     const login = async (email: string, password: string) => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            })
+            const data = await apiPost('/api/user/login', { email, password })
 
-            const data = await res.json().catch(() => ({ message: "Invalid server response" }))
-
-            if (!res.ok) {
-                return { success: false, error: data.message || "Invalid email or password" }
-            }
-
-            const userData = { name: data.user.name, email: data.user.email, phone: data.user.phone }
+            const userData = { _id: data.user._id, name: data.user.name, email: data.user.email, phone: data.user.phone }
             setUser(userData)
             localStorage.setItem("auth_user", JSON.stringify(userData))
             localStorage.setItem("auth_token", data.token)
 
+            // Signal cart/wishlist to sync
+            setLoginEvent(prev => prev + 1)
+
             return { success: true }
-        } catch (error) {
-            return { success: false, error: "Something went wrong. Please try again." }
+        } catch (error: any) {
+            return { success: false, error: error.message || "Invalid email or password" }
         }
     }
 
@@ -107,18 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const updatedUser = { ...user, ...data }
         setUser(updatedUser)
         localStorage.setItem("auth_user", JSON.stringify(updatedUser))
-
-        // Also update in registered users list
-        const existingUsers: StoredUser[] = JSON.parse(localStorage.getItem("registered_users") || "[]")
-        const idx = existingUsers.findIndex(u => u.email === user.email)
-        if (idx !== -1) {
-            existingUsers[idx] = { ...existingUsers[idx], ...data }
-            // If email changed, update the key
-            if (data.email) {
-                existingUsers[idx].email = data.email
-            }
-            localStorage.setItem("registered_users", JSON.stringify(existingUsers))
-        }
     }
 
     return (
@@ -127,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 user,
                 isAuthenticated: !!user,
                 isHydrated,
+                loginEvent,
                 login,
                 signup,
                 logout,

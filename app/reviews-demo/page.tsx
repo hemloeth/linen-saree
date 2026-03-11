@@ -9,7 +9,7 @@ export default async function ReviewsDemoPage() {
   // Get a sample product for demonstration
   const allProducts = await fetchProductsFromDB()
   const sampleProduct = getProductBySlug(allProducts, "brown-pure-linen-saree")
-  const reviewStats = getReviewStats("1")
+  const reviewStats = getReviewStats([])
 
   if (!sampleProduct) {
     return <div>Product not found</div>

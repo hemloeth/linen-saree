@@ -1,16 +1,17 @@
 "use client"
 
 import { StarRating } from "@/components/star-rating"
-import { getReviewStats, type ReviewStats } from "@/lib/reviews"
+import { getReviewStats, type ReviewStats, type Review } from "@/lib/reviews"
 import { cn } from "@/lib/utils"
 
 interface ReviewSummaryProps {
   productId: string
+  reviews: Review[]
   className?: string
 }
 
-export function ReviewSummary({ productId, className }: ReviewSummaryProps) {
-  const stats = getReviewStats(productId)
+export function ReviewSummary({ productId, reviews, className }: ReviewSummaryProps) {
+  const stats = getReviewStats(reviews)
 
   if (stats.totalReviews === 0) {
     return (

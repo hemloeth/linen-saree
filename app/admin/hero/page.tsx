@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
 import Image from "next/image"
 import imageCompression from "browser-image-compression"
+import { apiGet, apiDelete, apiUpload } from "@/lib/api"
 
 interface HeroSlide {
     _id: string
@@ -42,8 +43,7 @@ export default function HeroAdminPage() {
 
     const fetchSlides = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/hero`)
-            const data = await res.json()
+            const data = await apiGet('/api/hero')
             if (data.success && data.slides) {
                 setSlides(data.slides)
             }
@@ -59,10 +59,7 @@ export default function HeroAdminPage() {
         if (!confirm("Are you sure you want to delete this slide?")) return;
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/hero/${slideId}`, {
-                method: "DELETE"
-            })
-            const data = await res.json()
+            const data = await apiDelete(`/api/hero/${slideId}`)
 
             if (data.success) {
                 setSlides(data.slides) // Update local state with the returned new array
@@ -114,12 +111,7 @@ export default function HeroAdminPage() {
             submitData.append("category", formData.category)
             submitData.append("link", "/collections")
             submitData.append("image", compressedImage, compressedImage.name)
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/hero`, {
-                method: "POST",
-                body: submitData
-            })
-
-            const data = await res.json()
+            const data = await apiUpload('/api/hero', submitData, 'POST')
 
             if (data.success) {
                 setToasts(prev => [...prev, { id: Date.now(), title: "Success", message: "New slide added successfully" }])

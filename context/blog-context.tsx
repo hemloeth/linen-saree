@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { apiGet, apiPost, apiDelete, apiPut } from "@/lib/api"
 
 export interface Blog {
     _id: string
@@ -29,9 +30,7 @@ export function BlogProvider({ children }: { children: ReactNode }) {
     const fetchBlogs = async () => {
         try {
             setLoading(true)
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/allblogs`)
-            if (!response.ok) throw new Error(`Failed to fetch blogs: ${response.status}`)
-            const data = await response.json()
+            const data = await apiGet('/api/blog/allblogs')
             if (data.success) {
                 setBlogs(data.blogs)
             }
@@ -49,15 +48,8 @@ export function BlogProvider({ children }: { children: ReactNode }) {
     const addBlog = async (blogData: { title: string; description: string; image: string }) => {
         try {
             setLoading(true)
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/add-blog`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(blogData)
-            })
+            const data = await apiPost('/api/blog/add-blog', blogData)
 
-            const data = await response.json()
             if (data.success && data.blog) {
                 setBlogs((prev) => [...prev, data.blog])
             } else {
@@ -74,11 +66,8 @@ export function BlogProvider({ children }: { children: ReactNode }) {
     const deleteBlog = async (id: string) => {
         try {
             setLoading(true)
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/${id}`, {
-                method: "DELETE"
-            })
+            const data = await apiDelete(`/api/blog/${id}`)
 
-            const data = await response.json()
             if (data.success) {
                 setBlogs((prev) => prev.filter((blog) => blog._id !== id))
             } else {
@@ -95,15 +84,8 @@ export function BlogProvider({ children }: { children: ReactNode }) {
     const updateBlog = async (id: string, blogData: { title?: string; description?: string; image?: string }) => {
         try {
             setLoading(true)
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/update/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(blogData)
-            })
+            const data = await apiPut(`/api/blog/update/${id}`, blogData)
 
-            const data = await response.json()
             if (data.success && data.blog) {
                 setBlogs((prev) =>
                     prev.map((blog) => (blog._id === id ? data.blog : blog))

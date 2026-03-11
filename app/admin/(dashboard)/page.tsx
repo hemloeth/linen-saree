@@ -1,7 +1,8 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { StatsCard } from "@/components/admin/stats-card"
-import { DollarSign, ShoppingBag, Package, Users } from "lucide-react"
+import { DollarSign, ShoppingBag, Package, Users, TrendingUp, TrendingDown, Loader2 } from "lucide-react"
 import {
     ResponsiveContainer,
     AreaChart,
@@ -15,59 +16,115 @@ import {
 } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-const revenueData = [
-    { name: "Jan", total: 1200 },
-    { name: "Feb", total: 2100 },
-    { name: "Mar", total: 1800 },
-    { name: "Apr", total: 2400 },
-    { name: "May", total: 2800 },
-    { name: "Jun", total: 3200 },
-]
+interface DashboardStats {
+    revenue: { total: number; thisMonth: number; growth: number }
+    orders: { total: number; active: number; thisMonth: number; growth: number }
+    customers: { total: number; newThisMonth: number }
+    products: { total: number; lowStock: number; outOfStock: number }
+}
 
-const salesData = [
-    { name: "Mon", sales: 12 },
-    { name: "Tue", sales: 18 },
-    { name: "Wed", sales: 15 },
-    { name: "Thu", sales: 25 },
-    { name: "Fri", sales: 30 },
-    { name: "Sat", sales: 40 },
-    { name: "Sun", sales: 35 },
-]
+interface RecentOrder {
+    _id: string
+    orderId: string
+    status: string
+    pricing: { total: number }
+    createdAt: string
+    user?: { name: string; email: string }
+    items: any[]
+}
 
 export default function AdminDashboard() {
+    const [stats, setStats] = useState<DashboardStats | null>(null)
+    const [revenueData, setRevenueData] = useState<any[]>([])
+    const [salesData, setSalesData] = useState<any[]>([])
+    const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        fetchDashboardData()
+    }, [])
+
+    const fetchDashboardData = async () => {
+        try {
+            const { apiGet } = await import("@/lib/api")
+
+            const [statsRes, revenueRes, salesRes, ordersRes] = await Promise.all([
+                apiGet("/api/admin/stats"),
+                apiGet("/api/admin/revenue-chart"),
+                apiGet("/api/admin/sales-chart"),
+                apiGet("/api/admin/recent-orders"),
+            ])
+
+            if (statsRes.success) setStats(statsRes.stats)
+            if (revenueRes.success) setRevenueData(revenueRes.chartData)
+            if (salesRes.success) setSalesData(salesRes.chartData)
+            if (ordersRes.success) setRecentOrders(ordersRes.orders)
+        } catch (err) {
+            console.error("Failed to load dashboard:", err)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const formatCurrency = (value: number) =>
+        `₹${value.toLocaleString("en-IN")}`
+
+    const formatGrowth = (growth: number) =>
+        `${growth >= 0 ? "+" : ""}${growth}% from last month`
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "delivered": return "text-green-600"
+            case "shipped": case "in_transit": return "text-blue-600"
+            case "cancelled": return "text-red-600"
+            default: return "text-yellow-600"
+        }
+    }
+
+    const formatStatus = (s: string) =>
+        s.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        )
+    }
+
     return (
         <div className="space-y-6">
             <div>
                 <h2 className="text-3xl font-bold tracking-tight text-primary font-serif">Dashboard</h2>
                 <p className="text-muted-foreground">
-                    Overview of your store's performance.
+                    Overview of your store&apos;s performance.
                 </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatsCard
                     title="Total Revenue"
-                    value="$15,231.89"
-                    description="+20.1% from last month"
+                    value={formatCurrency(stats?.revenue.total || 0)}
+                    description={formatGrowth(stats?.revenue.growth || 0)}
                     icon={DollarSign}
                 />
                 <StatsCard
-                    title="Active Orders"
-                    value="+573"
-                    description="+180 last hour"
+                    title="Orders"
+                    value={String(stats?.orders.total || 0)}
+                    description={`${stats?.orders.active || 0} active orders`}
                     icon={ShoppingBag}
                 />
                 <StatsCard
-                    title="Products In Stock"
-                    value="124"
-                    description="12 items low on stock"
-                    icon={Package}
+                    title="Customers"
+                    value={String(stats?.customers.total || 0)}
+                    description={`+${stats?.customers.newThisMonth || 0} this month`}
+                    icon={Users}
                 />
                 <StatsCard
-                    title="Out of Stock Products"
-                    value="8"
-                    description="Products currently unavailable"
-                    icon={Users}
+                    title="Products"
+                    value={String(stats?.products.total || 0)}
+                    description={`${stats?.products.lowStock || 0} low stock · ${stats?.products.outOfStock || 0} out`}
+                    icon={Package}
                 />
             </div>
 
@@ -76,7 +133,7 @@ export default function AdminDashboard() {
                     <CardHeader>
                         <CardTitle>Revenue Overview</CardTitle>
                         <CardDescription>
-                            Monthly revenue for the current year.
+                            Monthly revenue for the last 12 months.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pl-2">
@@ -100,10 +157,12 @@ export default function AdminDashboard() {
                                     fontSize={12}
                                     tickLine={false}
                                     axisLine={false}
-                                    tickFormatter={(value) => `$${value}`}
+                                    tickFormatter={(value) => `₹${value}`}
                                 />
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5DED6" />
-                                <Tooltip />
+                                <Tooltip
+                                    formatter={(value: number) => [`₹${value.toLocaleString("en-IN")}`, "Revenue"]}
+                                />
                                 <Area
                                     type="monotone"
                                     dataKey="total"
@@ -145,6 +204,41 @@ export default function AdminDashboard() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Recent Orders */}
+            {recentOrders.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Recent Orders</CardTitle>
+                        <CardDescription>Latest 5 orders placed on your store.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {recentOrders.map((order) => (
+                                <div key={order._id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-3">
+                                            <span className="font-mono text-xs text-muted-foreground">{order.orderId}</span>
+                                            <span className={`text-xs font-medium ${getStatusColor(order.status)}`}>
+                                                {formatStatus(order.status)}
+                                            </span>
+                                        </div>
+                                        <div className="text-sm text-muted-foreground mt-1">
+                                            {order.user?.name || "Unknown"} · {order.items.length} item{order.items.length > 1 ? "s" : ""}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-semibold">{formatCurrency(order.pricing.total)}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {new Date(order.createdAt).toLocaleDateString("en-IN")}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 }

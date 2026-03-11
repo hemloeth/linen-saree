@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { apiGet, apiUpload, apiDelete } from "@/lib/api"
 
 interface Category {
     _id: string
@@ -21,7 +22,6 @@ interface CategoryContextType {
 const CategoryContext = createContext<CategoryContextType | undefined>(undefined)
 
 export function CategoryProvider({ children }: { children: ReactNode }) {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL
     const [categories, setCategories] = useState<Category[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -29,9 +29,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/category/allcategory`)
-                if (!res.ok) throw new Error(`Failed to fetch categories: ${res.status}`)
-                const data = await res.json()
+                const data = await apiGet('/api/category/allcategory')
                 if (data.categories) {
                     setCategories(data.categories)
                 }
@@ -52,17 +50,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
             formData.append("sortDesc", sortDesc)
             formData.append("image", imageFile)
 
-            const res = await fetch(`${API_URL}/api/category/add-category`, {
-                method: "POST",
-                body: formData,
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to add category")
-            }
-
+            const data = await apiUpload('/api/category/add-category', formData, 'POST')
             setCategories((prev) => [...prev, data.category])
         } catch (err: any) {
             setError(err.message || "Something went wrong")
@@ -77,16 +65,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
         setError(null)
 
         try {
-            const res = await fetch(`${API_URL}/api/category/${id}`, {
-                method: "DELETE",
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to delete category")
-            }
-
+            await apiDelete(`/api/category/${id}`)
             setCategories((prev) => prev.filter((cat) => cat._id !== id))
         } catch (err: any) {
             setError(err.message || "Something went wrong")
@@ -107,17 +86,7 @@ export function CategoryProvider({ children }: { children: ReactNode }) {
                 formData.append("image", imageFile)
             }
 
-            const res = await fetch(`${API_URL}/api/category/${id}`, {
-                method: "PUT",
-                body: formData,
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to update category")
-            }
-
+            const data = await apiUpload(`/api/category/${id}`, formData, 'PUT')
             setCategories((prev) =>
                 prev.map((cat) => (cat._id === id ? data.category : cat))
             )

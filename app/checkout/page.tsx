@@ -9,6 +9,7 @@ import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
 import { CheckoutProductMedia } from "@/components/checkout-product-media"
 import Link from "next/link"
+import { toast } from "sonner"
 import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X, ChevronDown, Search } from "lucide-react"
 
 export default function CheckoutPage() {
@@ -92,29 +93,14 @@ export default function CheckoutPage() {
   }, [])
 
   const [couponCode, setCouponCode] = useState("")
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string, discount: number, type: 'percentage' | 'fixed' } | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string, discountAmount: number } | null>(null)
   const [couponError, setCouponError] = useState("")
-
-  // Sample coupon codes - in real app, this would come from backend
-  const validCoupons = {
-    "WELCOME10": { discount: 10, type: "percentage" as const },
-    "SAVE500": { discount: 500, type: "fixed" as const },
-    "FESTIVE15": { discount: 15, type: "percentage" as const },
-    "NEWUSER": { discount: 20, type: "percentage" as const }
-  }
+  const [applyingCoupon, setApplyingCoupon] = useState(false)
 
   const shipping = totalPrice >= 999 ? 0 : 199
 
-  // Calculate discount
-  let discount = 0
-  if (appliedCoupon) {
-    if (appliedCoupon.type === 'percentage') {
-      discount = Math.round((totalPrice * appliedCoupon.discount) / 100)
-    } else {
-      discount = appliedCoupon.discount
-    }
-  }
-
+  // Calculate discount using backend supplied amount
+  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0
   const total = totalPrice + shipping - discount
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -169,7 +155,7 @@ export default function CheckoutPage() {
     }
   }
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     setCouponError("")
 
     if (!couponCode.trim()) {
@@ -177,18 +163,26 @@ export default function CheckoutPage() {
       return
     }
 
-    const upperCouponCode = couponCode.toUpperCase()
-    const coupon = validCoupons[upperCouponCode as keyof typeof validCoupons]
-
-    if (coupon) {
-      setAppliedCoupon({
-        code: upperCouponCode,
-        discount: coupon.discount,
-        type: coupon.type
+    setApplyingCoupon(true)
+    try {
+      const { apiPost } = await import("@/lib/api")
+      const result = await apiPost('/api/coupon/apply', {
+        code: couponCode,
+        subtotal: totalPrice
       })
-      setCouponCode("")
-    } else {
-      setCouponError("Invalid coupon code")
+
+      if (result.success && result.coupon) {
+        setAppliedCoupon({
+          code: result.coupon.code,
+          discountAmount: result.coupon.discountAmount
+        })
+        setCouponCode("")
+      }
+    } catch (error: any) {
+      setCouponError(error.message || "Invalid or expired coupon")
+      setAppliedCoupon(null)
+    } finally {
+      setApplyingCoupon(false)
     }
   }
 
@@ -198,10 +192,52 @@ export default function CheckoutPage() {
     setCouponError("")
   }
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [placedOrderId, setPlacedOrderId] = useState("")
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
-    setOrderPlaced(true)
-    clearCart()
+    setIsPlacingOrder(true)
+
+    try {
+      const { apiPost } = await import("@/lib/api")
+
+      const orderData = {
+        items: items.map(item => ({
+          productId: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          image: item.product.image,
+        })),
+        shippingAddress: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          landmark: formData.landmark,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+        },
+        paymentMethod: formData.paymentMethod,
+        couponCode: appliedCoupon?.code || "",
+        discount,
+      }
+
+      const data = await apiPost('/api/order', orderData)
+
+      if (data.success) {
+        setPlacedOrderId(data.order.orderId)
+        setOrderPlaced(true)
+        clearCart()
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to place order. Please try again.")
+    } finally {
+      setIsPlacingOrder(false)
+    }
   }
 
   if (!isHydrated) {
@@ -250,7 +286,7 @@ export default function CheckoutPage() {
               Thank you for your order. We{"'"}ve sent a confirmation email to {formData.email || "your email"}.
             </p>
             <p className="text-sm text-muted-foreground mb-8">
-              Order ID: #LS{Date.now().toString().slice(-8)}
+              Order ID: #{placedOrderId || "Processing..."}
             </p>
             <Link href="/collections">
               <Button className="bg-primary hover:bg-primary/90">
@@ -523,7 +559,7 @@ export default function CheckoutPage() {
                               <Tag className="w-5 h-5 text-primary" />
                               <span className="font-medium text-primary">{appliedCoupon.code}</span>
                               <span className="text-sm text-primary/70">
-                                ({appliedCoupon.type === 'percentage' ? `${appliedCoupon.discount}% off` : `₹${appliedCoupon.discount} off`})
+                                (₹{appliedCoupon.discountAmount.toLocaleString()} off)
                               </span>
                             </div>
                             <button
@@ -548,16 +584,17 @@ export default function CheckoutPage() {
                                 type="button"
                                 variant="outline"
                                 onClick={handleApplyCoupon}
+                                disabled={applyingCoupon}
                                 className="px-6 py-3"
                               >
-                                Apply
+                                {applyingCoupon ? "Applying..." : "Apply"}
                               </Button>
                             </div>
                             {couponError && (
                               <p className="text-sm text-red-500">{couponError}</p>
                             )}
                             <div className="text-sm text-muted-foreground">
-                              Available codes: WELCOME10, SAVE500, FESTIVE15, NEWUSER
+                              Enter a promotional code to apply a discount.
                             </div>
                           </div>
                         )}
@@ -645,8 +682,9 @@ export default function CheckoutPage() {
                         <Button
                           type="submit"
                           className="flex-1 bg-primary hover:bg-primary/90 py-6"
+                          disabled={isPlacingOrder}
                         >
-                          Place Order
+                          {isPlacingOrder ? "Placing Order..." : "Place Order"}
                         </Button>
                       </div>
                     </div>

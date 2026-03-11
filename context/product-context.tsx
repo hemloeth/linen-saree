@@ -17,6 +17,7 @@ import {
     sortProducts,
     searchProducts
 } from "@/lib/products"
+import { apiGet, apiUpload, apiDelete, apiPut } from "@/lib/api"
 
 export interface ImageInfo {
     url: string
@@ -81,7 +82,6 @@ interface ProductContextType {
 const ProductContext = createContext<ProductContextType | undefined>(undefined)
 
 export function ProductProvider({ children, initialProducts = [] }: { children: ReactNode, initialProducts?: FrontendProduct[] }) {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
     const [products, setProducts] = useState<Product[]>([])
     const [ssrProducts] = useState<FrontendProduct[]>(initialProducts)
     const [loading, setLoading] = useState(false)
@@ -91,11 +91,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/product/allproducts`)
-                if (!res.ok) {
-                    throw new Error(`Failed to fetch products: ${res.status}`)
-                }
-                const data = await res.json()
+                const data = await apiGet('/api/product/allproducts')
                 if (data.products) {
                     setProducts(data.products)
                 }
@@ -105,24 +101,14 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
             }
         }
         fetchProducts()
-    }, [API_URL])
+    }, [])
 
     const addProduct = async (formData: FormData): Promise<Product | null> => {
         setLoading(true)
         setError(null)
 
         try {
-            const res = await fetch(`${API_URL}/api/product/add-product`, {
-                method: "POST",
-                body: formData,
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to add product")
-            }
-
+            const data = await apiUpload('/api/product/add-product', formData, 'POST')
             setProducts((prev) => [data.product, ...prev])
             return data.product
         } catch (err: any) {
@@ -138,16 +124,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
             const videoForm = new FormData()
             videoForm.append("videoFile", videoFile)
 
-            const res = await fetch(`${API_URL}/api/product/upload-video/${productId}`, {
-                method: "PUT",
-                body: videoForm,
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to upload video")
-            }
+            const data = await apiUpload(`/api/product/upload-video/${productId}`, videoForm, 'PUT')
 
             // Update the product in state with video URL
             setProducts((prev) =>
@@ -163,16 +140,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
         setError(null)
 
         try {
-            const res = await fetch(`${API_URL}/api/product/update/${id}`, {
-                method: "PUT",
-                body: formData,
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to update product")
-            }
+            const data = await apiUpload(`/api/product/update/${id}`, formData, 'PUT')
 
             setProducts((prev) =>
                 prev.map((p) => (p._id === id ? data.product : p))
@@ -191,16 +159,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
         setError(null)
 
         try {
-            const res = await fetch(`${API_URL}/api/product/${id}`, {
-                method: "DELETE",
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to delete product")
-            }
-
+            await apiDelete(`/api/product/${id}`)
             setProducts((prev) => prev.filter((p) => p._id !== id))
         } catch (err: any) {
             setError(err.message || "Something went wrong")
@@ -214,17 +173,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
         setError(null)
 
         try {
-            const res = await fetch(`${API_URL}/api/product/bulk-delete`, {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ids }),
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to delete products")
-            }
+            const data = await apiDelete('/api/product/bulk-delete', { ids })
 
             const idSet = new Set(ids)
             setProducts((prev) => prev.filter((p) => !idSet.has(p._id)))
@@ -239,17 +188,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
 
     const updateGalleryImageInfo = async (productId: string, imageIndex: number, info: Partial<ImageInfo>) => {
         try {
-            const res = await fetch(`${API_URL}/api/product/${productId}/gallery-image-info`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageIndex, ...info }),
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                throw new Error(data.message || "Failed to update image info")
-            }
+            const data = await apiPut(`/api/product/${productId}/gallery-image-info`, { imageIndex, ...info })
 
             setProducts((prev) =>
                 prev.map((p) => (p._id === productId ? data.product : p))

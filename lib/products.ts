@@ -19,6 +19,7 @@ export interface Product {
   // Review stats (computed dynamically)
   averageRating?: number
   totalReviews?: number
+  stock?: number
   // Specification fields
   material?: string
   sareeSize?: string
@@ -65,20 +66,19 @@ function mapProductFromDB(dbProduct: any): Product {
     washCare: dbProduct.washCare,
     dispatch: dbProduct.dispatch,
     disclaimer: dbProduct.disclaimer,
-    internationalNote: dbProduct.internationalNote
+    internationalNote: dbProduct.internationalNote,
+    averageRating: dbProduct.averageRating || 0,
+    totalReviews: dbProduct.numReviews || 0,
+    stock: dbProduct.stock || 0
   };
 }
 
 // Fetch all products from the backend and map them
 export async function fetchProductsFromDB(): Promise<Product[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/product/allproducts`, {
-      cache: 'no-store' // Fetch fresh data on every request
-    });
+    const { apiServerGet } = await import("@/lib/api");
+    const data = await apiServerGet('/api/product/allproducts', { cache: 'no-store' });
 
-    if (!res.ok) throw new Error("Failed to fetch products");
-
-    const data = await res.json();
     if (data.success && data.products) {
       return data.products.map(mapProductFromDB);
     }

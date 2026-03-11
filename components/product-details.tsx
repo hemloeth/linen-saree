@@ -9,7 +9,6 @@ import { useWishlist } from "@/context/wishlist-context"
 import { Button } from "@/components/ui/button"
 import { TrustBadges } from "@/components/trust-badges"
 import { StarRating } from "@/components/star-rating"
-import { getReviewStats } from "@/lib/reviews"
 import type { Product } from "@/lib/products"
 
 interface ProductDetailsProps {
@@ -35,7 +34,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   // Get review stats
-  const reviewStats = getReviewStats(product.id)
+  const avgRating = product.averageRating || 0
+  const totalReviews = product.totalReviews || 0
 
   // Combine images and videos into a single media array
   const mediaItems: MediaItem[] = [
@@ -45,6 +45,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
+  const availableStock = product.stock ?? 0
+  const outOfStock = availableStock <= 0
 
   // Handle swipe gestures
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -259,16 +261,16 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             {/* Reviews */}
             <div className="flex items-center gap-3 mb-6">
               <StarRating
-                rating={reviewStats.totalReviews > 0 ? reviewStats.averageRating : 0}
+                rating={totalReviews > 0 ? avgRating : 0}
                 size="md"
-                showRating={reviewStats.totalReviews > 0}
+                showRating={totalReviews > 0}
               />
               <Link
                 href="#reviews"
                 className="text-sm text-muted-foreground hover:text-primary underline decoration-muted-foreground/30 underline-offset-4"
               >
-                {reviewStats.totalReviews > 0
-                  ? `(${reviewStats.totalReviews} review${reviewStats.totalReviews !== 1 ? 's' : ''})`
+                {totalReviews > 0
+                  ? `(${totalReviews} review${totalReviews !== 1 ? 's' : ''})`
                   : "Be the first to review"
                 }
               </Link>
@@ -287,6 +289,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   </span>
                 </>
               )}
+              {outOfStock && (
+                <span className="bg-black text-white text-[10px] sm:text-xs px-2 py-1 font-bold rounded-sm uppercase tracking-wider backdrop-blur-sm shadow-sm inline-block ml-auto">
+                  Out of Stock
+                </span>
+              )}
             </div>
 
             {/* Description */}
@@ -301,18 +308,25 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
             {/* Quantity */}
             <div className="mb-4 sm:mb-6">
-              <p className="text-xs sm:text-sm font-medium mb-2 sm:mb-3">Quantity</p>
-              <div className="flex items-center border border-border w-fit">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <p className="text-xs sm:text-sm font-medium">Quantity</p>
+                {!outOfStock && availableStock < 10 && availableStock > 0 && (
+                  <p className="text-xs text-red-500 font-medium">Only {availableStock} left in stock</p>
+                )}
+              </div>
+              <div className="flex items-center border border-border w-fit opacity-100 disabled:opacity-50">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-2 sm:p-3 hover:bg-muted transition-colors"
+                  disabled={outOfStock}
+                  className="p-2 sm:p-3 hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                 </button>
-                <span className="px-4 sm:px-6 text-base sm:text-lg font-medium">{quantity}</span>
+                <span className="px-4 sm:px-6 text-base sm:text-lg font-medium">{outOfStock ? 0 : quantity}</span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="p-2 sm:p-3 hover:bg-muted transition-colors"
+                  onClick={() => setQuantity(Math.min(availableStock, quantity + 1))}
+                  disabled={outOfStock || quantity >= availableStock}
+                  className="p-2 sm:p-3 hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                 </button>
@@ -324,9 +338,12 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   size="lg"
-                  className={`flex-1 h-auto py-3 sm:py-3 px-6 text-sm sm:text-base font-bold tracking-wide transition-all duration-300 active:scale-95 ${isAdded
-                    ? "bg-green-600 hover:bg-green-600 text-white scale-[1.02]"
-                    : "bg-primary hover:bg-primary/90"
+                  disabled={outOfStock}
+                  className={`flex-1 h-auto py-3 sm:py-3 px-6 text-sm sm:text-base font-bold tracking-wide transition-all duration-300 active:scale-95 ${outOfStock
+                    ? "bg-muted text-muted-foreground cursor-not-allowed active:scale-100"
+                    : isAdded
+                      ? "bg-green-600 hover:bg-green-600 text-white scale-[1.02]"
+                      : "bg-primary hover:bg-primary/90"
                     }`}
                   onClick={handleAddToCart}
                 >
@@ -338,20 +355,31 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   ) : (
                     <>
                       <ShoppingBag className="w-4 h-4 mr-2" />
-                      Add to Cart
+                      {outOfStock ? "Out of Stock" : "Add to Cart"}
                     </>
                   )}
                 </Button>
-                <Link href="/checkout" className="flex-1">
+                {outOfStock ? (
                   <Button
                     size="lg"
+                    disabled
                     variant="outline"
-                    className="w-full h-auto py-3 sm:py-3 px-6 text-sm sm:text-base font-bold tracking-wide border-primary text-primary hover:bg-primary/5 transition-all active:scale-95 focus-visible:ring-primary"
-                    onClick={() => addToCart(product, quantity)}
+                    className="flex-1 w-full h-auto py-3 sm:py-3 px-6 text-sm sm:text-base font-bold tracking-wide border-muted text-muted-foreground cursor-not-allowed"
                   >
-                    Buy It Now
+                    Out of Stock
                   </Button>
-                </Link>
+                ) : (
+                  <Link href="/checkout" className="flex-1">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full h-auto py-3 sm:py-3 px-6 text-sm sm:text-base font-bold tracking-wide border-primary text-primary hover:bg-primary/5 transition-all active:scale-95 focus-visible:ring-primary"
+                      onClick={() => addToCart(product, quantity)}
+                    >
+                      Buy It Now
+                    </Button>
+                  </Link>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button

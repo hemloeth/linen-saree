@@ -12,6 +12,7 @@ import { ClientOnly } from "@/components/client-only"
 import SmoothScroll from "@/components/SmoothScroll"
 import { ProductProvider } from "@/context/product-context"
 import { fetchProductsFromDB } from "@/lib/products"
+import { Toaster } from "sonner"
 import './globals.css'
 
 export const dynamic = 'force-dynamic'
@@ -77,6 +78,7 @@ export default async function RootLayout({
           </AuthProvider>
         </SmoothScroll>
         <Analytics />
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   )
