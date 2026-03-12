@@ -113,15 +113,39 @@ const createOrder = asyncHandler(async (req, res) => {
             }
         }
 
-        // Clear user's server-side cart
+        // Update user: Clear cart and save new address if not already present
         try {
             const user = await User.findById(req.user._id);
             if (user) {
+                // 1. Clear cart
                 user.cart = [];
+
+                // 2. Extract and check address
+                const newAddr = {
+                    fullName: `${shippingAddress.firstName} ${shippingAddress.lastName}`.trim(),
+                    mobile: shippingAddress.phone,
+                    pincode: shippingAddress.pincode,
+                    state: shippingAddress.state,
+                    city: shippingAddress.city,
+                    address: shippingAddress.address,
+                    landmark: shippingAddress.landmark || "",
+                };
+
+                // Simple duplicate check (pincode + address + city)
+                const isDuplicate = user.address.some(addr => 
+                    addr.pincode === newAddr.pincode && 
+                    addr.address.toLowerCase() === newAddr.address.toLowerCase() &&
+                    addr.city.toLowerCase() === newAddr.city.toLowerCase()
+                );
+
+                if (!isDuplicate) {
+                    user.address.push(newAddr);
+                }
+
                 await user.save();
             }
-        } catch (cartErr) {
-            console.error("Failed to clear cart after order:", cartErr);
+        } catch (updateErr) {
+            console.error("Failed to update user profile after order:", updateErr);
         }
 
     } catch (error) {
