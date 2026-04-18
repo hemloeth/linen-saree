@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { AddCategoryModal } from "@/components/admin/add-category-modal"
 import { useCategory } from "@/context/category-context"
 import { useProducts } from "@/context/product-context"
+import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
 import {
     Select,
     SelectContent,
@@ -29,6 +30,19 @@ export default function AddProductPage() {
     const router = useRouter()
     const { addProduct, uploadVideo, loading } = useProducts()
     const [showSuccessModal, setShowSuccessModal] = useState(false)
+    const [toasts, setToasts] = useState<ToastItem[]>([])
+    
+    const showToast = (title: string, message: string) => {
+        const id = Date.now()
+        setToasts((prev) => [...prev, { id, title, message }])
+        setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== id))
+        }, 3000)
+    }
+
+    const dismissToast = (id: number) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id))
+    }
     const [lastAddedName, setLastAddedName] = useState("")
     const [mainImage, setMainImage] = useState<string | null>(null)
     const [mainImageFile, setMainImageFile] = useState<File | null>(null)
@@ -143,12 +157,11 @@ export default function AddProductPage() {
             formData.append("mainImage", compressedMainImage, compressedMainImage.name)
             compressedGalleryImages.forEach((file) => formData.append("galleryImages", file, file.name))
 
-            const product = await addProduct(formData)
-
-            // Upload video separately if present
-            if (videoFileRaw && product?._id) {
-                await uploadVideo(product._id, videoFileRaw)
+            if (videoFileRaw) {
+                formData.append("videoFile", videoFileRaw)
             }
+
+            const product = await addProduct(formData)
 
             // Clear all fields
             setMainImage(null)
@@ -177,13 +190,15 @@ export default function AddProductPage() {
 
             // Show Success Modal
             setShowSuccessModal(true)
-        } catch (err) {
+        } catch (err: any) {
             console.error("Failed to add product", err)
+            showToast("Failed to Add Product", err.message || "Something went wrong. Please check the form and try again.")
         }
     }
 
     return (
         <div className="-m-4 md:-m-6">
+            <AdminToast toasts={toasts} onDismiss={dismissToast} />
             <SuccessModal
                 isOpen={showSuccessModal}
                 onClose={() => setShowSuccessModal(false)}

@@ -25,8 +25,8 @@ router.get("/:id", protect, getOrderById);
 router.get("/:id/track", protect, trackOrder);
 
 // Admin routes (uses same protect middleware — role check can be added later)
-router.get("/admin/all", protect, getAllOrders);
-router.put("/admin/:id/status", protect, updateOrderStatus);
-router.post("/admin/:id/cancel", protect, cancelOrder);
+router.get("/admin/all", getAllOrders);
+router.put("/admin/:id/status", updateOrderStatus);
+router.post("/admin/:id/cancel", cancelOrder);
 
 export default router;

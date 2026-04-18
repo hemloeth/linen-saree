@@ -213,6 +213,7 @@ export function AutoScrollHero() {
             onClick={goToPrevious}
             className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/10 hover:bg-white/25 backdrop-blur-md border border-white/20 rounded-full transition-all duration-300 text-white group hover:scale-110"
             aria-label="Previous slide"
+            suppressHydrationWarning
           >
             <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 group-hover:-translate-x-0.5 transition-transform" />
           </button>
@@ -220,6 +221,7 @@ export function AutoScrollHero() {
             onClick={goToNext}
             className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/10 hover:bg-white/25 backdrop-blur-md border border-white/20 rounded-full transition-all duration-300 text-white group hover:scale-110"
             aria-label="Next slide"
+            suppressHydrationWarning
           >
             <ChevronRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-0.5 transition-transform" />
           </button>
@@ -240,6 +242,7 @@ export function AutoScrollHero() {
                   : "w-2 h-2 bg-white/40 hover:bg-white/60"
                   }`}
                 aria-label={`Go to slide ${index + 1}`}
+                suppressHydrationWarning
               />
             ))}
           </div>
@@ -250,6 +253,7 @@ export function AutoScrollHero() {
           onClick={scrollToContent}
           className="flex flex-col items-center gap-1 text-white/60 hover:text-white transition-colors group"
           aria-label="Scroll to content"
+          suppressHydrationWarning
         >
           <span className="text-[10px] tracking-[0.3em] uppercase font-sans">Scroll</span>
           <ChevronDown className="w-4 h-4 animate-bounce" />

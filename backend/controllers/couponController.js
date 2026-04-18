@@ -59,12 +59,39 @@ const getCoupons = asyncHandler(async (req, res) => {
  * POST /api/coupon — Create a new coupon (Admin)
  */
 const createCoupon = asyncHandler(async (req, res) => {
-    const existing = await Coupon.findOne({ code: req.body.code?.toUpperCase() });
+    const {
+        code,
+        discountType,
+        discountValue,
+        minPurchase,
+        usageLimit,
+        usageLimitPerUser,
+        expiryDate,
+        isActive
+    } = req.body;
+
+    if (!code || !discountValue || !expiryDate) {
+        throw new AppError("Code, discount value, and expiry date are required", 400);
+    }
+
+    const normalizedCode = code.toUpperCase().trim();
+
+    const existing = await Coupon.findOne({ code: normalizedCode });
     if (existing) {
         throw new AppError("A coupon with this code already exists", 400);
     }
 
-    const coupon = await Coupon.create(req.body);
+    const coupon = await Coupon.create({
+        code: normalizedCode,
+        discountType: discountType || "percentage",
+        discountValue: parseFloat(discountValue),
+        minPurchase: minPurchase ? parseFloat(minPurchase) : 0,
+        usageLimit: usageLimit ? parseInt(usageLimit) : 100,
+        usageLimitPerUser: usageLimitPerUser ? parseInt(usageLimitPerUser) : 1,
+        expiryDate: new Date(expiryDate).toISOString(),
+        isActive: isActive !== undefined ? isActive : true,
+    });
+
     res.status(201).json({ success: true, coupon });
 });
 

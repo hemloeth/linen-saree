@@ -180,12 +180,11 @@ export default function EditProductPage() {
                 compressedGalleryImages.forEach((file) => formData.append("galleryImages", file, file.name))
             }
 
-            const product = await updateProduct(productId, formData)
-
-            // Upload video separately if a new one was selected
-            if (videoFileRaw && product?._id) {
-                await uploadVideo(product._id, videoFileRaw)
+            if (videoFileRaw) {
+                formData.append("videoFile", videoFileRaw)
             }
+
+            const product = await updateProduct(productId, formData)
 
             // Show Success Modal
             setShowSuccessModal(true)

@@ -64,8 +64,8 @@ export function AddCategoryModal({ isOpen, onClose, onSuccess }: AddCategoryModa
 
             // Show a success toast
             showToast("Category Added", `"${savedName}" has been created successfully`)
-        } catch {
-            // error is handled in context
+        } catch (err: any) {
+            showToast("Failed to Add Category", err.message || "Something went wrong. Please try again.")
         }
     }
 

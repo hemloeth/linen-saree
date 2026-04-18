@@ -61,6 +61,7 @@ const createOrder = asyncHandler(async (req, res) => {
             items: items.map((item) => ({
                 productId: item.productId || item.id,
                 name: item.name,
+                slug: item.slug || item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
                 price: item.price,
                 quantity: item.quantity,
                 image: item.image || "",

@@ -43,10 +43,13 @@ const addToWishlist = async (req, res) => {
         user.wishList.push({ productId, quantity: 1 });
         await user.save();
 
+        // Populate for frontend
+        const populatedUser = await User.findById(req.user._id).populate("wishList.productId");
+
         res.status(200).json({
             success: true,
             message: "Item added to wishlist",
-            wishlist: user.wishList
+            wishlist: populatedUser.wishList
         });
     } catch (error) {
         console.error("Error in addToWishlist:", error);
@@ -65,10 +68,13 @@ const removeFromWishlist = async (req, res) => {
         user.wishList = user.wishList.filter(item => item.productId.toString() !== productId);
         await user.save();
 
+        // Populate for frontend
+        const populatedUser = await User.findById(req.user._id).populate("wishList.productId");
+
         res.status(200).json({
             success: true,
             message: "Item removed from wishlist",
-            wishlist: user.wishList
+            wishlist: populatedUser.wishList
         });
     } catch (error) {
         console.error("Error in removeFromWishlist:", error);
@@ -119,10 +125,13 @@ const syncWishlist = async (req, res) => {
 
         await user.save();
 
+        // Populate for frontend
+        const populatedUser = await User.findById(req.user._id).populate("wishList.productId");
+
         res.status(200).json({
             success: true,
             message: "Wishlist synced successfully",
-            wishlist: user.wishList
+            wishlist: populatedUser.wishList
         });
     } catch (error) {
         console.error("Error in syncWishlist:", error);

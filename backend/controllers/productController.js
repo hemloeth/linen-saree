@@ -221,6 +221,11 @@ const updateProduct = async (req, res) => {
             updateData.galleryImages = [...existingGallery, ...newGalleryImages];
         }
 
+        // Handle video file update
+        if (files?.videoFile?.[0]?.path) {
+            updateData.videoFile = files.videoFile[0].path;
+        }
+
         const product = await productModal.findByIdAndUpdate(id, updateData, { new: true });
         if (!product) {
             return res.status(404).json({
@@ -304,4 +309,35 @@ const updateGalleryImageInfo = async (req, res) => {
     }
 };
 
-export default { addProduct, getAllProducts, getProductById, deleteProduct, deleteMultipleProducts, updateProduct, updateGalleryImageInfo };
+const uploadProductVideo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const videoFile = req.file?.path || null;
+        if (!videoFile) {
+            return res.status(400).json({
+                success: false,
+                message: "Video file is required",
+            });
+        }
+        const product = await productModal.findByIdAndUpdate(id, { videoFile }, { new: true });
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Video uploaded successfully",
+            product,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+export default { addProduct, getAllProducts, getProductById, deleteProduct, deleteMultipleProducts, updateProduct, updateGalleryImageInfo, uploadProductVideo };

@@ -2,18 +2,22 @@ import blogModal from "../modal/blogModal.js";
 
 const addBlog = async (req, res) => {
     try {
-        const { title, description, image } = req.body;
+        const { title, description } = req.body;
+        const imageFile = req.file;
+
+        // The image can either come as a file (preferred) or as a URL (fallback for legacy)
+        const image = imageFile ? imageFile.path : req.body.image;
 
         if (!title || !description || !image) {
             return res.status(400).json({
                 success: false,
-                message: "Please provide title, description, and image",
+                message: "Please provide title, description, and an image",
             });
         }
 
         const blog = new blogModal({
-            title,
-            description,
+            title: title.trim(),
+            description: description.trim(),
             image,
         });
 
@@ -21,7 +25,7 @@ const addBlog = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: "Blog added successfully",
+            message: "Blog post published successfully",
             blog,
         });
     } catch (error) {
@@ -35,7 +39,7 @@ const addBlog = async (req, res) => {
 
 const getAllBlogs = async (req, res) => {
     try {
-        const blogs = await blogModal.find({});
+        const blogs = await blogModal.find({}).sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
             blogs,
@@ -57,13 +61,13 @@ const deleteBlog = async (req, res) => {
         if (!blog) {
             return res.status(404).json({
                 success: false,
-                message: "Blog not found",
+                message: "Blog post not found",
             });
         }
 
         res.status(200).json({
             success: true,
-            message: "Blog deleted successfully",
+            message: "Blog post removed successfully",
         });
     } catch (error) {
         console.error(error);
@@ -77,25 +81,32 @@ const deleteBlog = async (req, res) => {
 const updateBlog = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, image } = req.body;
+        const { title, description } = req.body;
+        const imageFile = req.file;
 
         const updateData = {};
-        if (title) updateData.title = title;
-        if (description) updateData.description = description;
-        if (image) updateData.image = image;
+        if (title) updateData.title = title.trim();
+        if (description) updateData.description = description.trim();
+        
+        // Handle image update from file OR body URL
+        if (imageFile) {
+            updateData.image = imageFile.path;
+        } else if (req.body.image) {
+            updateData.image = req.body.image;
+        }
 
         const blog = await blogModal.findByIdAndUpdate(id, updateData, { new: true });
 
         if (!blog) {
             return res.status(404).json({
                 success: false,
-                message: "Blog not found",
+                message: "Blog post not found",
             });
         }
 
         res.status(200).json({
             success: true,
-            message: "Blog updated successfully",
+            message: "Blog entry updated successfully",
             blog,
         });
     } catch (error) {
@@ -105,6 +116,6 @@ const updateBlog = async (req, res) => {
             message: "Internal server error",
         });
     }
-}
+};
 
 export default { addBlog, getAllBlogs, deleteBlog, updateBlog };

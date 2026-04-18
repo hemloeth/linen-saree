@@ -64,6 +64,7 @@ export function CelebritySection() {
                 onClick={prevTestimonial}
                 className="w-12 h-12 border border-border flex items-center justify-center hover:bg-muted transition-colors"
                 aria-label="Previous testimonial"
+                suppressHydrationWarning
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -71,6 +72,7 @@ export function CelebritySection() {
                 onClick={nextTestimonial}
                 className="w-12 h-12 border border-border flex items-center justify-center hover:bg-muted transition-colors"
                 aria-label="Next testimonial"
+                suppressHydrationWarning
               >
                 <ChevronRight className="w-5 h-5" />
               </button>

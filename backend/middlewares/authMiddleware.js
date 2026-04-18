@@ -16,7 +16,11 @@ const protect = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // 3. Find user and attach to request object
-        req.user = await User.findById(decoded.id).select("-password");
+        const user = await User.findById(decoded.id).select("-password");
+        if (!user) {
+            return res.status(401).json({ message: "Not authorized, user not found" });
+        }
+        req.user = user;
 
         // 4. Move to the next middleware/controller
         next();

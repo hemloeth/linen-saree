@@ -39,6 +39,7 @@ export function NewsletterSection() {
           <button
             type="submit"
             className="group inline-flex items-center justify-center gap-3 bg-primary-foreground text-primary px-8 py-4 font-sans text-sm tracking-wider uppercase hover:opacity-90 transition-opacity"
+            suppressHydrationWarning
           >
             Subscribe
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

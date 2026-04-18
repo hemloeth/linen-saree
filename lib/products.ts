@@ -82,8 +82,10 @@ export async function fetchProductsFromDB(): Promise<Product[]> {
     if (data.success && data.products) {
       return data.products.map(mapProductFromDB);
     }
-  } catch (error) {
-    console.error("Error fetching products from DB, using fallbacks:", error);
+  } catch (error: any) {
+    const { API_BASE_URL } = await import("@/lib/api");
+    console.error(`Error fetching products from DB (${API_BASE_URL}/api/product/allproducts):`, error.message || error);
+    console.info("Using fallback products as a safety measure.");
   }
 
   return fallbackProducts;

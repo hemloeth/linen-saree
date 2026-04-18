@@ -2,39 +2,25 @@ import express from "express";
 import productController from "../controllers/productController.js";
 import upLoadImage from "../middlewares/uploadImage.js";
 import upLoadVideo from "../middlewares/uploadVedio.js";
+import productModal from "../modal/productModal.js";
 
-const { addProduct, getAllProducts, getProductById, deleteProduct, deleteMultipleProducts, updateProduct, updateGalleryImageInfo } = productController;
+const { addProduct, getAllProducts, getProductById, deleteProduct, deleteMultipleProducts, updateProduct, updateGalleryImageInfo, uploadProductVideo } = productController;
 
 const router = express.Router();
 
 router.post("/add-product", upLoadImage.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "galleryImages", maxCount: 10 },
+    { name: "videoFile", maxCount: 1 },
 ]), addProduct);
 
 router.put("/update/:id", upLoadImage.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "galleryImages", maxCount: 10 },
+    { name: "videoFile", maxCount: 1 },
 ]), updateProduct);
 
-router.put("/upload-video/:id", upLoadVideo.single("videoFile"), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const videoFile = req.file?.path || null;
-        if (!videoFile) {
-            return res.status(400).json({ success: false, message: "Video file is required" });
-        }
-        const { default: productModal } = await import("../modal/productModal.js");
-        const product = await productModal.findByIdAndUpdate(id, { videoFile }, { new: true });
-        if (!product) {
-            return res.status(404).json({ success: false, message: "Product not found" });
-        }
-        res.status(200).json({ success: true, message: "Video uploaded successfully", product });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error" });
-    }
-});
+router.put("/upload-video/:id", upLoadVideo.single("videoFile"), uploadProductVideo);
 
 router.get("/allproducts", getAllProducts);
 router.delete("/bulk-delete", deleteMultipleProducts);

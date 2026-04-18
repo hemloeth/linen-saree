@@ -16,11 +16,11 @@ router.post("/apply", protect, applyCoupon);
 
 // Admin Routes (using protect for now, should add admin middleware later)
 router.route("/")
-    .post(protect, createCoupon)
-    .get(protect, getCoupons);
+    .post(createCoupon)
+    .get(getCoupons);
 
 router.route("/:id")
-    .put(protect, updateCoupon)
-    .delete(protect, deleteCoupon);
+    .put(updateCoupon)
+    .delete(deleteCoupon);
 
 export default router;

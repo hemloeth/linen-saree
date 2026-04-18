@@ -25,22 +25,25 @@ export function AnimatedModal({ isOpen, onClose, children, disableClose = false 
                         onClick={() => !disableClose && onClose?.()}
                     />
 
-                    {/* Modal */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        transition={{
-                            type: "spring",
-                            stiffness: 400,
-                            damping: 28,
-                        }}
-                        className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm"
-                    >
-                        <div className="bg-background rounded-2xl border shadow-2xl p-6 mx-4">
-                            {children}
-                        </div>
-                    </motion.div>
+                    {/* Modal Wrapper for Centering */}
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+                        {/* Modal container */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 450,
+                                damping: 30,
+                            }}
+                            className="w-full max-w-sm pointer-events-auto"
+                        >
+                            <div className="bg-background rounded-2xl border shadow-2xl p-6 drop-shadow-xl">
+                                {children}
+                            </div>
+                        </motion.div>
+                    </div>
                 </>
             )}
         </AnimatePresence>

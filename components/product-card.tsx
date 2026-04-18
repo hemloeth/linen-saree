@@ -28,6 +28,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const [api, setApi] = useState<CarouselApi>()
   const [isAdded, setIsAdded] = useState(false)
+  const [mounted, setMounted] = useState(false)
+ 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!api) return
@@ -36,7 +41,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   }, [api])
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-  const isWishlisted = isInWishlist(product.id)
+  const isWishlisted = mounted ? isInWishlist(product.id) : false
 
   const avgRating = product.averageRating || 0
   const totalReviews = product.totalReviews || 0
@@ -146,6 +151,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               className={`p-2 bg-background/95 hover:bg-background rounded-full transition-all shadow-sm active:scale-95 ${isWishlisted ? 'text-primary' : ''
                 }`}
               aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              suppressHydrationWarning
             >
               <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
             </button>
@@ -198,6 +204,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               : "bg-primary text-primary-foreground hover:bg-primary/90"
             }`}
           title={outOfStock ? "Out of Stock" : "Add to Cart"}
+          suppressHydrationWarning
         >
           {isAdded ? (
             <Check className="w-4 h-4 animate-[bounceIn_0.4s_ease-out]" />
@@ -215,7 +222,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
             className="flex-1"
             onClick={() => addToCart(product)}
           >
-            <button className="w-full h-full bg-background border border-primary text-primary hover:bg-primary/5 py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold transition-all rounded-sm active:scale-95 shadow-sm uppercase tracking-wider">
+            <button 
+              className="w-full h-full bg-background border border-primary text-primary hover:bg-primary/5 py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold transition-all rounded-sm active:scale-95 shadow-sm uppercase tracking-wider"
+              suppressHydrationWarning
+            >
               Buy Now
             </button>
           </Link>
