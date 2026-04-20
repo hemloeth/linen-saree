@@ -6,7 +6,7 @@ import { ShoppingBag, Heart, Play, Pause, ChevronLeft, ChevronRight } from "luci
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { useProducts } from "@/context/product-context"
-import { Header } from "@/components/header"
+import { Header } from "@/components/layout/header"
 import Link from "next/link"
 
 interface VideoCardProps {
@@ -143,7 +143,7 @@ const baseVideoCards = [
     title: "Premium Silk Linen Collection",
     price: 3499,
     originalPrice: 4999,
-    videoSrc: "/Video-266.mp4",
+    videoSrc: "/videos/Video-266.mp4",
     productId: "8",
     category: "Silk"
   },
@@ -151,7 +151,7 @@ const baseVideoCards = [
     title: "Designer Dupatta Elegance",
     price: 1899,
     originalPrice: 3499,
-    videoSrc: "/dupaataa.mp4",
+    videoSrc: "/videos/dupaataa.mp4",
     productId: "2",
     category: "Dupatta"
   },
@@ -159,7 +159,7 @@ const baseVideoCards = [
     title: "Festive Special Collection",
     price: 3999,
     originalPrice: 6999,
-    videoSrc: "/gemini_vedio.mp4",
+    videoSrc: "/videos/gemini_vedio.mp4",
     productId: "3",
     category: "Festive"
   },
@@ -167,7 +167,7 @@ const baseVideoCards = [
     title: "Banarasi Silk Elegance",
     price: 4299,
     originalPrice: 7999,
-    videoSrc: "/bluesaree.mp4",
+    videoSrc: "/videos/bluesaree.mp4",
     productId: "4",
     category: "Banarasi"
   },
@@ -175,7 +175,7 @@ const baseVideoCards = [
     title: "Contemporary Elegance",
     price: 2799,
     originalPrice: 4999,
-    videoSrc: "/videoplayback.mp4",
+    videoSrc: "/videos/videoplayback.mp4",
     productId: "5",
     category: "Contemporary"
   },
@@ -183,7 +183,7 @@ const baseVideoCards = [
     title: "Handloom Heritage Collection",
     price: 2890,
     originalPrice: 5290,
-    videoSrc: "/Video-385.mp4",
+    videoSrc: "/videos/Video-385.mp4",
     productId: "6",
     category: "Handloom"
   },
@@ -191,7 +191,7 @@ const baseVideoCards = [
     title: "Pure Linen Comfort",
     price: 2499,
     originalPrice: 4799,
-    videoSrc: "/Video-28.mp4",
+    videoSrc: "/videos/Video-28.mp4",
     productId: "1",
     category: "Linen"
   }
@@ -204,7 +204,7 @@ const extendedVideoCards = [
     title: "Royal Silk Elegance",
     price: 4599,
     originalPrice: 7299,
-    videoSrc: "/Video-266.mp4",
+    videoSrc: "/videos/Video-266.mp4",
     productId: "9",
     category: "Silk"
   },
@@ -212,7 +212,7 @@ const extendedVideoCards = [
     title: "Luxurious Silk Drape",
     price: 3899,
     originalPrice: 6499,
-    videoSrc: "/bluesaree.mp4",
+    videoSrc: "/videos/bluesaree.mp4",
     productId: "10",
     category: "Silk"
   },
@@ -220,7 +220,7 @@ const extendedVideoCards = [
     title: "Premium Silk Weave",
     price: 4199,
     originalPrice: 6999,
-    videoSrc: "/gemini_vedio.mp4",
+    videoSrc: "/videos/gemini_vedio.mp4",
     productId: "11",
     category: "Silk"
   },
@@ -230,7 +230,7 @@ const extendedVideoCards = [
     title: "Traditional Banarasi Gold",
     price: 5299,
     originalPrice: 8999,
-    videoSrc: "/Video-385.mp4",
+    videoSrc: "/videos/Video-385.mp4",
     productId: "12",
     category: "Banarasi"
   },
@@ -238,7 +238,7 @@ const extendedVideoCards = [
     title: "Heritage Banarasi Silk",
     price: 4799,
     originalPrice: 7999,
-    videoSrc: "/videoplayback.mp4",
+    videoSrc: "/videos/videoplayback.mp4",
     productId: "13",
     category: "Banarasi"
   },
@@ -246,7 +246,7 @@ const extendedVideoCards = [
     title: "Classic Banarasi Weave",
     price: 4999,
     originalPrice: 8499,
-    videoSrc: "/Video-28.mp4",
+    videoSrc: "/videos/Video-28.mp4",
     productId: "14",
     category: "Banarasi"
   },
@@ -256,7 +256,7 @@ const extendedVideoCards = [
     title: "Artisan Handloom Special",
     price: 3299,
     originalPrice: 5799,
-    videoSrc: "/dupaataa.mp4",
+    videoSrc: "/videos/dupaataa.mp4",
     productId: "15",
     category: "Handloom"
   },
@@ -264,7 +264,7 @@ const extendedVideoCards = [
     title: "Traditional Handloom Cotton",
     price: 2699,
     originalPrice: 4999,
-    videoSrc: "/Video-266.mp4",
+    videoSrc: "/videos/Video-266.mp4",
     productId: "16",
     category: "Handloom"
   },
@@ -272,7 +272,7 @@ const extendedVideoCards = [
     title: "Heritage Handloom Craft",
     price: 3099,
     originalPrice: 5499,
-    videoSrc: "/bluesaree.mp4",
+    videoSrc: "/videos/bluesaree.mp4",
     productId: "17",
     category: "Handloom"
   },
@@ -282,7 +282,7 @@ const extendedVideoCards = [
     title: "Organic Linen Comfort",
     price: 2799,
     originalPrice: 4599,
-    videoSrc: "/gemini_vedio.mp4",
+    videoSrc: "/videos/gemini_vedio.mp4",
     productId: "18",
     category: "Linen"
   },
@@ -290,7 +290,7 @@ const extendedVideoCards = [
     title: "Premium Linen Blend",
     price: 2999,
     originalPrice: 4999,
-    videoSrc: "/Video-385.mp4",
+    videoSrc: "/videos/Video-385.mp4",
     productId: "19",
     category: "Linen"
   },
@@ -298,7 +298,7 @@ const extendedVideoCards = [
     title: "Summer Linen Collection",
     price: 2599,
     originalPrice: 4299,
-    videoSrc: "/videoplayback.mp4",
+    videoSrc: "/videos/videoplayback.mp4",
     productId: "20",
     category: "Linen"
   },
@@ -308,7 +308,7 @@ const extendedVideoCards = [
     title: "Embroidered Dupatta Set",
     price: 2199,
     originalPrice: 3999,
-    videoSrc: "/Video-28.mp4",
+    videoSrc: "/videos/Video-28.mp4",
     productId: "21",
     category: "Dupatta"
   },
@@ -316,7 +316,7 @@ const extendedVideoCards = [
     title: "Silk Dupatta Elegance",
     price: 2499,
     originalPrice: 4299,
-    videoSrc: "/Video-266.mp4",
+    videoSrc: "/videos/Video-266.mp4",
     productId: "22",
     category: "Dupatta"
   },
@@ -324,7 +324,7 @@ const extendedVideoCards = [
     title: "Designer Dupatta Collection",
     price: 1999,
     originalPrice: 3699,
-    videoSrc: "/bluesaree.mp4",
+    videoSrc: "/videos/bluesaree.mp4",
     productId: "23",
     category: "Dupatta"
   },
@@ -334,7 +334,7 @@ const extendedVideoCards = [
     title: "Wedding Special Saree",
     price: 5999,
     originalPrice: 9999,
-    videoSrc: "/Video-385.mp4",
+    videoSrc: "/videos/Video-385.mp4",
     productId: "24",
     category: "Festive"
   },
@@ -342,7 +342,7 @@ const extendedVideoCards = [
     title: "Celebration Wear Elegance",
     price: 4599,
     originalPrice: 7999,
-    videoSrc: "/videoplayback.mp4",
+    videoSrc: "/videos/videoplayback.mp4",
     productId: "25",
     category: "Festive"
   },
@@ -350,7 +350,7 @@ const extendedVideoCards = [
     title: "Festival Special Collection",
     price: 4299,
     originalPrice: 7299,
-    videoSrc: "/dupaataa.mp4",
+    videoSrc: "/videos/dupaataa.mp4",
     productId: "26",
     category: "Festive"
   },
@@ -360,7 +360,7 @@ const extendedVideoCards = [
     title: "Modern Drape Style",
     price: 3199,
     originalPrice: 5499,
-    videoSrc: "/Video-28.mp4",
+    videoSrc: "/videos/Video-28.mp4",
     productId: "27",
     category: "Contemporary"
   },
@@ -368,7 +368,7 @@ const extendedVideoCards = [
     title: "Fusion Wear Collection",
     price: 2899,
     originalPrice: 4999,
-    videoSrc: "/gemini_vedio.mp4",
+    videoSrc: "/videos/gemini_vedio.mp4",
     productId: "28",
     category: "Contemporary"
   },
@@ -376,7 +376,7 @@ const extendedVideoCards = [
     title: "Urban Chic Saree",
     price: 3399,
     originalPrice: 5799,
-    videoSrc: "/Video-266.mp4",
+    videoSrc: "/videos/Video-266.mp4",
     productId: "29",
     category: "Contemporary"
   }

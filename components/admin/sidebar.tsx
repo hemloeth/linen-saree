@@ -19,6 +19,21 @@ const sidebarItems = [
         icon: LayoutDashboard,
     },
     {
+        title: "Festive Banner",
+        href: "/admin/festive-banner",
+        icon: Images,
+    },
+    {
+        title: "Sale Banner",
+        href: "/admin/festive-sale",
+        icon: TicketPercent,
+    },
+    {
+        title: "Category Banners",
+        href: "/admin/category-banners",
+        icon: LayoutDashboard,
+    },
+    {
         title: "Products",
         href: "/admin/products",
         icon: Package,

@@ -1,8 +1,8 @@
 "use client"
 
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { ProductCard } from "@/components/product-card"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { ProductCard } from "@/components/products/product-card"
 import { useWishlist } from "@/context/wishlist-context"
 import { useCart } from "@/context/cart-context"
 import { Heart, ShoppingBag } from "lucide-react"

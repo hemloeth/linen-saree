@@ -1,8 +1,8 @@
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { PageHeroSlider } from "@/components/page-hero-slider"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import { fetchProductsFromDB } from "@/lib/products"
-import { ProductCard } from "@/components/product-card"
+import { ProductCard } from "@/components/products/product-card"
 
 export const metadata = {
   title: "Festival Collection | Linen Sarees",

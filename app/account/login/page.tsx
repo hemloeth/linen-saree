@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { Eye, EyeOff } from "lucide-react"

@@ -66,6 +66,7 @@ export default function AddProductPage() {
     const [color, setColor] = useState("")
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
     const { categories: dbCategories } = useCategory()
+    const [isOnSale, setIsOnSale] = useState(false)
 
     // Specification State
     const [material, setMaterial] = useState("")
@@ -154,6 +155,7 @@ export default function AddProductPage() {
             formData.append("dispatch", dispatch)
             formData.append("disclaimer", disclaimer)
             formData.append("internationalNote", internationalNote)
+            formData.append("isOnSale", String(isOnSale))
             formData.append("mainImage", compressedMainImage, compressedMainImage.name)
             compressedGalleryImages.forEach((file) => formData.append("galleryImages", file, file.name))
 
@@ -187,6 +189,7 @@ export default function AddProductPage() {
             setDisclaimer("Actual product color may differ slightly from the images due to lighting and display differences.")
             setInternationalNote("Custom duties")
             setColor("")
+            setIsOnSale(false)
 
             // Show Success Modal
             setShowSuccessModal(true)
@@ -404,6 +407,20 @@ export default function AddProductPage() {
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="international-note" className="text-[10px] uppercase text-muted-foreground font-bold">Intl Note</Label>
                                         <Input id="international-note" value={internationalNote} readOnly className="h-8 text-xs bg-muted/50 cursor-not-allowed" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6 pt-4">
+                                <div className="flex items-center gap-3 p-4 rounded-xl border bg-primary/[0.02] border-primary/10 transition-colors hover:bg-primary/[0.04]">
+                                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-muted"
+                                         onClick={() => setIsOnSale(!isOnSale)}
+                                         style={{ backgroundColor: isOnSale ? 'var(--primary)' : '' }}>
+                                        <span className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${isOnSale ? 'translate-x-5' : 'translate-x-0'}`} />
+                                    </div>
+                                    <div className="grid gap-0.5">
+                                        <Label className="text-sm font-bold cursor-pointer" onClick={() => setIsOnSale(!isOnSale)}>Show in Festive Sale</Label>
+                                        <p className="text-[10px] text-muted-foreground">Display this product in the sale collection.</p>
                                     </div>
                                 </div>
                             </div>

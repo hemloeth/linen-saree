@@ -10,7 +10,7 @@
  * - Consistent error handling
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;
@@ -172,6 +172,21 @@ export async function apiPut<T = any>(
 ): Promise<T> {
     return request<T>(endpoint, {
         method: 'PUT',
+        headers: buildHeaders(config?.headers),
+        body: body ? JSON.stringify(body) : undefined,
+    }, { timeout: config?.timeout });
+}
+
+/**
+ * PATCH request with JSON body
+ */
+export async function apiPatch<T = any>(
+    endpoint: string,
+    body?: any,
+    config?: { timeout?: number; headers?: Record<string, string> }
+): Promise<T> {
+    return request<T>(endpoint, {
+        method: 'PATCH',
         headers: buildHeaders(config?.headers),
         body: body ? JSON.stringify(body) : undefined,
     }, { timeout: config?.timeout });

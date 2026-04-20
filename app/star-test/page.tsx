@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { StarRating } from "@/components/star-rating"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { StarRating } from "@/components/common/star-rating"
 
 export default function StarTestPage() {
   const [rating, setRating] = useState(0)

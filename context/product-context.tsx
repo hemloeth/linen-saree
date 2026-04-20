@@ -17,7 +17,7 @@ import {
     sortProducts,
     searchProducts
 } from "@/lib/products"
-import { apiGet, apiUpload, apiDelete, apiPut } from "@/lib/api"
+import { apiGet, apiUpload, apiDelete, apiPut, apiPatch } from "@/lib/api"
 
 export interface ImageInfo {
     url: string
@@ -50,6 +50,9 @@ interface Product {
     internationalNote: string
     videoUrl: string
     videoFile: string
+    isOnSale: boolean
+    isFestive: boolean
+    isNew: boolean
     createdAt: string
 }
 
@@ -57,6 +60,7 @@ interface ProductContextType {
     products: Product[]
     addProduct: (formData: FormData) => Promise<Product | null>
     updateProduct: (id: string, formData: FormData) => Promise<Product | null>
+    quickUpdateProduct: (id: string, updates: Partial<Product>) => Promise<void>
     uploadVideo: (productId: string, videoFile: File) => Promise<void>
     deleteProduct: (id: string) => Promise<void>
     deleteMultipleProducts: (ids: string[]) => Promise<number>
@@ -154,6 +158,18 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
         }
     }
 
+    const quickUpdateProduct = async (id: string, updates: Partial<Product>) => {
+        try {
+            const data = await apiPatch(`/api/product/quick-update/${id}`, updates)
+            setProducts((prev) =>
+                prev.map((p) => (p._id === id ? data.product : p))
+            )
+        } catch (err: any) {
+            console.error("Quick update failed", err)
+            throw err
+        }
+    }
+
     const deleteProduct = async (id: string) => {
         setLoading(true)
         setError(null)
@@ -229,9 +245,10 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
                 ].filter(Boolean),
                 fabric: dbProduct.material || "Linen",
                 color: dbProduct.color || "Multicolor",
-                isOnSale: !!dbProduct.regularPrice && dbProduct.regularPrice > dbProduct.price,
+                isOnSale: dbProduct.isOnSale,
+                isFestive: dbProduct.isFestive,
                 isFeatured: true, // Mocked for now
-                isNew: true,      // Mocked for now
+                isNew: dbProduct.isNew,
                 material: dbProduct.material,
                 sareeSize: dbProduct.sareeSize,
                 blouseSize: dbProduct.blouseSize,
@@ -249,6 +266,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
                 products,
                 addProduct,
                 updateProduct,
+                quickUpdateProduct,
                 uploadVideo,
                 deleteProduct,
                 deleteMultipleProducts,

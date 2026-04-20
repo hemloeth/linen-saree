@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import Link from "next/link"
 import { getBestSellers, fetchProductsFromDB } from "@/lib/products"
-import { ProductCard } from "@/components/product-card"
+import { ProductCard } from "@/components/products/product-card"
 
 export const metadata: Metadata = {
   title: "Best Sellers - Linen Sarees",

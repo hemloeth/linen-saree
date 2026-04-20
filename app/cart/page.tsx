@@ -1,10 +1,10 @@
 "use client"
 
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
-import { CheckoutProductMedia } from "@/components/checkout-product-media"
+import { CheckoutProductMedia } from "@/components/common/checkout-product-media"
 import Image from "next/image"
 import Link from "next/link"
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Play } from "lucide-react"

@@ -10,6 +10,8 @@ import couponRoutes from "./couponRoutes.js";
 import orderRoutes from "./orderRoutes.js";
 import reviewRoutes from "./reviewRoutes.js";
 import heroRoutes from "./heroRoutes.js";
+import festiveSaleRoutes from "./festiveSaleRoutes.js";
+import festiveBannerRoutes from "./festiveBannerRoutes.js";
 
 const router = express.Router();
 
@@ -24,5 +26,7 @@ router.use("/coupon", couponRoutes);
 router.use("/order", orderRoutes);
 router.use("/review", reviewRoutes);
 router.use("/hero", heroRoutes);
+router.use("/festive-sale", festiveSaleRoutes);
+router.use("/festive-banner", festiveBannerRoutes);
 
-export default router;
+export default router;

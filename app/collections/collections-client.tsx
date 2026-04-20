@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ProductCard } from "@/components/product-card"
-import { ProductFilters } from "@/components/product-filters"
+import { ProductCard } from "@/components/products/product-card"
+import { ProductFilters } from "@/components/products/product-filters"
 import {
   type Product,
   type FilterOptions,

@@ -7,6 +7,7 @@ const addProduct = async (req, res) => {
             shortDescription, tags, color,
             material, sareeSize, blouseSize, washCare, dispatch,
             disclaimer, internationalNote, videoUrl,
+            isOnSale, isNew,
             galleryImageInfos: galleryImageInfosRaw,
         } = req.body;
 
@@ -51,6 +52,8 @@ const addProduct = async (req, res) => {
             mainImage, galleryImages, videoFile, videoUrl,
             material, sareeSize, blouseSize, washCare, dispatch,
             disclaimer, internationalNote,
+            isOnSale: isOnSale === "true" || isOnSale === true,
+            isNew: isNew === "true" || isNew === true,
         });
 
         res.status(201).json({
@@ -165,6 +168,7 @@ const updateProduct = async (req, res) => {
             shortDescription, tags, color,
             material, sareeSize, blouseSize, washCare, dispatch,
             disclaimer, internationalNote, videoUrl,
+            isOnSale, isNew,
             galleryImageInfos: galleryImageInfosRaw,
             existingGalleryImages: existingGalleryImagesRaw,
         } = req.body;
@@ -179,11 +183,16 @@ const updateProduct = async (req, res) => {
             videoUrl, material, sareeSize, blouseSize, washCare,
             dispatch, disclaimer, internationalNote,
             regularPrice, price, stock,
+            isOnSale, isNew,
         };
 
         Object.entries(textFields).forEach(([key, value]) => {
             if (value !== undefined && value !== "") {
-                updateData[key] = numberFields.includes(key) ? Number(value) : value;
+                if (key === "isOnSale" || key === "isNew") {
+                    updateData[key] = value === "true" || value === true;
+                } else {
+                    updateData[key] = numberFields.includes(key) ? Number(value) : value;
+                }
             }
         });
 
@@ -340,4 +349,31 @@ const uploadProductVideo = async (req, res) => {
     }
 };
 
-export default { addProduct, getAllProducts, getProductById, deleteProduct, deleteMultipleProducts, updateProduct, updateGalleryImageInfo, uploadProductVideo };
+const quickUpdateProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const product = await productModal.findByIdAndUpdate(id, updates, { new: true });
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Product updated successfully",
+            product,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+        });
+    }
+};
+
+export default { addProduct, getAllProducts, getProductById, deleteProduct, deleteMultipleProducts, updateProduct, updateGalleryImageInfo, uploadProductVideo, quickUpdateProduct };

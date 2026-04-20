@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { Gift, CreditCard, Heart } from 'lucide-react'
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 
 export default function GiftCardsPage() {
   const giftCardAmounts = [50, 100, 200, 500, 1000]

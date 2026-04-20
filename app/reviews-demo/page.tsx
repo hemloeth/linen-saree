@@ -1,7 +1,7 @@
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { ProductReviews } from "@/components/product-reviews"
-import { StarRating } from "@/components/star-rating"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { ProductReviews } from "@/components/products/product-reviews"
+import { StarRating } from "@/components/common/star-rating"
 import { getProductBySlug, fetchProductsFromDB } from "@/lib/products"
 import { getReviewStats } from "@/lib/reviews"
 

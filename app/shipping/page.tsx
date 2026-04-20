@@ -1,7 +1,7 @@
 import { Truck, Globe, Clock, Package, MapPin, Shield } from "lucide-react"
 import { Metadata } from "next"
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 
 export const metadata: Metadata = {
   title: "Shipping Information - Linen Sarees",

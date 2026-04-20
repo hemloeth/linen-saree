@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Package, Truck, CheckCircle, Clock, Search, Loader2 } from 'lucide-react'
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import { useAuth } from "@/context/auth-context"
 import Link from "next/link"
 

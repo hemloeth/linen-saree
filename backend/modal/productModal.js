@@ -91,6 +91,18 @@ const productSchema = new mongoose.Schema({
     videoFile: {
         type: String,
     },
+    isOnSale: {
+        type: Boolean,
+        default: false,
+    },
+    isNew: {
+        type: Boolean,
+        default: false,
+    },
+    isFestive: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 
 export default mongoose.model("Product", productSchema);

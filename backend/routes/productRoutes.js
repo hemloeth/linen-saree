@@ -4,7 +4,7 @@ import upLoadImage from "../middlewares/uploadImage.js";
 import upLoadVideo from "../middlewares/uploadVedio.js";
 import productModal from "../modal/productModal.js";
 
-const { addProduct, getAllProducts, getProductById, deleteProduct, deleteMultipleProducts, updateProduct, updateGalleryImageInfo, uploadProductVideo } = productController;
+const { addProduct, getAllProducts, getProductById, deleteProduct, deleteMultipleProducts, updateProduct, updateGalleryImageInfo, uploadProductVideo, quickUpdateProduct } = productController;
 
 const router = express.Router();
 
@@ -19,6 +19,8 @@ router.put("/update/:id", upLoadImage.fields([
     { name: "galleryImages", maxCount: 10 },
     { name: "videoFile", maxCount: 1 },
 ]), updateProduct);
+
+router.patch("/quick-update/:id", quickUpdateProduct);
 
 router.put("/upload-video/:id", upLoadVideo.single("videoFile"), uploadProductVideo);
 

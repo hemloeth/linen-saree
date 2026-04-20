@@ -1,6 +1,6 @@
 import Image from "next/image"
 import { Heart, ShoppingBag } from "lucide-react"
-import { StarRating } from "@/components/star-rating"
+import { StarRating } from "@/components/common/star-rating"
 import {
     Carousel,
     CarouselContent,

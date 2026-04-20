@@ -1,21 +1,23 @@
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { PageHeroSlider } from "@/components/page-hero-slider"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import {
   fetchProductsFromDB,
   categories,
-  getProductsByCategory
+  getProductsByCategory,
+  getNewProducts
 } from "@/lib/products"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { CategoryProductsClient } from "./category-products-client"
+import { apiServerGet } from "@/lib/api"
 
 interface Props {
   params: Promise<{ slug: string }>
 }
 
 // Define different slide sets for different collection types
-const getCollectionSlides = (slug: string, category: any) => {
+const getCollectionSlides = (slug: string, category: any, festiveData?: any) => {
   const baseSlides = [
     {
       id: `${slug}-main`,
@@ -196,6 +198,16 @@ const getCollectionSlides = (slug: string, category: any) => {
         }
       ]
 
+    case "festive":
+      return [
+        {
+          id: "festive-main",
+          image: festiveData?.image || "/images/hero-saree.jpg",
+          title: festiveData?.title2 || "Festive Collection",
+          subtitle: festiveData?.description || "Discover our latest curated festive sarees for every celebration"
+        }
+      ]
+
     default:
       return baseSlides
   }
@@ -230,21 +242,59 @@ export default async function CategoryPage({ params }: Props) {
 
   // Special cases
   if (slug === "new-arrivals") {
-    categoryProducts = allProducts.filter(p => p.isNew)
+    categoryProducts = getNewProducts(allProducts)
     pageTitle = "New Arrivals"
     pageDescription = "Discover our latest collection of handcrafted linen sarees"
   } else if (slug === "sale") {
     categoryProducts = allProducts.filter(p => p.isOnSale)
     pageTitle = "Sale"
     pageDescription = "Exclusive discounts on premium linen sarees"
+  } 
+
+  let festiveBannerData = null;
+  if (slug === "festive") {
+    categoryProducts = allProducts.filter(p => p.isFestive)
+    pageTitle = "Festive Collection"
+    pageDescription = "Discover our latest curated festive sarees, handcrafted with elegance and tradition."
+    
+    try {
+      const response = await apiServerGet('/api/festive-banner', { cache: 'no-store' });
+      if (response.success) {
+        festiveBannerData = response.data;
+      }
+    } catch (error) {
+      console.error("Error fetching festive banner data in collection page:", error);
+    }
   }
 
-  if (!category && slug !== "new-arrivals" && slug !== "sale") {
+  if (!category && slug !== "new-arrivals" && slug !== "sale" && slug !== "festive") {
     notFound()
   }
 
   // Get slides for this collection
-  const collectionSlides = getCollectionSlides(slug, category)
+  let collectionSlides = getCollectionSlides(slug, category, festiveBannerData)
+
+  // Fetch Category Specific Banner from dynamic system
+  if (slug !== "festive") {
+    try {
+      const response = await apiServerGet(`/api/category-banner/${slug}`, { cache: 'no-store' });
+      if (response.success && response.data) {
+        const dyn = response.data;
+        const bannerImageUrl = dyn.image.startsWith('http') ? dyn.image : `${API_BASE_URL}${dyn.image}`;
+        
+        collectionSlides = [
+          {
+            id: `dyn-${slug}`,
+            image: bannerImageUrl,
+            title: dyn.title,
+            subtitle: dyn.subtitle || dyn.description || ""
+          }
+        ];
+      }
+    } catch (error) {
+      console.warn(`Dynamic banner fetch skipped/failed for ${slug}, using defaults.`);
+    }
+  }
 
   // Breadcrumbs
   const breadcrumbs = [
@@ -310,5 +360,6 @@ export async function generateStaticParams() {
     })),
     { slug: "new-arrivals" },
     { slug: "sale" },
+    { slug: "festive" },
   ]
 }

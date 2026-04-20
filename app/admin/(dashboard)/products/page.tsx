@@ -25,16 +25,22 @@ import { Badge } from "@/components/ui/badge"
 import { useProducts } from "@/context/product-context"
 import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
 import { ConfirmModal } from "@/components/admin/confirm-modal"
+import { QuickSaleModal } from "@/components/admin/quick-sale-modal"
 
 let toastId = 0
 
 export default function AdminProductsPage() {
-  const { products, deleteProduct, deleteMultipleProducts } = useProducts()
+  const { products, deleteProduct, deleteMultipleProducts, quickUpdateProduct } = useProducts()
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [toasts, setToasts] = useState<ToastItem[]>([])
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [updatingField, setUpdatingField] = useState<string | null>(null)
+  const [activeSaleProduct, setActiveSaleProduct] = useState<any | null>(null)
+  const [isSaleModalOpen, setIsSaleModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'all' | 'sale'>('all')
 
   // Multi-select state
   const [selectionMode, setSelectionMode] = useState(false)
@@ -43,11 +49,15 @@ export default function AdminProductsPage() {
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
   const filteredProducts = useMemo(
-    () => products.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ),
-    [products, searchTerm]
+    () => products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesTab = activeTab === 'all' || product.isOnSale
+      return matchesSearch && matchesTab
+    }),
+    [products, searchTerm, activeTab]
   )
+
+  const saleCount = useMemo(() => products.filter(p => p.isOnSale).length, [products])
 
   const allFilteredSelected = filteredProducts.length > 0 && filteredProducts.every(p => selectedIds.has(p._id))
 
@@ -129,6 +139,26 @@ export default function AdminProductsPage() {
     }
   }
 
+  const handleOpenSaleModal = (product: any) => {
+    setActiveSaleProduct(product)
+    setIsSaleModalOpen(true)
+  }
+
+  const handleToggleFestive = async (product: any) => {
+    setUpdatingId(product._id)
+    setUpdatingField('isFestive')
+    try {
+      await quickUpdateProduct(product._id, { isFestive: !product.isFestive })
+      showToast(
+        product.isFestive ? "Removed from Festive" : "Added to Festive",
+        `"${product.name}" is ${product.isFestive ? "no longer" : "now"} in the festive collection`
+      )
+    } finally {
+      setUpdatingId(null)
+      setUpdatingField(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <AdminToast toasts={toasts} onDismiss={dismissToast} />
@@ -138,6 +168,54 @@ export default function AdminProductsPage() {
           <h2 className="text-3xl font-bold tracking-tight font-serif text-primary">Products</h2>
           <p className="text-muted-foreground">Manage your product catalog.</p>
         </div>
+      </div>
+
+      {/* Tab Switcher */}
+      <div className="flex items-center gap-1 p-1 bg-muted/40 rounded-xl w-fit border border-primary/5 backdrop-blur-sm">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`relative px-6 py-2.5 text-sm font-bold transition-all duration-300 rounded-lg group ${
+            activeTab === 'all' ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+          }`}
+        >
+          {activeTab === 'all' && (
+            <motion.div
+              layoutId="activeTab"
+              className="absolute inset-0 bg-background shadow-sm border border-primary/10 rounded-lg"
+              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            />
+          )}
+          <span className="relative flex items-center gap-2">
+            All Products
+            <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+              activeTab === 'all' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+            }`}>
+              {products.length}
+            </span>
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('sale')}
+          className={`relative px-6 py-2.5 text-sm font-bold transition-all duration-300 rounded-lg group ${
+            activeTab === 'sale' ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+          }`}
+        >
+          {activeTab === 'sale' && (
+            <motion.div
+              layoutId="activeTab"
+              className="absolute inset-0 bg-background shadow-sm border border-primary/10 rounded-lg"
+              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            />
+          )}
+          <span className="relative flex items-center gap-2">
+            On Sale
+            <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+              activeTab === 'sale' ? 'bg-orange-500/10 text-orange-600' : 'bg-muted text-muted-foreground'
+            }`}>
+              {saleCount}
+            </span>
+          </span>
+        </button>
       </div>
 
       <div className="flex items-center gap-2">
@@ -242,6 +320,7 @@ export default function AdminProductsPage() {
               <TableHead>Regular Price</TableHead>
               <TableHead>Sale Price</TableHead>
               <TableHead>Stock</TableHead>
+              <TableHead>Promotion</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -292,6 +371,33 @@ export default function AdminProductsPage() {
                   <TableCell className="text-muted-foreground line-through">₹{product.regularPrice?.toLocaleString() || "—"}</TableCell>
                   <TableCell className="font-semibold">₹{product.price?.toLocaleString()}</TableCell>
                   <TableCell>{product.stock}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenSaleModal(product)}
+                          disabled={updatingId === product._id && updatingField === 'isOnSale'}
+                          className={`group relative flex items-center h-6 px-3 rounded-full text-[10px] font-bold transition-all duration-200 border ${product.isOnSale
+                            ? "bg-orange-500 border-orange-500 text-white shadow-sm hover:scale-105"
+                            : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:border-orange-500 hover:text-orange-500"
+                            } ${updatingId === product._id && updatingField === 'isOnSale' ? "animate-pulse opacity-70" : ""}`}
+                          title={product.isOnSale ? "Edit Sale Price" : "Add to Sale"}
+                        >
+                          {product.isOnSale ? "SALE" : "+ SALE"}
+                        </button>
+
+                        <button
+                          onClick={() => handleToggleFestive(product)}
+                          disabled={updatingId === product._id && updatingField === 'isFestive'}
+                          className={`group relative flex items-center h-6 px-3 rounded-full text-[10px] font-bold transition-all duration-200 border ${product.isFestive
+                            ? "bg-purple-500 border-purple-500 text-white shadow-sm hover:scale-105"
+                            : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:border-purple-500 hover:text-purple-500"
+                            } ${updatingId === product._id && updatingField === 'isFestive' ? "animate-pulse opacity-70" : ""}`}
+                          title={product.isFestive ? "Remove from Festive" : "Add to Festive"}
+                        >
+                          {product.isFestive ? "FESTIVE" : "+ FESTIVE"}
+                        </button>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={status === "Out of Stock" ? "destructive" : status === "Low Stock" ? "secondary" : "outline"}>
                       {status}
@@ -413,6 +519,13 @@ export default function AdminProductsPage() {
         }
         confirmLabel={`Delete ${selectedIds.size}`}
         loadingLabel="Deleting..."
+      />
+      {/* Quick Sale Modal */}
+      <QuickSaleModal
+        product={activeSaleProduct}
+        isOpen={isSaleModalOpen}
+        onClose={() => setIsSaleModalOpen(false)}
+        onSave={quickUpdateProduct}
       />
     </div>
   )

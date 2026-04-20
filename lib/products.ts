@@ -14,6 +14,7 @@ export interface Product {
   fabric: string
   color: string
   isOnSale: boolean
+  isFestive: boolean
   isFeatured: boolean
   isNew: boolean
   // Review stats (computed dynamically)
@@ -47,7 +48,15 @@ function mapProductFromDB(dbProduct: any): Product {
       dbProduct.mainImage,
       ...(dbProduct.galleryImages ? dbProduct.galleryImages.map((img: any) => img.url) : [])
     ].filter(Boolean),
-    videos: isVideoStr ? [dbProduct.videoFile || dbProduct.videoUrl].filter(Boolean) : [],
+    videos: isVideoStr ? [
+        (() => {
+          const v = dbProduct.videoFile || dbProduct.videoUrl;
+          if (v && !v.startsWith('http') && !v.startsWith('/videos/')) {
+            return `/videos/${v.replace(/^\//, '')}`;
+          }
+          return v;
+        })()
+      ].filter(Boolean) : [],
     description: dbProduct.shortDescription || "",
     details: [
       dbProduct.material ? `Material: ${dbProduct.material}` : "",
@@ -57,9 +66,10 @@ function mapProductFromDB(dbProduct: any): Product {
     ].filter(Boolean),
     fabric: dbProduct.material || "Linen",
     color: dbProduct.color || "Multicolor",
-    isOnSale: !!dbProduct.regularPrice && dbProduct.regularPrice > dbProduct.price,
+    isOnSale: dbProduct.isOnSale || (!!dbProduct.regularPrice && dbProduct.regularPrice > dbProduct.price),
+    isFestive: dbProduct.isFestive || false,
     isFeatured: true, // We can make this dynamic later if the backend supports it
-    isNew: true,       // We can make this dynamic later
+    isNew: dbProduct.isNew || false,
     material: dbProduct.material,
     sareeSize: dbProduct.sareeSize,
     blouseSize: dbProduct.blouseSize,
@@ -108,8 +118,8 @@ export const fallbackProducts: Product[] = [
       "/images/s/s4.jpg"
     ],
     videos: [
-      "/bluesaree.mp4",
-      "/dupaataa.mp4"
+      "/videos/bluesaree.mp4",
+      "/videos/dupaataa.mp4"
     ],
     description: "Elegant brown pure linen saree with gold zari border. Perfect for casual gatherings and daily wear. The soft texture and breathable fabric make it ideal for all seasons.",
     details: [
@@ -432,7 +442,8 @@ export function getFeaturedProducts(productsList: Product[]): Product[] {
 }
 
 export function getNewProducts(productsList: Product[]): Product[] {
-  return productsList.filter(p => p.isNew)
+  // Automatically return the latest 12 products
+  return productsList.slice(0, 12);
 }
 
 export function getBestSellers(productsList: Product[]): Product[] {
