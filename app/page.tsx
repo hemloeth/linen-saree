@@ -5,7 +5,7 @@ import { CategoryGrid } from "@/components/sections/category-grid"
 import { CollectionBanners } from "@/components/sections/collection-banners"
 import { VideoSection } from "@/components/sections/video-section"
 import { FeaturedBanner } from "@/components/sections/featured-banner"
-import { CelebritySection } from "@/components/sections/celebrity-section"
+
 import { TrustSection } from "@/components/sections/trust-section"
 import { NewsletterSection } from "@/components/sections/newsletter-section"
 import { Footer } from "@/components/layout/footer"
@@ -21,7 +21,7 @@ export default function Home() {
         <CollectionBanners />
         <VideoSection />
         <FeaturedBanner />
-        <CelebritySection />
+
         <NewsletterSection />
         <TrustSection />
         <Footer />
