@@ -48,8 +48,8 @@ export const upsertCategoryBanner = async (req, res) => {
     try {
         const { slug, title, subtitle, description, buttonText, link } = req.body;
         
-        // Handle image path from file upload or existing body data
-        const imagePath = req.file ? `/uploads/${req.file.filename}` : req.body.image;
+        // Handle image path from Cloudinary upload or existing body data
+        const imagePath = req.file ? req.file.path : req.body.image;
 
         if (!slug || !title || !imagePath) {
             return res.status(400).json({

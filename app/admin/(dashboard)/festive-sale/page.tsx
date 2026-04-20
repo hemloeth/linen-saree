@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { apiGet, apiUpload, API_BASE_URL } from "@/lib/api"
 import { toast } from "sonner"
 import Image from "next/image"
 
@@ -30,8 +31,7 @@ export default function FestiveSalePage() {
 
     const fetchFestiveSale = async () => {
         try {
-            const res = await fetch("http://localhost:5000/api/festive-sale")
-            const response = await res.json()
+            const response = await apiGet("/api/festive-sale")
             if (response.success && response.data) {
                 setFormData({
                     title1: response.data.title1 || "",
@@ -42,7 +42,7 @@ export default function FestiveSalePage() {
                     link: response.data.link || "",
                     image: response.data.image || ""
                 })
-                setPreviewImage(response.data.image || null)
+                setPreviewImage(response.data.image ? (response.data.image.startsWith('http') ? response.data.image : `${API_BASE_URL}${response.data.image}`) : null)
             }
         } catch (error) {
             console.error("Error fetching festive sale:", error)
@@ -85,12 +85,8 @@ export default function FestiveSalePage() {
                 form.append("image", imageInput.files[0])
             }
 
-            const res = await fetch("http://localhost:5001/api/festive-sale", {
-                method: "PUT",
-                body: form
-            })
+            const response = await apiUpload("/api/festive-sale", form, "PUT")
 
-            const response = await res.json()
             if (response.success) {
                 toast.success("Festive sale banner updated successfully!")
                 fetchFestiveSale() // Refresh data
