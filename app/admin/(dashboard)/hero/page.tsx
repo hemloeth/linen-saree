@@ -8,6 +8,7 @@ import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
 import Image from "next/image"
 import imageCompression from "browser-image-compression"
 import { apiGet, apiDelete, apiUpload } from "@/lib/api"
+import { resolveMediaUrl } from "@/lib/media"
 
 interface HeroSlide {
     _id: string
@@ -176,7 +177,7 @@ export default function HeroAdminPage() {
                                 className="bg-card rounded-xl overflow-hidden shadow-sm border group"
                             >
                                 <div className="aspect-video relative bg-muted">
-                                    <Image src={slide.image} alt={slide.title} fill className="object-cover object-top" />
+                                    <Image src={resolveMediaUrl(slide.image)} alt={slide.title} fill className="object-cover object-top" />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                         <Button variant="destructive" size="sm" onClick={() => handleDelete(slide._id)}>
                                             <Trash2 className="w-4 h-4 mr-2" /> Delete

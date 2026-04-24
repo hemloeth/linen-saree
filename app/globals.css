@@ -150,7 +150,18 @@
 }
 
 html {
-  scroll-behavior: auto;
+  scroll-behavior: auto !important;
+  scrollbar-gutter: stable !important;
+}
+
+body {
+  overflow-y: scroll !important;
+  padding-right: 0 !important;
+}
+
+/* Prevent Radix from adding padding to body */
+body[data-radix-scroll-lock] {
+  padding-right: 0 !important;
 }
 
 @keyframes bounceIn {

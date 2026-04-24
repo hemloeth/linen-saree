@@ -12,71 +12,96 @@ interface AdminSidebarProps {
     onClose: () => void
 }
 
-const sidebarItems = [
+const sidebarSections = [
     {
-        title: "Dashboard",
-        href: "/admin",
-        icon: LayoutDashboard,
+        label: "Overview",
+        items: [
+            {
+                title: "Dashboard",
+                href: "/admin",
+                icon: LayoutDashboard,
+            },
+            {
+                title: "Orders",
+                href: "/admin/orders",
+                icon: ShoppingCart,
+            },
+            {
+                title: "Customers",
+                href: "/admin/customers",
+                icon: Users,
+            },
+        ]
     },
     {
-        title: "Festive Banner",
-        href: "/admin/festive-banner",
-        icon: Images,
+        label: "Catalog",
+        items: [
+            {
+                title: "Products",
+                href: "/admin/products",
+                icon: Package,
+            },
+            {
+                title: "Categories",
+                href: "/admin/categories",
+                icon: Package,
+            },
+            {
+                title: "Add Product",
+                href: "/admin/add-product",
+                icon: Plus,
+            },
+        ]
     },
     {
-        title: "Sale Banner",
-        href: "/admin/festive-sale",
-        icon: TicketPercent,
+        label: "Promotions & UI",
+        items: [
+            {
+                title: "Hero Section",
+                href: "/admin/hero",
+                icon: Images,
+            },
+            {
+                title: "Bridal Banner",
+                href: "/admin/bridal-banner",
+                icon: Images,
+            },
+            {
+                title: "Festive Banner",
+                href: "/admin/festive-banner",
+                icon: Images,
+            },
+            {
+                title: "Sale Banner",
+                href: "/admin/festive-sale",
+                icon: TicketPercent,
+            },
+            {
+                title: "Category Banners",
+                href: "/admin/category-banners",
+                icon: LayoutDashboard,
+            },
+        ]
     },
     {
-        title: "Category Banners",
-        href: "/admin/category-banners",
-        icon: LayoutDashboard,
-    },
-    {
-        title: "Products",
-        href: "/admin/products",
-        icon: Package,
-    },
-    {
-        title: "Media",
-        href: "/admin/media",
-        icon: Images,
-    },
-    {
-        title: "Customers",
-        href: "/admin/customers",
-        icon: Users,
-    },
-    {
-        title: "Coupons",
-        href: "/admin/coupons",
-        icon: TicketPercent,
-    },
-    {
-        title: "Blog",
-        href: "/admin/blog",
-        icon: FileText,
-    },
-    {
-        title: "Categories",
-        href: "/admin/categories",
-        icon: Package,
-    },
-    {
-        title: "Add Product",
-        href: "/admin/add-product",
-        icon: Plus,
-    },
-    {
-        title: "Orders",
-        href: "/admin/orders",
-        icon: ShoppingCart,
-    },
-    {
-        title: "Hero Section",
-        href: "/admin/hero",
-        icon: Images,
+        label: "Marketing & Content",
+        items: [
+            {
+                title: "Blog",
+                href: "/admin/blog",
+                icon: FileText,
+            },
+            {
+                title: "Coupons",
+                href: "/admin/coupons",
+                icon: TicketPercent,
+            },
+            {
+                title: "Media",
+                href: "/admin/media",
+                icon: Images,
+            },
+        ]
     },
 ]
 
@@ -99,51 +124,60 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                     <span className="sr-only">Close sidebar</span>
                 </Button>
             </div>
-            <div className="flex-1 overflow-auto py-4">
-                <nav className="grid items-start px-4 text-sm font-medium gap-0.5">
-                    {sidebarItems.map((item) => {
-                        const isActive = pathname === item.href
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={() => {
-                                    if (window.innerWidth < 1024) onClose()
-                                }}
-                                className={cn(
-                                    "relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:text-primary",
-                                    isActive
-                                        ? "text-primary"
-                                        : "text-muted-foreground"
-                                )}
-                            >
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="sidebar-active-pill"
-                                        className="absolute inset-0 rounded-lg bg-muted"
-                                        transition={{
-                                            type: "spring",
-                                            stiffness: 350,
-                                            damping: 30,
-                                        }}
-                                    />
-                                )}
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="sidebar-active-bar"
-                                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full bg-primary"
-                                        transition={{
-                                            type: "spring",
-                                            stiffness: 350,
-                                            damping: 30,
-                                        }}
-                                    />
-                                )}
-                                <item.icon className="relative z-10 h-4 w-4" />
-                                <span className="relative z-10">{item.title}</span>
-                            </Link>
-                        )
-                    })}
+            <div className="flex-1 overflow-auto py-6">
+                <nav className="grid items-start px-4 text-sm font-medium gap-8">
+                    {sidebarSections.map((section) => (
+                        <div key={section.label} className="grid gap-1">
+                            <h3 className="px-3 text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/60 mb-2">
+                                {section.label}
+                            </h3>
+                            <div className="grid gap-0.5">
+                                {section.items.map((item) => {
+                                    const isActive = pathname === item.href
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            onClick={() => {
+                                                if (window.innerWidth < 1024) onClose()
+                                            }}
+                                            className={cn(
+                                                "relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:text-primary",
+                                                isActive
+                                                    ? "text-primary"
+                                                    : "text-muted-foreground"
+                                            )}
+                                        >
+                                            {isActive && (
+                                                <motion.div
+                                                    layoutId="sidebar-active-pill"
+                                                    className="absolute inset-0 rounded-lg bg-muted"
+                                                    transition={{
+                                                        type: "spring",
+                                                        stiffness: 350,
+                                                        damping: 30,
+                                                    }}
+                                                />
+                                            )}
+                                            {isActive && (
+                                                <motion.div
+                                                    layoutId="sidebar-active-bar"
+                                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full bg-primary"
+                                                    transition={{
+                                                        type: "spring",
+                                                        stiffness: 350,
+                                                        damping: 30,
+                                                    }}
+                                                />
+                                            )}
+                                            <item.icon className="relative z-10 h-4 w-4" />
+                                            <span className="relative z-10">{item.title}</span>
+                                        </Link>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </nav>
             </div>
             <div className="mt-auto border-t p-4">
@@ -160,7 +194,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     return (
         <>
             {/* Desktop Sidebar (Permanent) */}
-            <aside className="hidden lg:flex fixed inset-y-0 left-0 h-screen w-64 flex-col border-r bg-card shrink-0 z-40">
+            <aside className="hidden lg:flex fixed inset-y-0 left-0 h-screen w-64 flex-col border-r bg-card shrink-0 z-40" suppressHydrationWarning>
                 {sidebarContent}
             </aside>
 

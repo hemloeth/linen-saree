@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { CheckoutProductMedia } from "@/components/common/checkout-product-media"
 import Image from "next/image"
 import Link from "next/link"
+import { resolveMediaUrl } from "@/lib/media"
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Play } from "lucide-react"
 
 export default function CartPage() {
@@ -66,7 +67,7 @@ export default function CartPage() {
                           {item.product.videos && item.product.videos.length > 0 ? (
                             <div className="relative w-full h-full bg-black cursor-pointer group">
                               <video
-                                src={item.product.videos[0]}
+                                src={resolveMediaUrl(item.product.videos[0])}
                                 className="w-full h-full object-cover"
                                 muted
                                 onMouseEnter={(e) => e.currentTarget.play()}
@@ -80,7 +81,7 @@ export default function CartPage() {
                           ) : (
                             <Link href={`/product/${item.product.slug}`} className="relative w-full h-full block">
                               <Image
-                                src={item.product.image || "/placeholder.svg"}
+                                src={resolveMediaUrl(item.product.image)}
                                 alt={item.product.name}
                                 fill
                                 className="object-cover"

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { apiGet, apiUpload, API_BASE_URL } from "@/lib/api"
 import { categories } from "@/lib/products"
+import { resolveMediaUrl } from "@/lib/media"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -52,7 +53,7 @@ export default function EditCategoryBannerPage({ params }: Props) {
                         buttonText: response.data.buttonText || "SHOP COLLECTION",
                         link: response.data.link || `/collections/${slug}`
                     })
-                    setPreviewImage(response.data.image ? (response.data.image.startsWith('http') ? response.data.image : `${API_BASE_URL}${response.data.image}`) : null)
+                    setPreviewImage(resolveMediaUrl(response.data.image))
                 }
             } catch (error) {
                 console.error("Error fetching banner:", error)

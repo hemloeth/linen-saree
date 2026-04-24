@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from '@/components/ui/button';
 import { Package, Truck, CheckCircle, Clock, MapPin, ExternalLink } from 'lucide-react';
+import { resolveMediaUrl } from '@/lib/media';
 
 export default function TrackOrderPage() {
   const [orderId, setOrderId] = useState('');
@@ -168,7 +169,7 @@ export default function TrackOrderPage() {
                   <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-b-0">
                     <div className="flex items-center space-x-4">
                       {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
+                        <img src={resolveMediaUrl(item.image)} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
                       ) : (
                         <div className="w-16 h-16 bg-muted rounded-lg"></div>
                       )}

@@ -9,6 +9,7 @@ import {
     CarouselPrevious,
 } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
+import { resolveMediaUrl } from "@/lib/media"
 
 interface ProductPreviewCardProps {
     images: string[]
@@ -37,7 +38,7 @@ export function ProductPreviewCard({ images, name, sku, category, price, regular
                                 {displayImages.map((src, index) => (
                                     <CarouselItem key={index} className="relative aspect-[4/5] w-full h-full">
                                         <Image
-                                            src={src}
+                                            src={resolveMediaUrl(src)}
                                             alt={`${name} - Image ${index + 1}`}
                                             fill
                                             className="object-cover object-top"
@@ -53,7 +54,7 @@ export function ProductPreviewCard({ images, name, sku, category, price, regular
                         </Carousel>
                     ) : (
                         <Image
-                            src={displayImages[0]}
+                            src={resolveMediaUrl(displayImages[0])}
                             alt={name || "Product Preview"}
                             fill
                             className="object-cover object-top transition-transform duration-500 group-hover:scale-105"

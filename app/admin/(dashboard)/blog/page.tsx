@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { useBlog } from "@/context/blog-context"
 import { Trash2 } from "lucide-react"
+import { resolveMediaUrl } from "@/lib/media"
 
 function BlogPageContent() {
     const router = useRouter()
@@ -131,7 +132,7 @@ function BlogPageContent() {
                                 {image ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img
-                                        src={image}
+                                        src={resolveMediaUrl(image)}
                                         alt="Selected blog featured"
                                         className="h-full w-full object-cover"
                                     />
@@ -161,7 +162,7 @@ function BlogPageContent() {
                                 <div className="h-48 w-full bg-muted relative">
                                     {blog.image ? (
                                         // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={blog.image} alt={blog.title} className="w-full h-full object-cover" />
+                                        <img src={resolveMediaUrl(blog.image)} alt={blog.title} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Image</div>
                                     )}

@@ -35,6 +35,7 @@ export function NewsletterSection() {
             placeholder="Enter your email"
             className="flex-1 px-6 py-4 bg-transparent border border-primary-foreground/30 text-primary-foreground placeholder:text-primary-foreground/50 font-sans text-sm focus:outline-none focus:border-primary-foreground transition-colors"
             required
+            suppressHydrationWarning
           />
           <button
             type="submit"

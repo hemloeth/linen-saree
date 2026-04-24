@@ -8,6 +8,7 @@ import { useWishlist } from "@/context/wishlist-context"
 import { useProducts } from "@/context/product-context"
 import { Header } from "@/components/layout/header"
 import Link from "next/link"
+import { resolveMediaUrl } from "@/lib/media"
 
 interface VideoCardProps {
   title: string
@@ -54,7 +55,7 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
         <div className="aspect-[3/4] overflow-hidden bg-black rounded-sm relative">
           <video
             ref={videoRef}
-            src={videoSrc}
+            src={resolveMediaUrl(videoSrc)}
             autoPlay
             loop
             muted
@@ -449,7 +450,7 @@ function VideoCollectionContent() {
                 muted
                 playsInline
                 className="w-full h-full object-cover"
-                src={video.videoSrc}
+                src={resolveMediaUrl(video.videoSrc)}
               />
             </div>
           ))}

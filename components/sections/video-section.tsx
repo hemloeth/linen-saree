@@ -82,6 +82,7 @@ function VideoCard({ product }: VideoCardProps) {
               togglePlay()
             }}
             className="absolute top-1 right-8 md:top-2 md:right-12 p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors opacity-0 group-hover:opacity-100 z-10"
+            suppressHydrationWarning
           >
             {isPlaying ? (
               <Pause className="w-3 h-3 md:w-4 md:h-4" />
@@ -101,6 +102,7 @@ function VideoCard({ product }: VideoCardProps) {
               className={`p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors shadow-sm ${isWishlisted ? 'text-primary' : ''
                 }`}
               aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+              suppressHydrationWarning
             >
               <Heart className={`w-3 h-3 md:w-4 md:h-4 ${isWishlisted ? 'fill-primary' : ''}`} />
             </button>
@@ -115,6 +117,7 @@ function VideoCard({ product }: VideoCardProps) {
                 addToCart(product)
               }}
               className="w-full bg-background/95 hover:bg-white py-2 md:py-4 px-2 md:px-4 flex items-center justify-center gap-1 md:gap-2 text-[10px] md:text-sm btn-premium text-foreground border border-foreground/5"
+              suppressHydrationWarning
             >
               <ShoppingBag className="w-3 h-3 md:w-4 md:h-4" />
               <span className="hidden sm:inline">Add to Cart</span>
@@ -201,6 +204,7 @@ export function VideoSection() {
           <Link
             href="/video-collection"
             className="inline-flex items-center gap-2 bg-primary hover:bg-primary/95 text-primary-foreground px-12 py-4 rounded-full font-bold btn-premium shadow-lg group"
+            suppressHydrationWarning
           >
             <div className="absolute inset-0 animate-shimmer opacity-20 pointer-events-none" />
             <span className="relative z-10">View All Video Collection</span>

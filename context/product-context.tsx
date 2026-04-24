@@ -53,6 +53,7 @@ interface Product {
     isOnSale: boolean
     isFestive: boolean
     isNew: boolean
+    productCollection?: string
     createdAt: string
 }
 
@@ -255,7 +256,10 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
                 washCare: dbProduct.washCare,
                 dispatch: dbProduct.dispatch,
                 disclaimer: dbProduct.disclaimer,
-                internationalNote: dbProduct.internationalNote
+                internationalNote: dbProduct.internationalNote,
+                productCollection: dbProduct.productCollection || 
+                                 (dbProduct.isFestive ? "festive" : 
+                                  dbProduct.isOnSale ? "big-sale" : "none")
             } as FrontendProduct;
         })
     }, [products, ssrProducts]);

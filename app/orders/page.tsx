@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { useAuth } from "@/context/auth-context"
 import Link from "next/link"
+import { resolveMediaUrl } from "@/lib/media"
 
 interface OrderItem {
   name: string
@@ -189,7 +190,7 @@ export default function OrdersPage() {
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
+                          <img src={resolveMediaUrl(item.image)} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
                         ) : (
                           <div className="w-16 h-16 bg-muted rounded-lg"></div>
                         )}

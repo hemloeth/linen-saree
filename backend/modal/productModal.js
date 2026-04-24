@@ -103,6 +103,10 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    productCollection: {
+        type: String,
+        default: "",
+    },
 }, { timestamps: true });
 
 export default mongoose.model("Product", productSchema);

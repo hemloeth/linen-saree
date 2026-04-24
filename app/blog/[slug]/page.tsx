@@ -8,6 +8,7 @@ import { Calendar, User, ArrowLeft, Share2, Heart, MessageCircle, ArrowRight } f
 import Link from "next/link"
 import Image from "next/image"
 import { useParams } from "next/navigation"
+import { resolveMediaUrl } from "@/lib/media"
 
 // Sample blog data - in a real app, this would come from a CMS or API
 const blogPosts = [
@@ -168,7 +169,7 @@ export default function BlogPostPage() {
         {/* Hero Image */}
         <div className="relative aspect-[21/9] mb-8 overflow-hidden">
           <Image
-            src={post.image}
+            src={resolveMediaUrl(post.image)}
             alt={post.title}
             fill
             className="object-cover"
@@ -281,7 +282,7 @@ export default function BlogPostPage() {
                   <Link href={`/blog/${relatedPost.slug}`}>
                     <div className="relative aspect-[4/3] mb-4 overflow-hidden rounded-xl">
                       <Image
-                        src={relatedPost.image}
+                        src={resolveMediaUrl(relatedPost.image)}
                         alt={relatedPost.title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"

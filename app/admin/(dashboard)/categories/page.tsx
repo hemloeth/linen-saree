@@ -13,6 +13,7 @@ import { useCategory } from "@/context/category-context"
 import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
 import { ConfirmModal } from "@/components/admin/confirm-modal"
 import { EditCategoryModal } from "@/components/admin/edit-category-modal"
+import { resolveMediaUrl } from "@/lib/media"
 
 let toastId = 0
 
@@ -197,7 +198,7 @@ export default function CategoriesPage() {
                     >
                         <div className="relative aspect-[3/4] bg-gradient-to-br from-muted to-muted/50">
                             <Image
-                                src={category.image}
+                                src={resolveMediaUrl(category.image)}
                                 alt={category.name}
                                 fill
                                 className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"

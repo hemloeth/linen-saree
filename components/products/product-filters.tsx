@@ -8,6 +8,8 @@ import {
   getUniqueColors,
   getUniqueFabrics,
   getPriceRange,
+  getFilterCounts,
+  type FilterCounts,
   type Product
 } from "@/lib/products"
 
@@ -51,6 +53,7 @@ export function ProductFilters({
   })
   const [categories, setCategories] = useState<FilterCategory[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
+  const [counts, setCounts] = useState<FilterCounts | null>(null)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -78,6 +81,7 @@ export function ProductFilters({
     if (products.length > 0) {
       setColors(getUniqueColors(products))
       setFabrics(getUniqueFabrics(products))
+      setCounts(getFilterCounts(products))
 
       const newRange = getPriceRange(products)
       setPriceRange(newRange)
@@ -225,9 +229,14 @@ export function ProductFilters({
                       type="checkbox"
                       checked={filters.categories?.includes(category.slug) || false}
                       onChange={(e) => handleCategoryChange(category.slug, e.target.checked)}
-                      className="rounded border-border"
+                      className="rounded border-border text-primary focus:ring-primary h-4 w-4"
                     />
-                    <span className="text-sm">{category.name}</span>
+                    <span className="text-sm flex-1">{category.name}</span>
+                    {counts?.categories[category.slug] !== undefined && (
+                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                        {counts.categories[category.slug]}
+                      </span>
+                    )}
                   </label>
                 ))
               ) : (
@@ -246,9 +255,14 @@ export function ProductFilters({
                     type="checkbox"
                     checked={filters.colors?.includes(color) || false}
                     onChange={(e) => handleColorChange(color, e.target.checked)}
-                    className="rounded border-border"
+                    className="rounded border-border text-primary focus:ring-primary h-4 w-4"
                   />
-                  <span className="text-sm">{color}</span>
+                  <span className="text-sm flex-1">{color}</span>
+                  {counts?.colors[color] !== undefined && (
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                      {counts.colors[color]}
+                    </span>
+                  )}
                 </label>
               ))}
             </div>
@@ -264,9 +278,14 @@ export function ProductFilters({
                     type="checkbox"
                     checked={filters.fabrics?.includes(fabric) || false}
                     onChange={(e) => handleFabricChange(fabric, e.target.checked)}
-                    className="rounded border-border"
+                    className="rounded border-border text-primary focus:ring-primary h-4 w-4"
                   />
-                  <span className="text-sm">{fabric}</span>
+                  <span className="text-sm flex-1">{fabric}</span>
+                  {counts?.fabrics[fabric] !== undefined && (
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                      {counts.fabrics[fabric]}
+                    </span>
+                  )}
                 </label>
               ))}
             </div>

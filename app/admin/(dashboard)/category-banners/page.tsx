@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { Edit2, Layout, Image as ImageIcon } from "lucide-react"
 import { categories } from "@/lib/products"
 import { apiGet, API_BASE_URL } from "@/lib/api"
+import { resolveMediaUrl } from "@/lib/media"
 
 // Add special collections to the list
 const allCollections = [
@@ -80,7 +81,7 @@ export default function CategoryBannersPage() {
                                             <div className="w-10 h-10 rounded bg-muted flex items-center justify-center overflow-hidden">
                                                 {banner?.image ? (
                                                     <img 
-                                                        src={banner.image.startsWith('http') ? banner.image : `${API_BASE_URL}${banner.image}`} 
+                                                        src={resolveMediaUrl(banner.image)} 
                                                         alt={collection.name}
                                                         className="w-full h-full object-cover"
                                                     />

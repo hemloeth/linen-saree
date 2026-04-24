@@ -168,10 +168,11 @@ export function Header() {
                 aria-label="Search (Ctrl+K)"
                 onClick={() => setIsSearchOpen(true)}
                 title="Search (Ctrl+K)"
+                suppressHydrationWarning
               >
                 <Search className="w-5 h-5" />
               </button>
-              <Link href="/wishlist" className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist">
+              <Link href="/wishlist" className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors relative" aria-label="Wishlist" suppressHydrationWarning>
                 <Heart className="w-5 h-5" />
                 {wishlistHydrated && wishlistItems > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary text-primary-foreground text-[10px] sm:text-xs flex items-center justify-center rounded-full">
@@ -180,7 +181,7 @@ export function Header() {
                 )}
               </Link>
               <div className="relative group">
-                <Link href={authHydrated && isAuthenticated ? "/account" : "/account/login"} className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors flex items-center" aria-label="Account">
+                <Link href={authHydrated && isAuthenticated ? "/account" : "/account/login"} className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors flex items-center" aria-label="Account" suppressHydrationWarning>
                   <User className="w-5 h-5" />
                 </Link>
                 {/* Desktop dropdown - only show on hover for larger screens */}
@@ -237,6 +238,7 @@ export function Header() {
                 className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors relative"
                 aria-label="Cart"
                 onClick={() => setIsCartOpen(true)}
+                suppressHydrationWarning
               >
                 <ShoppingBag className="w-5 h-5" />
                 {isHydrated && totalItems > 0 && (

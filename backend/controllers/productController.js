@@ -7,7 +7,7 @@ const addProduct = async (req, res) => {
             shortDescription, tags, color,
             material, sareeSize, blouseSize, washCare, dispatch,
             disclaimer, internationalNote, videoUrl,
-            isOnSale, isNew,
+            isOnSale, isNew, productCollection,
             galleryImageInfos: galleryImageInfosRaw,
         } = req.body;
 
@@ -43,6 +43,7 @@ const addProduct = async (req, res) => {
             });
         }
 
+        console.log(`Adding product: ${name} (SKU: ${sku})`);
         const product = await productModal.create({
             name, sku, category,
             regularPrice: regularPrice ? Number(regularPrice) : undefined,
@@ -52,9 +53,13 @@ const addProduct = async (req, res) => {
             mainImage, galleryImages, videoFile, videoUrl,
             material, sareeSize, blouseSize, washCare, dispatch,
             disclaimer, internationalNote,
-            isOnSale: isOnSale === "true" || isOnSale === true,
+            isFestive: productCollection === "festive",
+            isOnSale: (isOnSale === "true" || isOnSale === true) || productCollection === "big-sale",
             isNew: isNew === "true" || isNew === true,
+            productCollection: productCollection || "none",
         });
+
+        console.log(`Product added successfully to DB: ${product._id}`);
 
         res.status(201).json({
             success: true,
@@ -168,7 +173,7 @@ const updateProduct = async (req, res) => {
             shortDescription, tags, color,
             material, sareeSize, blouseSize, washCare, dispatch,
             disclaimer, internationalNote, videoUrl,
-            isOnSale, isNew,
+            isOnSale, isNew, productCollection,
             galleryImageInfos: galleryImageInfosRaw,
             existingGalleryImages: existingGalleryImagesRaw,
         } = req.body;
@@ -183,13 +188,24 @@ const updateProduct = async (req, res) => {
             videoUrl, material, sareeSize, blouseSize, washCare,
             dispatch, disclaimer, internationalNote,
             regularPrice, price, stock,
-            isOnSale, isNew,
+            isOnSale, isNew, productCollection,
         };
 
         Object.entries(textFields).forEach(([key, value]) => {
             if (value !== undefined && value !== "") {
                 if (key === "isOnSale" || key === "isNew") {
                     updateData[key] = value === "true" || value === true;
+                } else if (key === "productCollection") {
+                    updateData[key] = value;
+                    updateData.isFestive = value === "festive";
+                    // If big-sale is selected, ensure isOnSale is true. 
+                    // But don't force it false if it was already true for other reasons (like price discount), 
+                    // though usually isOnSale is just a flag here.
+                    if (value === "big-sale") updateData.isOnSale = true;
+                    else if (value === "none" || value === "festive" || value === "celebrity") {
+                        // Only clear if it was explicitly set via this logic
+                        updateData.isOnSale = false; 
+                    }
                 } else {
                     updateData[key] = numberFields.includes(key) ? Number(value) : value;
                 }

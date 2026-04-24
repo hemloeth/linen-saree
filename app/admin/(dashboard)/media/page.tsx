@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { useProducts } from "@/context/product-context"
 import type { ImageInfo } from "@/context/product-context"
 import { Copy, Check, X, Save, Loader2, ImageIcon } from "lucide-react"
+import { resolveMediaUrl } from "@/lib/media"
 
 interface SelectedImage {
     productId: string
@@ -135,7 +136,7 @@ function MediaPageContent() {
                                 >
                                     <div className="aspect-square w-full overflow-hidden bg-muted">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={img.url} alt={img.info.alt || img.productName} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                        <img src={resolveMediaUrl(img.url)} alt={img.info.alt || img.productName} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                                     </div>
                                     <div className="p-3 border-t bg-card text-center">
                                         <p className="line-clamp-2 text-xs font-medium leading-tight text-foreground transition-colors group-hover:text-primary">
@@ -175,7 +176,7 @@ function MediaPageContent() {
                             <div className="flex items-start gap-4">
                                 <div className="w-20 h-24 rounded-lg overflow-hidden border shrink-0">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={selected.url} alt="Selected" className="w-full h-full object-cover" />
+                                    <img src={resolveMediaUrl(selected.url)} alt="Selected" className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0 space-y-1.5">
                                     <Label className="text-[10px] uppercase text-muted-foreground font-bold">Image URL</Label>

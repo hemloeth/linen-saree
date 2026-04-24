@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { apiGet, apiUpload, API_BASE_URL } from "@/lib/api"
 import { toast } from "sonner"
 import Image from "next/image"
+import { resolveMediaUrl } from "@/lib/media"
 
 export default function FestiveSalePage() {
     const [isLoading, setIsLoading] = useState(false)
@@ -42,7 +43,7 @@ export default function FestiveSalePage() {
                     link: response.data.link || "",
                     image: response.data.image || ""
                 })
-                setPreviewImage(response.data.image ? (response.data.image.startsWith('http') ? response.data.image : `${API_BASE_URL}${response.data.image}`) : null)
+                setPreviewImage(resolveMediaUrl(response.data.image))
             }
         } catch (error) {
             console.error("Error fetching festive sale:", error)

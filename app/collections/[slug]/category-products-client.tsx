@@ -23,7 +23,7 @@ export function CategoryProductsClient({
 }: CategoryProductsClientProps) {
   const [filters, setFilters] = useState<FilterOptions>({})
   const [sortBy, setSortBy] = useState<SortOption>('featured')
-  const [showFilters, setShowFilters] = useState(false) // Reverted back to false
+  const [showFilters, setShowFilters] = useState(true)
   const [filteredProducts, setFilteredProducts] = useState(initialProducts)
 
   useEffect(() => {

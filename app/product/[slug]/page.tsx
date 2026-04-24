@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ProductDetails } from "@/components/products/product-details"
 import { ProductReviews } from "@/components/products/product-reviews"
+import { JsonLd } from "@/components/common/json-ld"
 import { RelatedProducts } from "@/components/products/related-products"
 import { fetchProductsFromDB, getProductBySlug, getProductsByCategory } from "@/lib/products"
 import type { Product } from "@/lib/products"
@@ -47,9 +48,40 @@ export default async function ProductPage({ params }: Props) {
     .filter(p => p.id !== product.id)
     .slice(0, 4)
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.images,
+    "description": product.description,
+    "sku": product.id,
+    "brand": {
+      "@type": "Brand",
+      "name": "Linen Saree"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/product/${product.slug}`,
+      "priceCurrency": "INR",
+      "price": product.price,
+      "itemCondition": "https://schema.org/NewCondition",
+      "availability": product.stock && product.stock > 0 
+        ? "https://schema.org/InStock" 
+        : "https://schema.org/OutOfStock"
+    },
+    ...(product.averageRating && {
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": product.averageRating,
+        "reviewCount": product.totalReviews || 0
+      }
+    })
+  }
+
   return (
     <main className="min-h-screen">
       <Header />
+      <JsonLd data={jsonLd} />
 
       <div className="pt-[96px] lg:pt-[104px]">
         <ProductDetails product={product} />

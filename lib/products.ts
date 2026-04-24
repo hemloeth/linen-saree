@@ -17,6 +17,7 @@ export interface Product {
   isFestive: boolean
   isFeatured: boolean
   isNew: boolean
+  productCollection?: string
   // Review stats (computed dynamically)
   averageRating?: number
   totalReviews?: number
@@ -70,6 +71,7 @@ function mapProductFromDB(dbProduct: any): Product {
     isFestive: dbProduct.isFestive || false,
     isFeatured: true, // We can make this dynamic later if the backend supports it
     isNew: dbProduct.isNew || false,
+    productCollection: dbProduct.productCollection || "",
     material: dbProduct.material,
     sareeSize: dbProduct.sareeSize,
     blouseSize: dbProduct.blouseSize,
@@ -491,6 +493,32 @@ export function getPriceRange(productsList: Product[]): { min: number; max: numb
     min: Math.min(...prices),
     max: Math.max(...prices)
   }
+}
+
+// Get counts for filters
+export interface FilterCounts {
+  categories: Record<string, number>
+  colors: Record<string, number>
+  fabrics: Record<string, number>
+}
+
+export function getFilterCounts(productsList: Product[]): FilterCounts {
+  const counts: FilterCounts = {
+    categories: {},
+    colors: {},
+    fabrics: {}
+  }
+
+  productsList.forEach(p => {
+    // Categories
+    counts.categories[p.categorySlug] = (counts.categories[p.categorySlug] || 0) + 1
+    // Colors
+    counts.colors[p.color] = (counts.colors[p.color] || 0) + 1
+    // Fabrics
+    counts.fabrics[p.fabric] = (counts.fabrics[p.fabric] || 0) + 1
+  })
+
+  return counts
 }
 
 // Filter products

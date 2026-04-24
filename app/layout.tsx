@@ -59,8 +59,8 @@ export default async function RootLayout({
   const initialProducts = await fetchProductsFromDB()
 
   return (
-    <html lang="en">
-      <body className="font-sans antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <SmoothScroll>
           <AuthProvider>
             <ProductProvider initialProducts={initialProducts}>

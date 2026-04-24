@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar, User, ArrowRight, Search } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { resolveMediaUrl } from "@/lib/media"
 
 // Sample blog data - in a real app, this would come from a CMS or API
 const blogPosts = [
@@ -163,7 +164,7 @@ export default function BlogPage() {
                   <Link href={`/blog/${post.slug}`}>
                     <div className="relative aspect-[16/10] mb-6 overflow-hidden rounded-2xl">
                       <Image
-                        src={post.image}
+                        src={resolveMediaUrl(post.image)}
                         alt={post.title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -224,7 +225,7 @@ export default function BlogPage() {
                   <Link href={`/blog/${post.slug}`}>
                     <div className="relative aspect-[4/3] mb-4 overflow-hidden rounded-xl">
                       <Image
-                        src={post.image}
+                        src={resolveMediaUrl(post.image)}
                         alt={post.title}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"

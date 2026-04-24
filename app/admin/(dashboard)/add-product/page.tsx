@@ -23,6 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { resolveMediaUrl } from "@/lib/media"
 
 // No hardcoded categories
 
@@ -67,12 +68,13 @@ export default function AddProductPage() {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
     const { categories: dbCategories } = useCategory()
     const [isOnSale, setIsOnSale] = useState(false)
+    const [productCollection, setProductCollection] = useState("none")
 
     // Specification State
     const [material, setMaterial] = useState("")
-    const [sareeSize, setSareeSize] = useState("")
-    const [blouseSize, setBlouseSize] = useState("")
-    const [washCare, setWashCare] = useState("")
+    const [sareeSize, setSareeSize] = useState("5.5 mtr")
+    const [blouseSize, setBlouseSize] = useState("95 cm")
+    const [washCare, setWashCare] = useState("Dry clean recommended")
     const [dispatch, setDispatch] = useState("2-3 days")
     const [disclaimer, setDisclaimer] = useState("Actual product color may differ slightly from the images due to lighting and display differences.")
     const [internationalNote, setInternationalNote] = useState("Custom duties")
@@ -156,6 +158,7 @@ export default function AddProductPage() {
             formData.append("disclaimer", disclaimer)
             formData.append("internationalNote", internationalNote)
             formData.append("isOnSale", String(isOnSale))
+            formData.append("productCollection", productCollection)
             formData.append("mainImage", compressedMainImage, compressedMainImage.name)
             compressedGalleryImages.forEach((file) => formData.append("galleryImages", file, file.name))
 
@@ -182,20 +185,22 @@ export default function AddProductPage() {
             setVideoFile(null)
             setVideoFileRaw(null)
             setMaterial("")
-            setSareeSize("")
-            setBlouseSize("")
-            setWashCare("")
+            setSareeSize("5.5 mtr")
+            setBlouseSize("95 cm")
+            setWashCare("Dry clean recommended")
             setDispatch("2-3 days")
             setDisclaimer("Actual product color may differ slightly from the images due to lighting and display differences.")
             setInternationalNote("Custom duties")
             setColor("")
             setIsOnSale(false)
+            setProductCollection("none")
 
             // Show Success Modal
             setShowSuccessModal(true)
         } catch (err: any) {
-            console.error("Failed to add product", err)
-            showToast("Failed to Add Product", err.message || "Something went wrong. Please check the form and try again.")
+            console.error("Detailed error adding product:", err)
+            const errorMsg = err instanceof Error ? err.message : String(err);
+            showToast("Failed to Add Product", `The product might have been added, but the server connection was lost. ${errorMsg}`);
         }
     }
 
@@ -254,7 +259,7 @@ export default function AddProductPage() {
                                         {mainImage ? (
                                             <div className="relative w-full h-full rounded-lg overflow-hidden group">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={mainImage} alt="Main Preview" className="w-full h-full object-cover" />
+                                                <img src={resolveMediaUrl(mainImage)} alt="Main Preview" className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <Button size="sm" variant="secondary" className="font-bold">Replace</Button>
                                                 </div>
@@ -303,7 +308,7 @@ export default function AddProductPage() {
                                         <div className="grid grid-cols-4 gap-2 mt-4">
                                             {galleryImages.map((img, i) => (
                                                 <div key={i} className="relative aspect-[4/5] rounded-lg overflow-hidden border group/item">
-                                                    <img src={img} alt="" className="w-full h-full object-cover" />
+                                                    <img src={resolveMediaUrl(img)} alt="" className="w-full h-full object-cover" />
                                                     <button
                                                         type="button"
                                                         onClick={(e) => { e.stopPropagation(); removeGalleryImage(i); }}
@@ -380,7 +385,7 @@ export default function AddProductPage() {
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="wash-care" className="text-[10px] uppercase text-muted-foreground font-bold">Wash Care</Label>
-                                        <Input id="wash-care" value={washCare} onChange={(e) => setWashCare(e.target.value)} placeholder="Dry Clean" required className="h-8 text-xs" />
+                                        <Input id="wash-care" value={washCare} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="color" className="text-[10px] uppercase text-muted-foreground font-bold">Color</Label>
@@ -388,11 +393,11 @@ export default function AddProductPage() {
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="saree-size" className="text-[10px] uppercase text-muted-foreground font-bold">Saree Size</Label>
-                                        <Input id="saree-size" value={sareeSize} onChange={(e) => setSareeSize(e.target.value)} placeholder="5.5m" required className="h-8 text-xs" />
+                                        <Input id="saree-size" value={sareeSize} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="blouse-size" className="text-[10px] uppercase text-muted-foreground font-bold">Blouse Size</Label>
-                                        <Input id="blouse-size" value={blouseSize} onChange={(e) => setBlouseSize(e.target.value)} placeholder="0.8m" required className="h-8 text-xs" />
+                                        <Input id="blouse-size" value={blouseSize} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="dispatch" className="text-[10px] uppercase text-muted-foreground font-bold">Dispatch</Label>
@@ -411,17 +416,21 @@ export default function AddProductPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6 pt-4">
-                                <div className="flex items-center gap-3 p-4 rounded-xl border bg-primary/[0.02] border-primary/10 transition-colors hover:bg-primary/[0.04]">
-                                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-muted"
-                                         onClick={() => setIsOnSale(!isOnSale)}
-                                         style={{ backgroundColor: isOnSale ? 'var(--primary)' : '' }}>
-                                        <span className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${isOnSale ? 'translate-x-5' : 'translate-x-0'}`} />
-                                    </div>
-                                    <div className="grid gap-0.5">
-                                        <Label className="text-sm font-bold cursor-pointer" onClick={() => setIsOnSale(!isOnSale)}>Show in Festive Sale</Label>
-                                        <p className="text-[10px] text-muted-foreground">Display this product in the sale collection.</p>
-                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                                <div className="grid gap-1.5">
+                                    <Label htmlFor="collection" className="text-xs font-bold text-primary uppercase tracking-wider">Product Collection</Label>
+                                    <Select value={productCollection} onValueChange={setProductCollection}>
+                                        <SelectTrigger id="collection" className="h-12 border-primary/20 bg-primary/5">
+                                            <SelectValue placeholder="Normal Collection" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Normal Collection</SelectItem>
+                                            <SelectItem value="festive">Festive Collection</SelectItem>
+                                            <SelectItem value="big-sale">Big Sale Collection</SelectItem>
+                                            <SelectItem value="celebrity">Celebrity Collection</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-[10px] text-muted-foreground px-1">Select a special collection to feature this product.</p>
                                 </div>
                             </div>
                         </div>
@@ -451,7 +460,7 @@ export default function AddProductPage() {
                                         {videoFile ? (
                                             <div className="flex flex-col items-center gap-2 w-full">
                                                 <video
-                                                    src={videoFile}
+                                                    src={resolveMediaUrl(videoFile)}
                                                     className="w-full max-h-40 rounded-lg object-cover"
                                                     muted
                                                 />

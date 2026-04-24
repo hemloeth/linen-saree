@@ -14,7 +14,7 @@ export function CollectionsClient() {
   const { mappedProducts, filterProducts, sortProducts } = useProducts()
   const [filters, setFilters] = useState<FilterOptions>({})
   const [sortBy, setSortBy] = useState<SortOption>('featured')
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
   const [filteredProducts, setFilteredProducts] = useState(mappedProducts)
 
   useEffect(() => {

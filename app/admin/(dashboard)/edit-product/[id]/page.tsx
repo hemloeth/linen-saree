@@ -20,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { resolveMediaUrl } from "@/lib/media"
 
 export default function EditProductPage() {
     const router = useRouter()
@@ -51,6 +52,7 @@ export default function EditProductPage() {
     const [videoFileRaw, setVideoFileRaw] = useState<File | null>(null)
     const [color, setColor] = useState("")
     const [isOnSale, setIsOnSale] = useState(false)
+    const [productCollection, setProductCollection] = useState("")
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
 
     // Specification State
@@ -77,13 +79,16 @@ export default function EditProductPage() {
             setVideoUrl(product.videoUrl || "")
             setColor(product.color || "")
             setMaterial(product.material || "")
-            setSareeSize(product.sareeSize || "")
-            setBlouseSize(product.blouseSize || "")
-            setWashCare(product.washCare || "")
+            setSareeSize("5.5 mtr")
+            setBlouseSize("95 cm")
+            setWashCare("Dry clean recommended")
             setDispatch(product.dispatch || "2-3 days")
             setDisclaimer(product.disclaimer || "Actual product color may differ slightly from the images due to lighting and display differences.")
             setInternationalNote(product.internationalNote || "Custom duties")
             setIsOnSale(product.isOnSale || false)
+            setProductCollection(product.productCollection || 
+                                (product.isFestive ? "festive" : 
+                                 product.isOnSale ? "big-sale" : "none"))
             // Set existing images as previews
             if (product.mainImage) setMainImage(product.mainImage)
             if (product.galleryImages?.length) {
@@ -170,6 +175,7 @@ export default function EditProductPage() {
             formData.append("disclaimer", disclaimer)
             formData.append("internationalNote", internationalNote)
             formData.append("isOnSale", String(isOnSale))
+            formData.append("productCollection", productCollection)
 
             // Only append image files if new ones were selected
             if (mainImageFile) {
@@ -260,7 +266,7 @@ export default function EditProductPage() {
                                         {mainImage ? (
                                             <div className="relative w-full h-full rounded-lg overflow-hidden group">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={mainImage} alt="Main Preview" className="w-full h-full object-cover" />
+                                                <img src={resolveMediaUrl(mainImage)} alt="Main Preview" className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                     <Button size="sm" variant="secondary" className="font-bold">Replace</Button>
                                                 </div>
@@ -309,7 +315,7 @@ export default function EditProductPage() {
                                         <div className="grid grid-cols-4 gap-2 mt-4">
                                             {galleryImages.map((img, i) => (
                                                 <div key={i} className="relative aspect-[4/5] rounded-lg overflow-hidden border group/item">
-                                                    <img src={img} alt="" className="w-full h-full object-cover" />
+                                                    <img src={resolveMediaUrl(img)} alt="" className="w-full h-full object-cover" />
                                                     <button
                                                         type="button"
                                                         onClick={(e) => { e.stopPropagation(); removeGalleryImage(i); }}
@@ -386,7 +392,7 @@ export default function EditProductPage() {
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="wash-care" className="text-[10px] uppercase text-muted-foreground font-bold">Wash Care</Label>
-                                        <Input id="wash-care" value={washCare} onChange={(e) => setWashCare(e.target.value)} placeholder="Dry Clean" required className="h-8 text-xs" />
+                                        <Input id="wash-care" value={washCare} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="color" className="text-[10px] uppercase text-muted-foreground font-bold">Color</Label>
@@ -394,11 +400,11 @@ export default function EditProductPage() {
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="saree-size" className="text-[10px] uppercase text-muted-foreground font-bold">Saree Size</Label>
-                                        <Input id="saree-size" value={sareeSize} onChange={(e) => setSareeSize(e.target.value)} placeholder="5.5m" required className="h-8 text-xs" />
+                                        <Input id="saree-size" value={sareeSize} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="blouse-size" className="text-[10px] uppercase text-muted-foreground font-bold">Blouse Size</Label>
-                                        <Input id="blouse-size" value={blouseSize} onChange={(e) => setBlouseSize(e.target.value)} placeholder="0.8m" required className="h-8 text-xs" />
+                                        <Input id="blouse-size" value={blouseSize} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="dispatch" className="text-[10px] uppercase text-muted-foreground font-bold">Dispatch</Label>
@@ -417,17 +423,21 @@ export default function EditProductPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-6 pt-4">
-                                <div className="flex items-center gap-3 p-4 rounded-xl border bg-primary/[0.02] border-primary/10 transition-colors hover:bg-primary/[0.04]">
-                                    <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-muted"
-                                         onClick={() => setIsOnSale(!isOnSale)}
-                                         style={{ backgroundColor: isOnSale ? 'var(--primary)' : '' }}>
-                                        <span className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${isOnSale ? 'translate-x-5' : 'translate-x-0'}`} />
-                                    </div>
-                                    <div className="grid gap-0.5" onClick={() => setIsOnSale(!isOnSale)}>
-                                        <Label className="text-sm font-bold cursor-pointer">Show in Festive Sale</Label>
-                                        <p className="text-[10px] text-muted-foreground">Display this product in the sale collection.</p>
-                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                                <div className="grid gap-1.5">
+                                    <Label htmlFor="collection" className="text-xs font-bold text-primary uppercase tracking-wider">Product Collection</Label>
+                                    <Select value={productCollection} onValueChange={setProductCollection}>
+                                        <SelectTrigger id="collection" className="h-12 border-primary/20 bg-primary/5">
+                                            <SelectValue placeholder="Normal Collection" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Normal Collection</SelectItem>
+                                            <SelectItem value="festive">Festive Collection</SelectItem>
+                                            <SelectItem value="big-sale">Big Sale Collection</SelectItem>
+                                            <SelectItem value="celebrity">Celebrity Collection</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-[10px] text-muted-foreground px-1">Select a special collection to feature this product.</p>
                                 </div>
                             </div>
                         </div>
@@ -457,7 +467,7 @@ export default function EditProductPage() {
                                         {videoFile ? (
                                             <div className="flex flex-col items-center gap-2 w-full">
                                                 <video
-                                                    src={videoFile}
+                                                    src={resolveMediaUrl(videoFile)}
                                                     className="w-full max-h-40 rounded-lg object-cover"
                                                     muted
                                                 />
