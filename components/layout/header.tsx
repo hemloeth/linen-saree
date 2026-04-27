@@ -13,35 +13,50 @@ import { cn } from "@/lib/utils"
 
 const navLinks = [
   {
+    name: "Categories",
+    href: "/categories",
+  },
+  {
     name: "New Arrivals",
-    href: "/collections/new-arrivals",
+    href: "/categories/new-arrivals",
   },
   {
     name: "Collections",
     href: "/collections",
-    submenu: [
-      { name: "Pure Linen", href: "/collections/pure-linen" },
-      { name: "Banarasi Silk", href: "/collections/banarasi-silk" },
-      { name: "Handloom", href: "/collections/handloom" },
-      { name: "Silk Linen", href: "/collections/silk-linen" },
-      { name: "Embroidery", href: "/collections/embroidery" },
-      { name: "Cotton Linen", href: "/collections/cotton-linen" },
-    ]
+    submenu: [] // Handled dynamically in the component
   },
   { name: "Video Collection", href: "/video-collection" },
   { name: "Blog", href: "/blog" },
-  { name: "Handloom", href: "/collections/handloom" },
+  { name: "Handloom", href: "/categories/handloom" },
   { name: "Best Sellers", href: "/best-sellers" },
-  { name: "Sale", href: "/collections/sale" },
+  { name: "Sale", href: "/categories/sale" },
 ]
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [marketingCollections, setMarketingCollections] = useState<any[]>([])
   const { totalItems, setIsCartOpen, isHydrated } = useCart()
   const { totalItems: wishlistItems, isHydrated: wishlistHydrated } = useWishlist()
   const { isAuthenticated, isHydrated: authHydrated, user, logout } = useAuth()
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/marketing-collections`)
+        const data = await response.json()
+        if (data.success) {
+          // Only include the 3 main marketing collections (exclude 'none')
+          const filtered = data.data.filter((col: any) => col.key !== 'none')
+          setMarketingCollections(filtered)
+        }
+      } catch (error) {
+        console.error("Error fetching collections:", error)
+      }
+    }
+    fetchCollections()
+  }, [])
 
   // Handle keyboard shortcut for search (Ctrl/Cmd + K)
   useEffect(() => {
@@ -105,7 +120,7 @@ export function Header() {
                 <div
                   key={link.name}
                   className="relative group"
-                  onMouseEnter={() => link.submenu && setActiveSubmenu(link.name)}
+                  onMouseEnter={() => (link.submenu?.length > 0 || link.name === "Collections") && setActiveSubmenu(link.name)}
                   onMouseLeave={() => setActiveSubmenu(null)}
                 >
                   <Link
@@ -116,13 +131,41 @@ export function Header() {
                     )}
                   >
                     {link.name}
-                    {link.submenu && <ChevronDown className="w-3 h-3" />}
+                    {(link.submenu?.length > 0 || link.name === "Collections") && <ChevronDown className="w-3 h-3" />}
                   </Link>
 
                   {/* Submenu */}
-                  {link.submenu && activeSubmenu === link.name && (
-                    <div className="absolute top-full left-0 pt-2">
-                      <div className="bg-background border border-border shadow-lg py-4 min-w-[200px]">
+                  {link.name === "Collections" && activeSubmenu === "Collections" && (
+                    <div className="absolute top-full left-0 pt-2 w-[240px] animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="bg-background border border-border shadow-xl rounded-md overflow-hidden">
+                        <div className="p-2 space-y-1">
+                          {marketingCollections.map((col) => (
+                            <Link
+                              key={col.key}
+                              href={`/collections/${col.key}`}
+                              className="group/item flex items-center justify-between px-4 py-3 text-sm hover:bg-primary/5 rounded-sm transition-all duration-200"
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-medium text-foreground group-hover/item:text-primary transition-colors">
+                                  {col.name}
+                                </span>
+                                {col.tagline && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {col.tagline}
+                                  </span>
+                                )}
+                              </div>
+                              <ChevronDown className="w-3 h-3 -rotate-90 opacity-0 group-hover/item:opacity-100 transition-all -translate-x-2 group-hover/item:translate-x-0" />
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {link.submenu && link.name !== "Collections" && activeSubmenu === link.name && (
+                    <div className="absolute top-full left-0 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="bg-background border border-border shadow-lg py-2 min-w-[200px] rounded-md">
                         {link.submenu.map((sublink) => (
                           <Link
                             key={sublink.name}
@@ -337,18 +380,31 @@ export function Header() {
               >
                 {link.name}
               </Link>
-              {link.submenu && (
+              {(link.submenu?.length > 0 || link.name === "Collections") && (
                 <div className="pl-4 border-l border-border ml-2">
-                  {link.submenu.map((sublink) => (
-                    <Link
-                      key={sublink.name}
-                      href={sublink.href}
-                      className="block py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {sublink.name}
-                    </Link>
-                  ))}
+                  {link.name === "Collections" ? (
+                    marketingCollections.map((col) => (
+                      <Link
+                        key={col.key}
+                        href={`/collections/${col.key}`}
+                        className="block py-3 text-base text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {col.name}
+                      </Link>
+                    ))
+                  ) : (
+                    link.submenu.map((sublink) => (
+                      <Link
+                        key={sublink.name}
+                        href={sublink.href}
+                        className="block py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {sublink.name}
+                      </Link>
+                    ))
+                  )}
                 </div>
               )}
             </div>

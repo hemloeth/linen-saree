@@ -13,14 +13,14 @@ export function CollectionBanners() {
     const fetchBanners = async () => {
       try {
         // Fetch Sale Offer Banner
-        const saleRes = await fetch(`${API_BASE_URL}/api/festive-sale`)
+        const saleRes = await fetch(`${API_BASE_URL}/api/marketing-collections/big-sale`)
         const saleResponse = await saleRes.json()
         if (saleResponse.success) {
           setSaleData(saleResponse.data)
         }
 
         // Fetch Festive Collection Banner
-        const festiveRes = await fetch(`${API_BASE_URL}/api/festive-banner`)
+        const festiveRes = await fetch(`${API_BASE_URL}/api/marketing-collections/festive`)
         const festiveResponse = await festiveRes.json()
         if (festiveResponse.success) {
           setFestiveData(festiveResponse.data)
@@ -62,7 +62,7 @@ export function CollectionBanners() {
               {/* Signed Accent */}
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <span className="font-script text-3xl md:text-5xl lg:text-6xl text-white/90 italic drop-shadow-md">
-                  {festiveData?.title1 || "festive"}
+                  {festiveData?.title1 || "Experience"}
                 </span>
               </div>
 
@@ -70,7 +70,7 @@ export function CollectionBanners() {
               <div className="overflow-hidden w-full">
                 <h2 className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                   <span className="block font-serif font-[300] text-3xl md:text-7xl lg:text-9xl text-white tracking-[0.1em] md:tracking-[0.2em] leading-none uppercase drop-shadow-xl translate-y-0 group-hover:-translate-y-2 transition-transform duration-1000">
-                    {festiveData?.title2 || "COLLECTION"}
+                    {festiveData?.title2 || festiveData?.name || "COLLECTION"}
                   </span>
                 </h2>
               </div>
@@ -105,7 +105,7 @@ export function CollectionBanners() {
       {/* Sale Offer Banner (Floating Minimalist) */}
       <section className="relative overflow-hidden group mx-0 lg:mx-0">
         <Link
-          href={saleData?.link || "/collections/sale"}
+          href={saleData?.link || "/collections/big-sale"}
           className="block relative h-[500px] md:h-[650px] lg:h-[800px] w-full"
         >
           {/* Base Image with Smooth Cinematic Zoom */}
@@ -128,14 +128,14 @@ export function CollectionBanners() {
               {/* Signed Accent */}
               <div>
                 <span className="font-script text-3xl md:text-5xl lg:text-7xl text-white/90 drop-shadow-md">
-                  {saleData?.title1 || "festive"}
+                  {saleData?.title1 || "Experience"}
                 </span>
               </div>
 
               {/* Light Couture Serif Title */}
               <h2 className="overflow-hidden">
                 <span className="block font-serif font-[300] text-5xl md:text-8xl lg:text-9xl text-white tracking-[0.2em] leading-tight uppercase drop-shadow-2xl">
-                  {saleData?.title2 || "BIG SALE"}
+                  {saleData?.title2 || saleData?.name || "BIG SALE"}
                 </span>
               </h2>
 

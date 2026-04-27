@@ -33,7 +33,7 @@ export function CuratedSection() {
             name: c.name,
             description: c.sortDesc,
             image: c.image,
-            href: `/collections/${c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
+            href: `/categories/${c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`,
           }))
           setCategories(mapped)
         }

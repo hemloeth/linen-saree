@@ -9,31 +9,48 @@ import { resolveMediaUrl } from "@/lib/media"
 
 export function FeaturedBanner() {
   const [data, setData] = useState({
-    badge: "Best Seller",
-    tagline: "Bridal Collection",
-    titleColorPart: "Elegance for Your",
-    titleItalicPart: "Special Day",
-    description: "Our bridal collection features exquisite linen sarees adorned with intricate zari work, delicate embroidery, and timeless designs. Each piece is crafted to make your special day truly memorable.",
-    stat1Number: "100+",
-    stat1Label: "Designs",
-    stat2Number: "50+",
-    stat2Label: "Artisans",
-    stat3Number: "15+",
-    stat3Label: "Years",
-    buttonText: "Shop Bridal Collection",
-    link: "/collections/banarasi-silk",
-    image: "/images/bridal-saree.jpg"
+    badge: "Celebrity Choice",
+    tagline: "Celebrity Collection",
+    titleColorPart: "Dress Like a",
+    titleItalicPart: "Star",
+    description: "Discover the exclusive collection favored by icons. Our Celebrity Collection brings red-carpet elegance to your wardrobe with premium linen sarees and sophisticated designs.",
+    stat1Number: "500+",
+    stat1Label: "Styles",
+    stat2Number: "20+",
+    stat2Label: "Celebrities",
+    stat3Number: "5★",
+    stat3Label: "Rating",
+    buttonText: "Explore Collection",
+    link: "/collections/celebrity",
+    image: "/images/celebrity-collection.png"
   })
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiGet("/api/bridal-banner")
+        const response = await apiGet("/api/marketing-collections/celebrity")
         if (response.success && response.data) {
-          setData(response.data)
+          setData({
+            ...response.data,
+            // Fallbacks for any missing fields if needed
+            badge: response.data.badge || "Celebrity Choice",
+            tagline: response.data.tagline || "Celebrity Collection",
+            titleColorPart: response.data.titleColorPart || "Dress Like a",
+            titleItalicPart: response.data.titleItalicPart || "Star",
+            description: response.data.description || "",
+            stat1Number: response.data.stats?.[0]?.number || "500+",
+            stat1Label: response.data.stats?.[0]?.label || "Styles",
+            stat2Number: response.data.stats?.[1]?.number || "20+",
+            stat2Label: response.data.stats?.[1]?.label || "Celebrities",
+            stat3Number: response.data.stats?.[2]?.number || "5★",
+            stat3Label: response.data.stats?.[2]?.label || "Rating",
+            buttonText: response.data.buttonText || "Explore Collection",
+            link: response.data.link || "/collections/celebrity",
+            image: response.data.image || "/images/celebrity-collection.png"
+          })
         }
       } catch (error) {
-        console.error("Error fetching bridal banner:", error)
+        console.error("Error fetching celebrity banner:", error)
       }
     }
     fetchData()
@@ -44,27 +61,24 @@ export function FeaturedBanner() {
       <div className="max-w-[1400px] mx-auto">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           {/* Image */}
-          <div className="relative aspect-[4/5] overflow-hidden rounded-sm">
+          <div className="relative aspect-square lg:aspect-[4/5] max-h-[600px] overflow-hidden rounded-lg shadow-2xl">
             <Image
               src={resolveMediaUrl(data.image)}
               alt={data.tagline}
               fill
               className="object-cover transition-transform duration-700 hover:scale-105"
             />
-            <div className="absolute top-6 left-6 bg-accent text-accent-foreground px-4 py-2 text-sm tracking-wide shadow-sm">
-              {data.badge}
-            </div>
           </div>
 
           {/* Content */}
           <div className="lg:pl-12">
             <p className="text-sm tracking-[0.2em] uppercase text-muted-foreground mb-4">
-              {data.tagline}
+              {data.tagline || (data as any).name}
             </p>
             <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight">
               {data.titleColorPart}
               <br />
-              <span className="italic text-primary">{data.titleItalicPart}</span>
+              <span className="italic text-primary">{data.titleItalicPart || (data as any).name}</span>
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-8 max-w-xl">
               {data.description}

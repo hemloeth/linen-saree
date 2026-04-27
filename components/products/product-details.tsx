@@ -106,7 +106,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <span className="mx-1 sm:mx-2 text-border">/</span>
           <Link href="/collections" className="hover:text-foreground inline-flex items-center min-w-fit">Collections</Link>
           <span className="mx-1 sm:mx-2 text-border">/</span>
-          <Link href={`/collections/${product.categorySlug}`} className="hover:text-foreground inline-flex items-center min-w-fit">Sarees</Link>
+          <Link href={`/categories/${product.categorySlug}`} className="hover:text-foreground inline-flex items-center min-w-fit">Sarees</Link>
           <span className="mx-1 sm:mx-2 text-border">/</span>
           <span className="text-foreground line-clamp-1">{product.name}</span>
         </nav>
@@ -249,7 +249,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <div className="lg:py-8">
             <div className="flex items-center gap-4 mb-4">
               <Link
-                href={`/collections/${product.categorySlug}`}
+                href={`/categories/${product.categorySlug}`}
                 className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary uppercase tracking-wider"
               >
                 {product.category}

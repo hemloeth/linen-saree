@@ -28,13 +28,12 @@ const YouTubeIcon = ({ className }: { className?: string }) => (
 
 const footerLinks = {
   shop: [
-    { name: "New Arrivals", href: "collections/new-arrivals" },
-    { name: "Handloom Sarees", href: "/collections/handloom" },
+    { name: "New Arrivals", href: "/categories/new-arrivals" },
+    { name: "Handloom Sarees", href: "/categories/handloom" },
     { name: "Designer Collection", href: "/collections" },
-    { name: "Bridal Wear", href: "/collections" },
-    { name: "Festive Collection", href: "/collections" },
+    { name: "Celebrity Collection", href: "/collections/celebrity" },
+    { name: "Festive Collection", href: "/collections/festive" },
     { name: "Best Sellers", href: "/best-sellers" },
-
   ],
   about: [
     { name: "About Us", href: "/about" },

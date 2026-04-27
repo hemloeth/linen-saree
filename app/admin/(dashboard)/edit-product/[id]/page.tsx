@@ -54,6 +54,23 @@ export default function EditProductPage() {
     const [isOnSale, setIsOnSale] = useState(false)
     const [productCollection, setProductCollection] = useState("")
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+    const [dbCollections, setDbCollections] = useState<any[]>([])
+
+    // Fetch marketing collections
+    useEffect(() => {
+        const fetchCollections = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/marketing-collections`)
+                const data = await res.json()
+                if (data.success) {
+                    setDbCollections(data.data)
+                }
+            } catch (e) {
+                console.error("Failed to fetch collections", e)
+            }
+        }
+        fetchCollections()
+    }, [])
 
     // Specification State
     const [material, setMaterial] = useState("")
@@ -432,9 +449,11 @@ export default function EditProductPage() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="none">Normal Collection</SelectItem>
-                                            <SelectItem value="festive">Festive Collection</SelectItem>
-                                            <SelectItem value="big-sale">Big Sale Collection</SelectItem>
-                                            <SelectItem value="celebrity">Celebrity Collection</SelectItem>
+                                            {dbCollections.map((col) => (
+                                                <SelectItem key={col.key} value={col.key}>
+                                                    {col.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <p className="text-[10px] text-muted-foreground px-1">Select a special collection to feature this product.</p>

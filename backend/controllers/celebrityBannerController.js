@@ -1,14 +1,14 @@
-import BridalBanner from "../modal/bridalBannerModal.js";
+import CelebrityBanner from "../modal/celebrityBannerModal.js";
 
-// @desc    Get Bridal Banner
-// @route   GET /api/bridal-banner
+// @desc    Get Celebrity Collection Banner
+// @route   GET /api/celebrity-collection
 // @access  Public
-export const getBridalBanner = async (req, res) => {
+export const getCelebrityBanner = async (req, res) => {
     try {
-        let banner = await BridalBanner.findOne();
+        let banner = await CelebrityBanner.findOne();
         if (!banner) {
             // Create a default one if it doesn't exist
-            banner = await BridalBanner.create({});
+            banner = await CelebrityBanner.create({});
         }
         res.status(200).json({
             success: true,
@@ -22,10 +22,10 @@ export const getBridalBanner = async (req, res) => {
     }
 };
 
-// @desc    Upsert Bridal Banner
-// @route   POST /api/bridal-banner
+// @desc    Upsert Celebrity Collection Banner
+// @route   POST /api/celebrity-collection
 // @access  Private/Admin
-export const upsertBridalBanner = async (req, res) => {
+export const upsertCelebrityBanner = async (req, res) => {
     try {
         const updateData = { ...req.body };
         
@@ -34,7 +34,7 @@ export const upsertBridalBanner = async (req, res) => {
             updateData.image = req.file.path;
         }
 
-        const banner = await BridalBanner.findOneAndUpdate({}, updateData, {
+        const banner = await CelebrityBanner.findOneAndUpdate({}, updateData, {
             new: true,
             upsert: true,
             setDefaultsOnInsert: true,
@@ -43,11 +43,11 @@ export const upsertBridalBanner = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Bridal banner updated successfully",
+            message: "Celebrity collection banner updated successfully",
             data: banner,
         });
     } catch (error) {
-        console.error("Error upserting bridal banner:", error);
+        console.error("Error upserting celebrity banner:", error);
         res.status(400).json({
             success: false,
             message: error.message,

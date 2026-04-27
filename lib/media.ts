@@ -15,6 +15,12 @@ export function resolveMediaUrl(path: string | null | undefined, fallback = "/pl
         return path;
     }
 
+    // Check if it's a frontend public asset (avoid prepending API_BASE_URL)
+    const frontendAssets = ["/images", "/placeholder", "/videos", "/icon", "/apple-icon", "/linen-saree-logo"];
+    if (frontendAssets.some(prefix => path.startsWith(prefix))) {
+        return path;
+    }
+
     // If it's a local legacy path, prepend the backend base URL
     if (path.startsWith("/") || path.startsWith("uploads")) {
         const cleanPath = path.startsWith("/") ? path : `/${path}`;

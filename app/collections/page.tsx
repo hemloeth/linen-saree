@@ -3,75 +3,76 @@ import { Footer } from "@/components/layout/footer"
 import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import { categories } from "@/lib/products"
 import Link from "next/link"
-import { CollectionsClient } from "./collections-client"
+import { CategoryProductsClient } from "../categories/[slug]/category-products-client"
+import { fetchProductsFromDB, apiServerGet } from "@/lib/api"
 
 export const metadata = {
-  title: "All Collections | Linen Sarees",
-  description: "Browse our complete collection of premium linen sarees."
+  title: "Our Collections | Linen Sarees",
+  description: "Browse our curated themes and special marketing collections."
 }
 
-const collectionSlides = [
-  {
-    id: "all-collections-main",
-    image: "/images/hero-saree.jpg",
-    title: "All Collections",
-    subtitle: "Discover our complete range of handcrafted linen sarees"
-  },
-  {
-    id: "handloom-collection",
-    image: "/images/handloom-saree.jpg",
-    title: "Handloom Heritage",
-    subtitle: "Traditional craftsmanship meets contemporary design"
-  },
-  {
-    id: "festive-collection",
-    image: "/images/celebrity-look.jpg",
-    title: "Festive Elegance",
-    subtitle: "Perfect for celebrations and special occasions"
-  },
-  {
-    id: "bridal-collection",
-    image: "/images/bridal-saree.jpg",
-    title: "Bridal Splendor",
-    subtitle: "Exquisite sarees for your most precious moments"
-  }
-]
+export default async function CollectionsPage() {
+  // Fetch all products
+  const productsResponse = await apiServerGet('/api/product/allproducts')
+  const allProducts = productsResponse.success ? productsResponse.products : []
+  
+  // Filter products that belong to ANY marketing collection
+  const collectionProducts = allProducts.filter((p: any) => 
+    p.productCollection && p.productCollection !== 'none' || p.isFestive || p.isOnSale
+  )
 
-export default function CollectionsPage() {
+  // Fetch marketing collection names for the filter bar
+  const colRes = await apiServerGet('/api/marketing-collections')
+  const marketingCols = colRes.success ? colRes.data.filter((c: any) => c.key !== 'none') : []
+
+  const heroSlides = [
+    {
+      id: "col-main",
+      image: "/images/celebrity-look.jpg",
+      title: "Our Collections",
+      subtitle: "Discover our curated themes for every special occasion"
+    }
+  ]
+
   return (
     <main className="min-h-screen">
       <Header />
 
-      {/* Hero Banner with Auto-Scroll */}
+      {/* Hero Banner */}
       <div className="mt-[96px] lg:mt-[104px]">
-        <PageHeroSlider slides={collectionSlides} height="40vh" />
+        <PageHeroSlider slides={heroSlides} height="40vh" />
       </div>
 
-      {/* Categories */}
-      <section className="py-12 px-4 lg:px-8 bg-secondary">
-        <div className="max-w-[1400px] mx-auto">
+      {/* Collections Sub-nav */}
+      <section className="bg-secondary border-b border-border py-8">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/collections"
-              className="px-6 py-2 bg-foreground text-background text-sm tracking-wide"
+              className="px-6 py-2 bg-foreground text-background text-sm tracking-wide transition-all"
             >
-              All
+              All Collections
             </Link>
-            {categories.map((category) => (
+            {marketingCols.map((col: any) => (
               <Link
-                key={category.slug}
-                href={`/collections/${category.slug}`}
-                className="px-6 py-2 border border-border hover:bg-foreground hover:text-background text-sm tracking-wide transition-colors"
+                key={col.key}
+                href={`/collections/${col.key}`}
+                className="px-6 py-2 border border-border hover:bg-foreground hover:text-background text-sm tracking-wide transition-all"
               >
-                {category.name}
+                {col.name}
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Products Section - Client Component */}
-      <CollectionsClient />
+      {/* Products Grid */}
+      <div className="py-12">
+        <CategoryProductsClient 
+            initialProducts={collectionProducts} 
+            pageTitle="Theme Collections" 
+        />
+      </div>
 
       <Footer />
     </main>

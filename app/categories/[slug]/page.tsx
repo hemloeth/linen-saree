@@ -8,7 +8,7 @@ import {
   getNewProducts
 } from "@/lib/products"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { CategoryProductsClient } from "./category-products-client"
 import { apiServerGet, API_BASE_URL } from "@/lib/api"
 import { resolveMediaUrl } from "@/lib/media"
@@ -243,7 +243,16 @@ export async function generateMetadata({ params }: Props) {
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params
 
+  const MARKETING_SLUGS = ["festive", "sale", "celebrity", "new-arrivals", "big-sale"];
+  if (MARKETING_SLUGS.includes(slug)) {
+    redirect(`/collections/${slug}`);
+  }
+
   const allProducts = await fetchProductsFromDB()
+  
+  // Fetch marketing collections for the sub-nav
+  const colRes = await apiServerGet('/api/marketing-collections')
+  const marketingCollectionsList = colRes.success ? colRes.data.filter((c: any) => c.key !== 'none') : []
 
   // Handle special slugs
   let categoryProducts = getProductsByCategory(allProducts, slug)
@@ -264,14 +273,14 @@ export default async function CategoryPage({ params }: Props) {
     categoryProducts = allProducts.filter(p => p.productCollection === "celebrity")
     pageTitle = "Celebrity Look"
     pageDescription = "Discover sarees inspired by your favorite celebrities."
-  } 
+  }
 
   let festiveBannerData = null;
   if (slug === "festive") {
     categoryProducts = allProducts.filter(p => p.isFestive || p.productCollection === "festive")
     pageTitle = "Festive Collection"
     pageDescription = "Discover our latest curated festive sarees, handcrafted with elegance and tradition."
-    
+
     try {
       const response = await apiServerGet('/api/festive-banner', { cache: 'no-store' });
       if (response.success) {
@@ -312,7 +321,7 @@ export default async function CategoryPage({ params }: Props) {
   // Breadcrumbs
   const breadcrumbs = [
     { label: "Home", href: "/" },
-    { label: "Collections", href: "/collections" },
+    { label: "Categories", href: "/categories" },
     { label: pageTitle }
   ]
 
@@ -329,23 +338,26 @@ export default async function CategoryPage({ params }: Props) {
         />
       </div>
 
-      {/* Categories Navigation */}
-      <section className="py-6 px-4 lg:px-8 bg-secondary border-b border-border">
-        <div className="max-w-[1400px] mx-auto">
+      {/* Categories Sub-nav */}
+      <section className="bg-secondary border-b border-border py-8">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              href="/collections"
-              className="px-5 py-2 border border-border hover:bg-foreground hover:text-background text-sm tracking-wide transition-colors"
+              href="/categories"
+              className={`px-5 py-2 text-sm tracking-wide transition-colors ${!slug || slug === 'all'
+                ? "bg-foreground text-background"
+                : "border border-border hover:bg-foreground hover:text-background"
+                }`}
             >
-              All
+              All Fabrics
             </Link>
             {categories.map((cat) => (
               <Link
                 key={cat.slug}
-                href={`/collections/${cat.slug}`}
+                href={`/categories/${cat.slug}`}
                 className={`px-5 py-2 text-sm tracking-wide transition-colors ${cat.slug === slug
-                    ? "bg-foreground text-background"
-                    : "border border-border hover:bg-foreground hover:text-background"
+                  ? "bg-foreground text-background"
+                  : "border border-border hover:bg-foreground hover:text-background"
                   }`}
               >
                 {cat.name}

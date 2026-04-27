@@ -62,19 +62,9 @@ const sidebarSections = [
                 icon: Images,
             },
             {
-                title: "Bridal Banner",
-                href: "/admin/bridal-banner",
+                title: "Marketing Collections",
+                href: "/admin/marketing-collections",
                 icon: Images,
-            },
-            {
-                title: "Festive Banner",
-                href: "/admin/festive-banner",
-                icon: Images,
-            },
-            {
-                title: "Sale Banner",
-                href: "/admin/festive-sale",
-                icon: TicketPercent,
             },
             {
                 title: "Category Banners",

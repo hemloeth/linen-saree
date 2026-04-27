@@ -12,7 +12,7 @@ import { toast } from "sonner"
 import Image from "next/image"
 import { resolveMediaUrl } from "@/lib/media"
 
-export default function BridalBannerPage() {
+export default function CelebrityCollectionPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isFetching, setIsFetching] = useState(true)
     const [previewImage, setPreviewImage] = useState<string | null>(null)
@@ -34,12 +34,12 @@ export default function BridalBannerPage() {
     })
 
     useEffect(() => {
-        fetchBridalBanner()
+        fetchCelebrityBanner()
     }, [])
 
-    const fetchBridalBanner = async () => {
+    const fetchCelebrityBanner = async () => {
         try {
-            const response = await apiGet("/api/bridal-banner")
+            const response = await apiGet("/api/celebrity-collection")
             if (response.success && response.data) {
                 setFormData({
                     badge: response.data.badge || "",
@@ -60,7 +60,7 @@ export default function BridalBannerPage() {
                 setPreviewImage(resolveMediaUrl(response.data.image))
             }
         } catch (error) {
-            console.error("Error fetching bridal banner:", error)
+            console.error("Error fetching celebrity banner:", error)
         } finally {
             setIsFetching(false)
         }
@@ -102,16 +102,16 @@ export default function BridalBannerPage() {
                 form.append("image", formData.image)
             }
 
-            const response = await apiUpload("/api/bridal-banner", form, "POST")
+            const response = await apiUpload("/api/celebrity-collection", form, "POST")
 
             if (response.success) {
-                toast.success("Bridal collection banner updated successfully!")
-                fetchBridalBanner() // Refresh data
+                toast.success("Celebrity collection banner updated successfully!")
+                fetchCelebrityBanner() // Refresh data
             } else {
                 toast.error(response.message || "Failed to update banner")
             }
         } catch (error) {
-            console.error("Error updating bridal banner:", error)
+            console.error("Error updating celebrity banner:", error)
             toast.error("An error occurred while saving")
         } finally {
             setIsLoading(false)
@@ -119,16 +119,16 @@ export default function BridalBannerPage() {
     }
 
     if (isFetching) {
-        return <div className="flex h-[400px] items-center justify-center text-muted-foreground">Loading Bridal Banner settings...</div>
+        return <div className="flex h-[400px] items-center justify-center text-muted-foreground">Loading Celebrity Collection settings...</div>
     }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Bridal Collection Banner</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">Celebrity Collection Banner</h2>
                     <p className="text-muted-foreground">
-                        Manage the bridal collection features on the home page.
+                        Manage the celebrity collection features on the home page.
                     </p>
                 </div>
             </div>
@@ -154,7 +154,7 @@ export default function BridalBannerPage() {
                                 <Label htmlFor="tagline">Tagline</Label>
                                 <Input
                                     id="tagline"
-                                    placeholder="e.g. Bridal Collection"
+                                    placeholder="e.g. Celebrity Collection"
                                     value={formData.tagline}
                                     onChange={handleInputChange}
                                 />
@@ -166,7 +166,7 @@ export default function BridalBannerPage() {
                                 <Label htmlFor="titleColorPart">Main Title Part</Label>
                                 <Input
                                     id="titleColorPart"
-                                    placeholder="e.g. Elegance for Your"
+                                    placeholder="e.g. Elegance for"
                                     value={formData.titleColorPart}
                                     onChange={handleInputChange}
                                 />
@@ -175,7 +175,7 @@ export default function BridalBannerPage() {
                                 <Label htmlFor="titleItalicPart">Italic Title Part</Label>
                                 <Input
                                     id="titleItalicPart"
-                                    placeholder="e.g. Special Day"
+                                    placeholder="e.g. Red Carpet"
                                     value={formData.titleItalicPart}
                                     onChange={handleInputChange}
                                 />
@@ -198,7 +198,7 @@ export default function BridalBannerPage() {
                                 <Label htmlFor="buttonText">Button Text</Label>
                                 <Input
                                     id="buttonText"
-                                    placeholder="e.g. Shop Bridal Collection"
+                                    placeholder="e.g. Shop Celebrity Collection"
                                     value={formData.buttonText}
                                     onChange={handleInputChange}
                                 />
@@ -207,7 +207,7 @@ export default function BridalBannerPage() {
                                 <Label htmlFor="link">Button Link</Label>
                                 <Input
                                     id="link"
-                                    placeholder="/collections/bridal"
+                                    placeholder="/collections/celebrity"
                                     value={formData.link}
                                     onChange={handleInputChange}
                                 />
@@ -288,7 +288,7 @@ export default function BridalBannerPage() {
                     </Card>
 
                     <div className="flex items-center justify-end gap-4">
-                        <Button type="button" variant="outline" onClick={fetchBridalBanner}>
+                        <Button type="button" variant="outline" onClick={fetchCelebrityBanner}>
                             Discard Changes
                         </Button>
                         <Button type="submit" disabled={isLoading} className="min-w-[120px]">
