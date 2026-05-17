@@ -81,6 +81,38 @@ function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Helper to parse responses robustly (handling non-JSON responses like HTML 404/502/504 pages)
+async function parseResponse(response: Response): Promise<{ data: any; isJson: boolean }> {
+    try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            return { data, isJson: true };
+        } else {
+            const text = await response.text();
+            let message = `Request failed with status ${response.status}`;
+            if (response.status === 404) {
+                message = `Endpoint not found (404). Please ensure the route exists on the backend.`;
+            } else if (response.status >= 500) {
+                message = `Internal Server Error (${response.status}).`;
+            }
+            // If the response text is short and not HTML, include it
+            if (text && text.length < 200 && !text.includes('<!DOCTYPE') && !text.includes('<html')) {
+                message += `: ${text.trim()}`;
+            }
+            return {
+                data: { message },
+                isJson: false
+            };
+        }
+    } catch (err) {
+        return {
+            data: { message: `Failed to parse server response (Status ${response.status})` },
+            isJson: false
+        };
+    }
+}
+
 // Core request function with retry logic
 async function request<T = any>(
     endpoint: string,
@@ -98,9 +130,7 @@ async function request<T = any>(
             const response = await fetchWithTimeout(url, options, timeout);
 
             // Parse response
-            const data = await response.json().catch(() => ({
-                message: 'Invalid server response',
-            }));
+            const { data } = await parseResponse(response);
 
             if (!response.ok) {
                 throw new ApiError(
@@ -248,7 +278,7 @@ export async function apiServerGet<T = any>(
     }
 
     const response = await fetchWithTimeout(url, fetchOptions, timeout);
-    const data = await response.json().catch(() => ({ message: 'Invalid server response' }));
+    const { data } = await parseResponse(response);
 
     if (!response.ok) {
         throw new ApiError(

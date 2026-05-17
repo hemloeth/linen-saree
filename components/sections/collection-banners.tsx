@@ -14,19 +14,19 @@ export function CollectionBanners() {
       try {
         // Fetch Sale Offer Banner
         const saleRes = await fetch(`${API_BASE_URL}/api/marketing-collections/big-sale`)
-        const saleResponse = await saleRes.json()
-        if (saleResponse.success) {
+        const saleResponse = await saleRes.json().catch(() => null)
+        if (saleResponse && saleResponse.success) {
           setSaleData(saleResponse.data)
         }
 
         // Fetch Festive Collection Banner
         const festiveRes = await fetch(`${API_BASE_URL}/api/marketing-collections/festive`)
-        const festiveResponse = await festiveRes.json()
-        if (festiveResponse.success) {
+        const festiveResponse = await festiveRes.json().catch(() => null)
+        if (festiveResponse && festiveResponse.success) {
           setFestiveData(festiveResponse.data)
         }
       } catch (error) {
-        console.error("Error fetching banner data:", error)
+        console.warn("Failed to fetch custom collection banners, using default visual fallbacks:", error)
       }
     }
     fetchBanners()

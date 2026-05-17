@@ -61,12 +61,12 @@ export default function EditProductPage() {
         const fetchCollections = async () => {
             try {
                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/marketing-collections`)
-                const data = await res.json()
-                if (data.success) {
+                const data = await res.json().catch(() => null)
+                if (data && data.success) {
                     setDbCollections(data.data)
                 }
             } catch (e) {
-                console.error("Failed to fetch collections", e)
+                console.warn("Failed to fetch collections inside edit-product dashboard:", e)
             }
         }
         fetchCollections()
@@ -468,64 +468,46 @@ export default function EditProductPage() {
                                 <Badge variant="outline" className="text-[10px] py-0 h-5 px-2">OPTIONAL</Badge>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Video File Upload */}
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold">Upload Video File</Label>
-                                    <div
-                                        className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border-muted-foreground/20 bg-muted/30 hover:border-primary hover:bg-muted/50"
-                                        onClick={() => document.getElementById("edit-video-upload")?.click()}
-                                    >
-                                        <Input
-                                            id="edit-video-upload"
-                                            type="file"
-                                            accept="video/*"
-                                            className="hidden"
-                                            onChange={handleVideoFileChange}
-                                        />
-                                        {videoFile ? (
-                                            <div className="flex flex-col items-center gap-2 w-full">
-                                                <video
-                                                    src={resolveMediaUrl(videoFile)}
-                                                    className="w-full max-h-40 rounded-lg object-cover"
-                                                    muted
-                                                />
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs text-green-600 font-semibold">Video uploaded</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => { e.stopPropagation(); setVideoFile(null); setVideoFileRaw(null); }}
-                                                        className="text-xs text-destructive hover:underline"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col items-center text-center gap-2">
-                                                <div className="p-3 bg-background rounded-full shadow-sm">
-                                                    <Upload className="h-5 w-5 text-primary" />
-                                                </div>
-                                                <div className="text-xs font-bold text-primary/80">Upload Video</div>
-                                                <p className="text-[10px] text-muted-foreground">MP4, WebM, MOV</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Video URL */}
-                                <div className="space-y-2">
-                                    <Label htmlFor="video-url" className="text-xs font-bold">Video URL Link</Label>
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold">Upload Video File</Label>
+                                <div
+                                    className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 border-muted-foreground/20 bg-muted/30 hover:border-primary hover:bg-muted/50"
+                                    onClick={() => document.getElementById("edit-video-upload")?.click()}
+                                >
                                     <Input
-                                        id="video-url"
-                                        value={videoUrl}
-                                        onChange={(e) => setVideoUrl(e.target.value)}
-                                        placeholder="https://youtube.com/watch?v=... or direct link"
-                                        className="h-9"
+                                        id="edit-video-upload"
+                                        type="file"
+                                        accept="video/*"
+                                        className="hidden"
+                                        onChange={handleVideoFileChange}
                                     />
-                                    <p className="text-[10px] text-muted-foreground">
-                                        Paste a YouTube, Vimeo, or direct video URL
-                                    </p>
+                                    {videoFile ? (
+                                        <div className="flex flex-col items-center gap-2 w-full">
+                                            <video
+                                                src={resolveMediaUrl(videoFile)}
+                                                className="w-full max-h-60 rounded-lg object-cover"
+                                                muted
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-green-600 font-semibold">Video uploaded</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); setVideoFile(null); setVideoFileRaw(null); }}
+                                                    className="text-xs text-destructive hover:underline"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center text-center gap-2">
+                                            <div className="p-3 bg-background rounded-full shadow-sm">
+                                                <Upload className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div className="text-xs font-bold text-primary/80">Upload Video</div>
+                                            <p className="text-[10px] text-muted-foreground">MP4, WebM, MOV</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

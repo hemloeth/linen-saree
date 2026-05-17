@@ -49,8 +49,8 @@ export function FeaturedBanner() {
             image: response.data.image || "/images/celebrity-collection.png"
           })
         }
-      } catch (error) {
-        console.error("Error fetching celebrity banner:", error)
+      } catch (error: any) {
+        console.warn("Failed to fetch celebrity banner from backend, using default fallback data. Message:", error.message || error)
       }
     }
     fetchData()

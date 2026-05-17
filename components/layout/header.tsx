@@ -45,14 +45,14 @@ export function Header() {
     const fetchCollections = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/marketing-collections`)
-        const data = await response.json()
-        if (data.success) {
+        const data = await response.json().catch(() => null)
+        if (data && data.success) {
           // Only include the 3 main marketing collections (exclude 'none')
           const filtered = data.data.filter((col: any) => col.key !== 'none')
           setMarketingCollections(filtered)
         }
-      } catch (error) {
-        console.error("Error fetching collections:", error)
+      } catch (error: any) {
+        console.warn("Failed to fetch marketing collections, using default fallback. Message:", error.message || error)
       }
     }
     fetchCollections()
