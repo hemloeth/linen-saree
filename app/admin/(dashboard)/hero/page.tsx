@@ -101,7 +101,7 @@ export default function HeroAdminPage() {
             const compressionOptions = {
                 maxSizeMB: 2,
                 maxWidthOrHeight: 1920,
-                useWebWorker: true,
+                useWebWorker: false, // Disabled to prevent potential browser hangs
             };
             const compressedImage = await imageCompression(selectedFile, compressionOptions);
 

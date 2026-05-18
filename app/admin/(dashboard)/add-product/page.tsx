@@ -148,7 +148,7 @@ export default function AddProductPage() {
             const compressionOptions = {
                 maxSizeMB: 2,
                 maxWidthOrHeight: 1920,
-                useWebWorker: true,
+                useWebWorker: false, // Disabled to prevent potential browser hangs
             };
 
             const compressedMainImage = await imageCompression(mainImageFile, compressionOptions);

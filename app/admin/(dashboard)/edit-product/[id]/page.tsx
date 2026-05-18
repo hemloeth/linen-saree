@@ -170,7 +170,7 @@ export default function EditProductPage() {
             const compressionOptions = {
                 maxSizeMB: 2,
                 maxWidthOrHeight: 1920,
-                useWebWorker: true,
+                useWebWorker: false, // Disabled to prevent potential browser hangs
             };
 
             const formData = new FormData()
