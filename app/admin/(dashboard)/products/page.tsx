@@ -67,9 +67,9 @@ export default function AdminProductsPage() {
     return "In Stock"
   }
 
-  const showToast = (title: string, message: string) => {
+  const showToast = (title: string, message: string, type: 'success' | 'error' = 'success') => {
     const id = ++toastId
-    setToasts((prev) => [...prev, { id, title, message }])
+    setToasts((prev) => [...prev, { id, title, message, type }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
     }, 3000)
@@ -152,6 +152,12 @@ export default function AdminProductsPage() {
       showToast(
         product.isFestive ? "Removed from Festive" : "Added to Festive",
         `"${product.name}" is ${product.isFestive ? "no longer" : "now"} in the festive collection`
+      )
+    } catch (err: any) {
+      showToast(
+        "Update Failed",
+        err.message || "Not authorized to modify products",
+        "error"
       )
     } finally {
       setUpdatingId(null)
@@ -373,33 +379,37 @@ export default function AdminProductsPage() {
                   <TableCell>{product.stock}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleOpenSaleModal(product)}
-                          disabled={updatingId === product._id && updatingField === 'isOnSale'}
-                          className={`group relative flex items-center h-6 px-3 rounded-full text-[10px] font-bold transition-all duration-200 border ${product.isOnSale
+                        <span
+                          role="button"
+                          onClick={() => {
+                            if (!(updatingId === product._id && updatingField === 'isOnSale')) {
+                              handleOpenSaleModal(product);
+                            }
+                          }}
+                          className={`group relative inline-flex items-center justify-center py-1 px-3 rounded-full text-[10px] font-bold cursor-pointer select-none transition-all duration-200 border whitespace-nowrap ${product.isOnSale
                             ? "bg-orange-500 border-orange-500 text-white shadow-sm hover:scale-105"
                             : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:border-orange-500 hover:text-orange-500"
-                            } ${updatingId === product._id && updatingField === 'isOnSale' ? "animate-pulse opacity-70" : ""}`}
+                            } ${updatingId === product._id && updatingField === 'isOnSale' ? "animate-pulse opacity-70 cursor-not-allowed" : ""}`}
                           title={product.isOnSale ? "Edit Sale Price" : "Add to Sale"}
-                        >
-                          {product.isOnSale ? "SALE" : "+ SALE"}
-                        </button>
+                        ><span className="translate-y-px">{product.isOnSale ? "SALE" : "+ SALE"}</span></span>
 
-                        <button
-                          onClick={() => handleToggleFestive(product)}
-                          disabled={updatingId === product._id && updatingField === 'isFestive'}
-                          className={`group relative flex items-center h-6 px-3 rounded-full text-[10px] font-bold transition-all duration-200 border ${product.isFestive
+                        <span
+                          role="button"
+                          onClick={() => {
+                            if (!(updatingId === product._id && updatingField === 'isFestive')) {
+                              handleToggleFestive(product);
+                            }
+                          }}
+                          className={`group relative inline-flex items-center justify-center py-1 px-3 rounded-full text-[10px] font-bold cursor-pointer select-none transition-all duration-200 border whitespace-nowrap ${product.isFestive
                             ? "bg-purple-500 border-purple-500 text-white shadow-sm hover:scale-105"
                             : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:border-purple-500 hover:text-purple-500"
-                            } ${updatingId === product._id && updatingField === 'isFestive' ? "animate-pulse opacity-70" : ""}`}
+                            } ${updatingId === product._id && updatingField === 'isFestive' ? "animate-pulse opacity-70 cursor-not-allowed" : ""}`}
                           title={product.isFestive ? "Remove from Festive" : "Add to Festive"}
-                        >
-                          {product.isFestive ? "FESTIVE" : "+ FESTIVE"}
-                        </button>
+                        ><span className="translate-y-px">{product.isFestive ? "FESTIVE" : "+ FESTIVE"}</span></span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={status === "Out of Stock" ? "destructive" : status === "Low Stock" ? "secondary" : "outline"}>
+                    <Badge variant={status === "Out of Stock" ? "destructive" : status === "Low Stock" ? "secondary" : "outline"} className="whitespace-nowrap">
                       {status}
                     </Badge>
                   </TableCell>
@@ -525,7 +535,19 @@ export default function AdminProductsPage() {
         product={activeSaleProduct}
         isOpen={isSaleModalOpen}
         onClose={() => setIsSaleModalOpen(false)}
-        onSave={quickUpdateProduct}
+        onSave={async (id, updates) => {
+          try {
+            await quickUpdateProduct(id, updates)
+            showToast("Sale Updated", "Sale details saved successfully")
+          } catch (err: any) {
+            showToast(
+              "Update Failed",
+              err.message || "Not authorized to modify products",
+              "error"
+            )
+            throw err
+          }
+        }}
       />
     </div>
   )
