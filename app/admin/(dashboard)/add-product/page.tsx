@@ -51,6 +51,7 @@ export default function AddProductPage() {
     const [galleryImageFiles, setGalleryImageFiles] = useState<File[]>([])
     const [isDraggingMain, setIsDraggingMain] = useState(false)
     const [isDraggingGallery, setIsDraggingGallery] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Form State
     const [name, setName] = useState("")
@@ -100,11 +101,10 @@ export default function AddProductPage() {
         const file = Array.from(files)[0]
         if (file && file.type.startsWith('image/')) {
             setMainImageFile(file)
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setMainImage(reader.result as string)
+            if (mainImage && mainImage.startsWith('blob:')) {
+                URL.revokeObjectURL(mainImage)
             }
-            reader.readAsDataURL(file)
+            setMainImage(URL.createObjectURL(file))
         }
     }
 
@@ -113,17 +113,16 @@ export default function AddProductPage() {
         const remainingSlots = 10 - galleryImages.length
         const limitedFiles = filesToProcess.slice(0, remainingSlots)
 
-        limitedFiles.forEach(file => {
-            setGalleryImageFiles(prev => [...prev, file])
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setGalleryImages(prev => [...prev, reader.result as string])
-            }
-            reader.readAsDataURL(file)
-        })
+        const newPreviews = limitedFiles.map(file => URL.createObjectURL(file))
+        
+        setGalleryImageFiles(prev => [...prev, ...limitedFiles])
+        setGalleryImages(prev => [...prev, ...newPreviews])
     }
 
     const removeGalleryImage = (index: number) => {
+        if (galleryImages[index] && galleryImages[index].startsWith('blob:')) {
+            URL.revokeObjectURL(galleryImages[index])
+        }
         setGalleryImages(prev => prev.filter((_, i) => i !== index))
         setGalleryImageFiles(prev => prev.filter((_, i) => i !== index))
     }
@@ -132,29 +131,31 @@ export default function AddProductPage() {
         const file = e.target.files?.[0]
         if (!file) return
         setVideoFileRaw(file)
-        const reader = new FileReader()
-        reader.onloadend = () => {
-            setVideoFile(reader.result as string)
+        if (videoFile && videoFile.startsWith('blob:')) {
+            URL.revokeObjectURL(videoFile)
         }
-        reader.readAsDataURL(file)
+        setVideoFile(URL.createObjectURL(file))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!mainImageFile) return
+        
+        setIsSubmitting(true)
         setLastAddedName(name)
 
         try {
             const compressionOptions = {
                 maxSizeMB: 2,
                 maxWidthOrHeight: 1920,
-                useWebWorker: false, // Disabled to prevent potential browser hangs
+                useWebWorker: true, // Use web workers for non-blocking UI
             };
 
-            const compressedMainImage = await imageCompression(mainImageFile, compressionOptions);
-            const compressedGalleryImages = await Promise.all(
-                galleryImageFiles.map(file => imageCompression(file, compressionOptions))
-            );
+            // Process main image and gallery images concurrently for maximum performance
+            const [compressedMainImage, ...compressedGalleryImages] = await Promise.all([
+                imageCompression(mainImageFile, compressionOptions),
+                ...galleryImageFiles.map(file => imageCompression(file, compressionOptions))
+            ]);
 
             const formData = new FormData()
             formData.append("name", name)
@@ -185,7 +186,13 @@ export default function AddProductPage() {
 
             const product = await addProduct(formData)
 
-            // Clear all fields
+            // Clear all fields and revoke object URLs to free memory
+            if (mainImage && mainImage.startsWith('blob:')) URL.revokeObjectURL(mainImage)
+            galleryImages.forEach(img => {
+                if (img && img.startsWith('blob:')) URL.revokeObjectURL(img)
+            })
+            if (videoFile && videoFile.startsWith('blob:')) URL.revokeObjectURL(videoFile)
+
             setMainImage(null)
             setMainImageFile(null)
             setGalleryImages([])
@@ -218,6 +225,8 @@ export default function AddProductPage() {
             console.error("Detailed error adding product:", err)
             const errorMsg = err instanceof Error ? err.message : String(err);
             showToast("Failed to Add Product", `The product might have been added, but the server connection was lost. ${errorMsg}`);
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -278,7 +287,7 @@ export default function AddProductPage() {
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={resolveMediaUrl(mainImage)} alt="Main Preview" className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <Button size="sm" variant="secondary" className="font-bold">Replace</Button>
+                                                    <Button size="sm" variant="secondary" className="font-bold cursor-pointer">Replace</Button>
                                                 </div>
                                             </div>
                                         ) : (
@@ -329,7 +338,7 @@ export default function AddProductPage() {
                                                     <button
                                                         type="button"
                                                         onClick={(e) => { e.stopPropagation(); removeGalleryImage(i); }}
-                                                        className="absolute top-1 right-1 p-1 bg-destructive/90 text-destructive-foreground rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                                        className="absolute top-1 right-1 p-1 bg-destructive/90 text-destructive-foreground rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity cursor-pointer"
                                                     >
                                                         <X className="h-3 w-3" />
                                                     </button>
@@ -354,12 +363,12 @@ export default function AddProductPage() {
                             <div className="grid gap-1.5">
                                 <Label htmlFor="category" className="text-xs font-bold">Category</Label>
                                 <Select value={category} onValueChange={(value) => value === "add-category" ? setIsCategoryModalOpen(true) : setCategory(value)}>
-                                    <SelectTrigger id="category" className="h-9">
+                                    <SelectTrigger id="category" className="h-9 cursor-pointer">
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {dbCategories.map((cat) => <SelectItem key={cat._id} value={cat.name}>{cat.name}</SelectItem>)}
-                                        <SelectItem value="add-category">+ Add Category</SelectItem>
+                                        {dbCategories.map((cat) => <SelectItem key={cat._id} value={cat.name} className="cursor-pointer">{cat.name}</SelectItem>)}
+                                        <SelectItem value="add-category" className="cursor-pointer">+ Add Category</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -437,13 +446,13 @@ export default function AddProductPage() {
                                 <div className="grid gap-1.5">
                                     <Label htmlFor="collection" className="text-xs font-bold text-primary uppercase tracking-wider">Product Collection</Label>
                                     <Select value={productCollection} onValueChange={setProductCollection}>
-                                        <SelectTrigger id="collection" className="h-12 border-primary/20 bg-primary/5">
+                                        <SelectTrigger id="collection" className="h-12 border-primary/20 bg-primary/5 cursor-pointer">
                                             <SelectValue placeholder="Normal Collection" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="none">Normal Collection</SelectItem>
+                                            <SelectItem value="none" className="cursor-pointer">Normal Collection</SelectItem>
                                             {dbCollections.map((col) => (
-                                                <SelectItem key={col.key} value={col.key}>
+                                                <SelectItem key={col.key} value={col.key} className="cursor-pointer">
                                                     {col.name}
                                                 </SelectItem>
                                             ))}
@@ -485,8 +494,13 @@ export default function AddProductPage() {
                                                 <span className="text-xs text-green-600 font-semibold">Video uploaded</span>
                                                 <button
                                                     type="button"
-                                                    onClick={(e) => { e.stopPropagation(); setVideoFile(null); setVideoFileRaw(null); }}
-                                                    className="text-xs text-destructive hover:underline"
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        if (videoFile && videoFile.startsWith('blob:')) URL.revokeObjectURL(videoFile);
+                                                        setVideoFile(null); 
+                                                        setVideoFileRaw(null); 
+                                                    }}
+                                                    className="text-xs text-destructive hover:underline cursor-pointer"
                                                 >
                                                     Remove
                                                 </button>
@@ -506,9 +520,9 @@ export default function AddProductPage() {
                         </div>
 
                         <div className="flex justify-end pb-8">
-                            <Button type="submit" disabled={loading} size="lg" className="px-10 h-12 text-base font-bold shadow-lg shadow-primary/20 relative overflow-hidden">
+                            <Button type="submit" disabled={loading || isSubmitting} size="lg" className="px-10 h-12 text-base font-bold shadow-lg shadow-primary/20 relative overflow-hidden cursor-pointer">
                                 <AnimatePresence mode="wait">
-                                    {loading ? (
+                                    {(loading || isSubmitting) ? (
                                         <motion.span
                                             key="loading"
                                             initial={{ opacity: 0, y: 10 }}
@@ -518,7 +532,7 @@ export default function AddProductPage() {
                                             className="flex items-center gap-2"
                                         >
                                             <LoadingSpinner size="sm" />
-                                            Adding Product...
+                                            {isSubmitting && !loading ? "Processing Images..." : "Adding Product..."}
                                         </motion.span>
                                     ) : (
                                         <motion.span

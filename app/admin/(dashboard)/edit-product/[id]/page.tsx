@@ -81,43 +81,52 @@ export default function EditProductPage() {
     const [disclaimer, setDisclaimer] = useState("Actual product color may differ slightly from the images due to lighting and display differences.")
     const [internationalNote, setInternationalNote] = useState("Custom duties")
 
-    // Pre-fill form with existing product data
+    // Fetch full product data from API to ensure we get excluded fields like galleryImages
     useEffect(() => {
-        const product = products.find((p) => p._id === productId)
-        if (product) {
-            setName(product.name || "")
-            setSku(product.sku || "")
-            setCategory(product.category || "")
-            setRegularPrice(product.regularPrice?.toString() || "")
-            setPrice(product.price?.toString() || "")
-            setStock(product.stock?.toString() || "")
-            setShortDescription(product.shortDescription || "")
-            setTags(product.tags || "")
-            setVideoUrl(product.videoUrl || "")
-            setColor(product.color || "")
-            setMaterial(product.material || "")
-            setSareeSize("5.5 mtr")
-            setBlouseSize("95 cm")
-            setWashCare("Dry clean recommended")
-            setDispatch(product.dispatch || "2-3 days")
-            setDisclaimer(product.disclaimer || "Actual product color may differ slightly from the images due to lighting and display differences.")
-            setInternationalNote(product.internationalNote || "Custom duties")
-            setIsOnSale(product.isOnSale || false)
-            setProductCollection(product.productCollection || 
-                                (product.isFestive ? "festive" : 
-                                 product.isOnSale ? "big-sale" : "none"))
-            // Set existing images as previews
-            if (product.mainImage) setMainImage(product.mainImage)
-            if (product.galleryImages?.length) {
-                // Handle both old string[] format and new object[] format
-                const urls = product.galleryImages.map((img: any) =>
-                    typeof img === "string" ? img : img.url
-                )
-                setGalleryImages(urls)
+        const fetchProduct = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/products/${productId}`);
+                const data = await res.json();
+                if (data && data.success && data.product) {
+                    const product = data.product;
+                    setName(product.name || "")
+                    setSku(product.sku || "")
+                    setCategory(product.category || "")
+                    setRegularPrice(product.regularPrice?.toString() || "")
+                    setPrice(product.price?.toString() || "")
+                    setStock(product.stock?.toString() || "")
+                    setShortDescription(product.shortDescription || "")
+                    setTags(product.tags || "")
+                    setVideoUrl(product.videoUrl || "")
+                    setColor(product.color || "")
+                    setMaterial(product.material || "")
+                    setSareeSize("5.5 mtr")
+                    setBlouseSize("95 cm")
+                    setWashCare("Dry clean recommended")
+                    setDispatch(product.dispatch || "2-3 days")
+                    setDisclaimer(product.disclaimer || "Actual product color may differ slightly from the images due to lighting and display differences.")
+                    setInternationalNote(product.internationalNote || "Custom duties")
+                    setIsOnSale(product.isOnSale || false)
+                    setProductCollection(product.productCollection || 
+                                        (product.isFestive ? "festive" : 
+                                         product.isOnSale ? "big-sale" : "none"))
+                    // Set existing images as previews
+                    if (product.mainImage) setMainImage(product.mainImage)
+                    if (product.galleryImages?.length) {
+                        // Handle both old string[] format and new object[] format
+                        const urls = product.galleryImages.map((img: any) =>
+                            typeof img === "string" ? img : img.url
+                        )
+                        setGalleryImages(urls)
+                    }
+                    if (product.videoFile) setVideoFile(product.videoFile)
+                }
+            } catch (err) {
+                console.error("Failed to fetch product details:", err);
             }
-            if (product.videoFile) setVideoFile(product.videoFile)
-        }
-    }, [productId, products])
+        };
+        fetchProduct();
+    }, [productId])
 
     const handleMainImage = (files: FileList | File[]) => {
         const file = Array.from(files)[0]
