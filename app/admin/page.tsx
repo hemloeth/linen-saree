@@ -261,7 +261,7 @@ export default function AdminAuthPage() {
                                 </div>
                                 
                                 <Button 
-                                    className="w-full h-12 rounded-lg bg-[#1A1A1A] hover:bg-[#2D2D2D] text-white font-medium tracking-[0.2em] text-[10px] uppercase transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.99]" 
+                                    className="w-full h-12 rounded-lg bg-[#8B7355] hover:bg-[#725E45] text-white font-medium tracking-[0.2em] text-[10px] uppercase transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.99]" 
                                     type="submit" 
                                     disabled={isLoading}
                                 >
@@ -317,7 +317,7 @@ export default function AdminAuthPage() {
                                 </div>
 
                                 <Button 
-                                    className="w-full h-12 rounded-lg bg-[#1A1A1A] hover:bg-[#2D2D2D] text-white font-medium tracking-[0.2em] text-[10px] uppercase transition-all duration-200 flex items-center justify-center cursor-pointer shadow-sm active:scale-[0.99]" 
+                                    className="w-full h-12 rounded-lg bg-[#8B7355] hover:bg-[#725E45] text-white font-medium tracking-[0.2em] text-[10px] uppercase transition-all duration-200 flex items-center justify-center cursor-pointer shadow-sm active:scale-[0.99]" 
                                     type="submit" 
                                     disabled={isLoading}
                                 >
