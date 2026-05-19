@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, Mail, ArrowRight, ShieldCheck, ArrowLeft, Star } from "lucide-react"
+import { Loader2, Mail, ArrowRight, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { apiPost } from "@/lib/api"
 import { toast } from "sonner"
@@ -185,91 +185,73 @@ export default function AdminAuthPage() {
     }
 
     return (
-        <div className="relative flex min-h-screen items-center justify-center bg-[#FAF7F2] px-4 py-12 overflow-hidden font-sans">
-            {/* Ultra-Premium Moving Background Blobs */}
-            <div className="absolute top-[-30%] left-[-20%] w-[800px] h-[800px] rounded-full bg-gradient-to-tr from-[#E6DFD5] to-transparent opacity-40 blur-[150px] animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
-            <div className="absolute bottom-[-30%] right-[-20%] w-[800px] h-[800px] rounded-full bg-gradient-to-bl from-[#C4B29E] to-transparent opacity-20 blur-[150px] animate-pulse pointer-events-none" style={{ animationDuration: '12s' }} />
+        <div className="relative flex min-h-screen items-center justify-center bg-[#FAF9F5] px-4 py-12 font-sans text-[#1A1A1A]">
             
-            {/* Fine Grid Pattern Overlay for Luxury Texture */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#8b735505_1px,transparent_1px),linear-gradient(to_bottom,#8b735505_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
-
             <motion.div 
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-full max-w-[500px]"
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full max-w-[440px]"
             >
-                {/* Custom Luxury Card Container */}
-                <div className="backdrop-blur-xl bg-white/70 border border-white/50 shadow-[0_24px_80px_rgba(27,21,16,0.06)] rounded-[32px] overflow-hidden px-8 py-10 md:px-12 md:py-12 relative">
+                {/* Minimalist, Clean Luxury Box Container */}
+                <div className="bg-white border border-[#EBE8E2] rounded-2xl shadow-[0_4px_30px_rgba(26,21,16,0.015)] p-8 md:p-10 relative">
                     
-                    {/* Golden Brand Accent Line */}
-                    <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-[#C4A77D] via-[#8B7355] to-[#C4A77D]" />
-
-                    {/* Logo/Crest Header */}
-                    <div className="text-center space-y-4 mb-8">
-                        <motion.div 
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.2, duration: 0.5 }}
-                            className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#C4A77D]/30 bg-[#F5F2EB]/80 text-[#8B7355] shadow-inner relative group"
-                        >
-                            <span className="absolute inset-0 rounded-full border border-dashed border-[#C4A77D]/20 animate-spin" style={{ animationDuration: '20s' }}></span>
-                            <Star className="h-6 w-6 fill-[#C4A77D]/10 stroke-[#8B7355] transition-transform duration-700 group-hover:rotate-180" />
-                        </motion.div>
-                        
+                    {/* Minimal Brand Title */}
+                    <div className="text-center space-y-3 mb-8">
                         <div className="space-y-1">
-                            <h1 className="text-sm uppercase tracking-[0.25em] font-bold text-[#8B7355]/80">
+                            <h1 className="text-[11px] uppercase tracking-[0.35em] font-medium text-[#8F8C84]">
                                 Linen Saree
                             </h1>
-                            <h2 className="text-3xl font-serif font-semibold text-[#1A1510] tracking-wide">
-                                Gateway Control
+                            <h2 className="text-2xl font-serif font-light text-[#1A1A1A] tracking-normal">
+                                Administrative Gate
                             </h2>
                         </div>
                         
-                        <p className="text-xs text-[#8B7355]/70 max-w-[320px] mx-auto leading-relaxed">
+                        <p className="text-[11px] text-[#8F8C84] leading-relaxed max-w-[280px] mx-auto">
                             {step === "email" 
-                                ? "Authenticate administrative session with a secure dynamic key" 
-                                : "Please verify the 6-digit access key dispatched to your inbox"}
+                                ? "Enter your email credentials below to request access." 
+                                : "A 6-digit dynamic key has been dispatched to your inbox."}
                         </p>
                     </div>
 
-                    {/* Animated Form Area */}
+                    {/* Simple Error Banner */}
                     <AnimatePresence mode="wait">
                         {error && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="bg-[#DF5B5B]/5 text-[#DF5B5B] text-xs font-semibold p-4 rounded-xl border border-[#DF5B5B]/10 mb-6 text-center"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="bg-[#DF5B5B]/5 text-[#DF5B5B] text-[11px] p-3 rounded-lg border border-[#DF5B5B]/10 mb-6 text-center font-medium"
                             >
                                 {error}
                             </motion.div>
                         )}
                     </AnimatePresence>
 
+                    {/* Clean Static Forms */}
                     <AnimatePresence mode="wait">
                         {step === "email" ? (
                             /* ================== Step 1: Email Form ================== */
                             <motion.form 
                                 key="email-form"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
-                                transition={{ duration: 0.4, ease: "easeInOut" }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
                                 onSubmit={handleSendOTP} 
                                 className="space-y-6"
                             >
-                                <div className="space-y-2">
-                                    <Label htmlFor="email" className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8B7355]/80 block px-1">
-                                        Administrative Credentials
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="email" className="text-[9px] uppercase tracking-[0.2em] font-semibold text-[#8F8C84] block px-0.5">
+                                        Email Address
                                     </Label>
-                                    <div className="relative group">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8B7355]/50 group-focus-within:text-[#8B7355] transition-colors" />
+                                    <div className="relative">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#8F8C84]/60" />
                                         <Input
                                             id="email"
                                             type="email"
                                             placeholder="admin@linensaree.com"
-                                            className="pl-11 pr-4 h-13 rounded-xl border-[#8B7355]/15 bg-white/50 hover:border-[#8B7355]/40 focus:border-[#8B7355] focus:ring-4 focus:ring-[#8B7355]/5 transition-all text-sm font-sans"
+                                            className="pl-10 pr-4 h-12 rounded-lg border-[#E5E2DC] bg-white hover:border-[#8F8C84]/60 focus:border-[#1A1A1A] focus:ring-0 focus-visible:ring-0 transition-colors text-sm font-sans"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             required
@@ -279,19 +261,19 @@ export default function AdminAuthPage() {
                                 </div>
                                 
                                 <Button 
-                                    className="w-full h-13 rounded-xl bg-gradient-to-r from-[#8B7355] via-[#C4A77D] to-[#8B7355] hover:opacity-95 text-white font-medium tracking-[0.15em] text-xs uppercase transition-all duration-300 shadow-[0_8px_30px_rgba(139,115,85,0.2)] flex items-center justify-center gap-2 group cursor-pointer hover:shadow-[0_12px_35px_rgba(139,115,85,0.35)] hover:-translate-y-0.5 active:translate-y-0" 
+                                    className="w-full h-12 rounded-lg bg-[#1A1A1A] hover:bg-[#2D2D2D] text-white font-medium tracking-[0.2em] text-[10px] uppercase transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm active:scale-[0.99]" 
                                     type="submit" 
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                                            Verifying Credentials...
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                                            Requesting Access...
                                         </>
                                     ) : (
                                         <>
                                             Request Access Key
-                                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                            <ArrowRight className="h-3.5 w-3.5" />
                                         </>
                                     )}
                                 </Button>
@@ -300,16 +282,16 @@ export default function AdminAuthPage() {
                             /* ================== Step 2: OTP Form ================== */
                             <motion.form 
                                 key="otp-form"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.4, ease: "easeInOut" }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
                                 onSubmit={handleVerifyOTP} 
                                 className="space-y-6"
                             >
-                                <div className="space-y-4 text-center">
-                                    <Label className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8B7355]/80 block px-1">
-                                        Verification Keycard
+                                <div className="space-y-3 text-center">
+                                    <Label className="text-[9px] uppercase tracking-[0.2em] font-semibold text-[#8F8C84] block">
+                                        Verification Code
                                     </Label>
                                     <div className="flex justify-between gap-2 max-w-xs mx-auto">
                                         {otp.map((digit, idx) => (
@@ -320,7 +302,7 @@ export default function AdminAuthPage() {
                                                 pattern="\d*"
                                                 inputMode="numeric"
                                                 ref={el => { otpRefs.current[idx] = el }}
-                                                className="w-11 h-14 text-center text-2xl font-serif font-bold border border-[#8B7355]/15 rounded-xl bg-white/50 focus:border-[#8B7355] focus:ring-4 focus:ring-[#8B7355]/5 focus:outline-none transition-all"
+                                                className="w-11 h-12 text-center text-xl font-sans font-light border border-[#E5E2DC] rounded-lg bg-white focus:border-[#1A1A1A] focus:ring-0 focus:outline-none transition-colors"
                                                 value={digit}
                                                 onChange={e => handleOtpChange(idx, e.target.value)}
                                                 onKeyDown={e => handleOtpKeyDown(idx, e)}
@@ -329,47 +311,47 @@ export default function AdminAuthPage() {
                                             />
                                         ))}
                                     </div>
-                                    <p className="text-xs text-[#8B7355]/70 mt-2 font-sans">
-                                        Keycard sent to <strong className="text-[#1A1510] font-medium">{email}</strong>
+                                    <p className="text-[11px] text-[#8F8C84] mt-2 font-sans">
+                                        Sent to <strong className="text-[#1A1A1A] font-medium">{email}</strong>
                                     </p>
                                 </div>
 
                                 <Button 
-                                    className="w-full h-13 rounded-xl bg-gradient-to-r from-[#8B7355] via-[#C4A77D] to-[#8B7355] hover:opacity-95 text-white font-medium tracking-[0.15em] text-xs uppercase transition-all duration-300 shadow-[0_8px_30px_rgba(139,115,85,0.2)] flex items-center justify-center gap-2 cursor-pointer hover:shadow-[0_12px_35px_rgba(139,115,85,0.35)] hover:-translate-y-0.5 active:translate-y-0" 
+                                    className="w-full h-12 rounded-lg bg-[#1A1A1A] hover:bg-[#2D2D2D] text-white font-medium tracking-[0.2em] text-[10px] uppercase transition-all duration-200 flex items-center justify-center cursor-pointer shadow-sm active:scale-[0.99]" 
                                     type="submit" 
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                                            Authorizing Entry...
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                                            Verifying Key...
                                         </>
                                     ) : (
                                         <>
-                                            Confirm Verification Code
+                                            Verify Access Key
                                         </>
                                     )}
                                 </Button>
 
                                 {/* Back and Resend Options */}
-                                <div className="flex items-center justify-between border-t border-[#8B7355]/10 pt-5 text-sm mt-4">
+                                <div className="flex items-center justify-between border-t border-[#F0EDE8] pt-4 text-xs mt-4">
                                     <button
                                         type="button"
                                         onClick={() => setStep("email")}
-                                        className="flex items-center gap-1.5 text-[#8B7355]/60 hover:text-[#8B7355] transition-colors text-xs font-semibold tracking-wider uppercase cursor-pointer"
+                                        className="flex items-center gap-1 text-[#8F8C84] hover:text-[#1A1A1A] transition-colors text-[10px] font-medium tracking-wider uppercase cursor-pointer"
                                         disabled={isLoading}
                                     >
-                                        <ArrowLeft className="h-3.5 w-3.5" />
+                                        <ArrowLeft className="h-3 w-3" />
                                         Modify Email
                                     </button>
                                     
                                     <button
                                         type="button"
                                         onClick={handleResend}
-                                        className={`font-semibold text-xs tracking-wider uppercase transition-colors cursor-pointer ${
+                                        className={`font-semibold text-[10px] tracking-wider uppercase transition-colors cursor-pointer ${
                                             resendCooldown > 0 || isLoading
-                                                ? "text-[#8B7355]/30 cursor-not-allowed"
-                                                : "text-[#8B7355] hover:text-[#725E45] underline decoration-dashed"
+                                                ? "text-[#8F8C84]/40 cursor-not-allowed"
+                                                : "text-[#8F8C84] hover:text-[#1A1A1A] underline decoration-dotted"
                                         }`}
                                         disabled={resendCooldown > 0 || isLoading}
                                     >
@@ -381,14 +363,15 @@ export default function AdminAuthPage() {
                     </AnimatePresence>
                 </div>
 
-                {/* Elegant Footer Area */}
+                {/* Back Link */}
                 <div className="mt-8 text-center">
-                    <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-[#8B7355]/70 hover:text-[#8B7355] transition-colors tracking-widest uppercase font-semibold">
-                        Return to Public Storefront
+                    <Link href="/" className="inline-flex items-center gap-1 text-[10px] text-[#8F8C84] hover:text-[#1A1A1A] transition-colors tracking-widest uppercase font-semibold">
+                        Return to Storefront
                     </Link>
                 </div>
             </motion.div>
         </div>
     )
 }
+
 
