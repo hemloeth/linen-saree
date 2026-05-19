@@ -10,8 +10,8 @@ import { API_BASE_URL } from "./api";
 export function resolveMediaUrl(path: string | null | undefined, fallback = "/placeholder.svg"): string {
     if (!path) return fallback;
 
-    // If it's already a full URL or a base64 data URL, return it
-    if (path.startsWith("http") || path.startsWith("data:")) {
+    // If it's already a full URL, a base64 data URL, or a local blob URL, return it
+    if (path.startsWith("http") || path.startsWith("data:") || path.startsWith("blob:")) {
         return path;
     }
 
