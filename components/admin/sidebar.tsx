@@ -18,7 +18,7 @@ const sidebarSections = [
         items: [
             {
                 title: "Dashboard",
-                href: "/admin",
+                href: "/admin/dashboard",
                 icon: LayoutDashboard,
             },
             {
@@ -101,7 +101,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     const sidebarContent = (
         <>
             <div className="flex h-16 items-center justify-between border-b px-6">
-                <Link href="/admin" className="flex items-center gap-2 font-semibold" onClick={onClose}>
+                <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold" onClick={onClose}>
                     <span className="text-xl font-serif text-primary">Linen Saree Admin</span>
                 </Link>
                 <Button
@@ -171,11 +171,17 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                 </nav>
             </div>
             <div className="mt-auto border-t p-4">
-                <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                    <Link href="/admin/login">
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                    </Link>
+                <Button
+                    variant="outline"
+                    className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 hover:border-destructive/30 transition-colors"
+                    onClick={() => {
+                        localStorage.removeItem("auth_token")
+                        localStorage.removeItem("auth_user")
+                        window.location.href = "/admin"
+                    }}
+                >
+                    <LogOut className="h-4 w-4" />
+                    Logout
                 </Button>
             </div>
         </>
