@@ -10,103 +10,65 @@ import Image from "next/image"
 import { useParams } from "next/navigation"
 import { resolveMediaUrl } from "@/lib/media"
 
-// Sample blog data - in a real app, this would come from a CMS or API
-const blogPosts = [
-  {
-    id: 1,
-    slug: "art-of-handloom-weaving",
-    title: "The Art of Handloom Weaving: Preserving Ancient Traditions",
-    excerpt: "Discover the intricate process behind our handwoven sarees and the skilled artisans who bring these masterpieces to life.",
-    content: `
-      <p>Handloom weaving is more than just a craft—it's a living tradition that has been passed down through generations of skilled artisans. In our workshops across India, master weavers continue to create exquisite linen sarees using techniques that have remained unchanged for centuries.</p>
-      
-      <h2>The Weaving Process</h2>
-      <p>Each linen saree begins its journey with the careful selection of premium linen fibers. Our artisans examine each thread for quality, ensuring that only the finest materials make it to the loom. The process involves several intricate steps:</p>
-      
-      <h3>1. Yarn Preparation</h3>
-      <p>The linen yarn is carefully prepared and dyed using natural colors derived from plants, minerals, and other organic sources. This eco-friendly approach not only creates beautiful, lasting colors but also ensures that our sarees are gentle on the skin.</p>
-      
-      <h3>2. Setting the Loom</h3>
-      <p>Setting up the handloom is an art in itself. The warp threads are carefully arranged according to the desired pattern, with each thread positioned with mathematical precision. This process can take several hours for complex designs.</p>
-      
-      <h3>3. The Weaving</h3>
-      <p>The actual weaving is where the magic happens. Our master weavers work with incredible skill and patience, interlacing the weft threads through the warp to create intricate patterns and textures. A single saree can take anywhere from 3 to 15 days to complete, depending on the complexity of the design.</p>
-      
-      <h2>Preserving Tradition</h2>
-      <p>We are committed to preserving these ancient techniques while providing fair wages and working conditions for our artisans. Each purchase supports not just the weaver, but their entire family and community.</p>
-      
-      <p>When you wear one of our handwoven linen sarees, you're not just wearing a piece of clothing—you're carrying forward a tradition that connects you to generations of skilled craftspeople and their timeless artistry.</p>
-    `,
-    author: "Priya Sharma",
-    date: "2024-01-15",
-    category: "Craftsmanship",
-    image: "/images/handloom-saree.jpg",
-    readTime: "5 min read",
-    tags: ["handloom", "weaving", "artisans", "tradition"]
-  },
-  {
-    id: 2,
-    slug: "styling-linen-sarees-modern-woman",
-    title: "Styling Linen Sarees for the Modern Woman",
-    excerpt: "Learn how to style linen sarees for different occasions, from office wear to evening parties.",
-    content: `
-      <p>Linen sarees are incredibly versatile and can be styled for any occasion. Here's your complete guide to wearing linen sarees with confidence and elegance.</p>
-      
-      <h2>Office Wear</h2>
-      <p>For professional settings, choose linen sarees in solid colors or subtle patterns. Pair with a well-fitted blouse and minimal jewelry. A structured blazer can add a contemporary touch while maintaining professionalism.</p>
-      
-      <h2>Casual Outings</h2>
-      <p>Embrace the relaxed nature of linen for casual wear. Opt for lighter colors and comfortable draping styles. Add a denim jacket or cotton shrug for a fusion look that's perfect for brunches or shopping trips.</p>
-      
-      <h2>Evening Events</h2>
-      <p>Transform your linen saree for evening wear with the right accessories. Choose sarees with metallic threads or embellishments, and pair with statement jewelry and elegant footwear.</p>
-    `,
-    author: "Meera Patel",
-    date: "2024-01-10",
-    category: "Fashion",
-    image: "/images/casual-saree.jpg",
-    readTime: "4 min read",
-    tags: ["styling", "fashion", "modern", "occasions"]
-  }
-  // Add more posts as needed
-]
-
-const relatedPosts = [
-  {
-    id: 3,
-    slug: "sustainable-fashion-linen-sarees",
-    title: "Sustainable Fashion: Why Linen Sarees are the Future",
-    image: "/images/designer-saree.jpg",
-    category: "Sustainability"
-  },
-  {
-    id: 4,
-    slug: "care-guide-linen-sarees",
-    title: "Complete Care Guide for Your Linen Sarees",
-    image: "/images/festive-saree.jpg",
-    category: "Care Tips"
-  },
-  {
-    id: 5,
-    slug: "history-of-linen-in-indian-textiles",
-    title: "The Rich History of Linen in Indian Textiles",
-    image: "/images/bridal-saree.jpg",
-    category: "History"
-  }
-]
-
 export default function BlogPostPage() {
   const params = useParams()
   const [post, setPost] = useState<any>(null)
+  const [relatedPosts, setRelatedPosts] = useState<any[]>([])
   const [isLiked, setIsLiked] = useState(false)
   const [likes, setLikes] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Find the post by slug
-    const foundPost = blogPosts.find(p => p.slug === params.slug)
-    if (foundPost) {
-      setPost(foundPost)
-      setLikes(Math.floor(Math.random() * 100) + 20) // Random likes for demo
+    const fetchBlog = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'
+        const id = params.slug
+        
+        // Fetch all blogs since the /:id endpoint might not be deployed yet
+        const response = await fetch(`${apiUrl}/api/blog/allblogs`)
+        const data = await response.json()
+        
+        if (data.success && data.blogs) {
+          const b = data.blogs.find((blog: any) => blog._id === id)
+          
+          if (b) {
+            const mappedPost = {
+              id: b._id,
+              slug: b._id,
+              title: b.title,
+              excerpt: b.description ? b.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '',
+              content: b.description,
+              author: "Linen Saree Team",
+              date: b.createdAt || new Date().toISOString(),
+              category: "Fashion",
+              image: b.image || "/images/placeholder.jpg",
+              readTime: "5 min read",
+              tags: ["saree", "fashion", "linen"]
+            }
+            setPost(mappedPost)
+            setLikes(Math.floor(Math.random() * 100) + 20) // Random likes for demo
+          }
+
+          // Related posts
+          const others = data.blogs.filter((x: any) => x._id !== id).slice(0, 3)
+          setRelatedPosts(others.map((blog: any) => ({
+            id: blog._id,
+            slug: blog._id,
+            title: blog.title,
+            image: blog.image || "/images/placeholder.jpg",
+            category: "Fashion"
+          })))
+        }
+
+      } catch (error) {
+        console.error("Error fetching blog:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (params.slug) {
+        fetchBlog()
     }
   }, [params.slug])
 
@@ -167,14 +129,12 @@ export default function BlogPostPage() {
         </div>
 
         {/* Hero Image */}
-        <div className="relative aspect-[21/9] mb-8 overflow-hidden">
-          <Image
+        <div className="w-full mb-8">
+          <img
             src={resolveMediaUrl(post.image)}
             alt={post.title}
-            fill
-            className="object-cover"
+            className="w-full h-auto rounded-2xl shadow-sm"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         </div>
 
         {/* Article Content */}
@@ -285,7 +245,7 @@ export default function BlogPostPage() {
                         src={resolveMediaUrl(relatedPost.image)}
                         alt={relatedPost.title}
                         fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>
                     <span className="inline-block px-2 py-1 bg-muted text-muted-foreground text-xs font-medium rounded mb-2">

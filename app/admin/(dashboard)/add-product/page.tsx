@@ -487,8 +487,10 @@ export default function AddProductPage() {
                                         <div className="flex flex-col items-center gap-2 w-full">
                                             <video
                                                 src={resolveMediaUrl(videoFile)}
-                                                className="w-full max-h-60 rounded-lg object-cover"
-                                                muted
+                                                className="w-full max-h-[300px] rounded-lg object-contain bg-black/90 border border-border/50 shadow-inner"
+                                                controls
+                                                controlsList="nodownload"
+                                                preload="metadata"
                                             />
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs text-green-600 font-semibold">Video uploaded</span>

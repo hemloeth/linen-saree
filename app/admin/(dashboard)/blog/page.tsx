@@ -10,6 +10,8 @@ import { useBlog } from "@/context/blog-context"
 import { Trash2 } from "lucide-react"
 import { resolveMediaUrl } from "@/lib/media"
 
+import { RichTextEditor } from "@/components/admin/rich-text-editor"
+
 function BlogPageContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -72,63 +74,57 @@ function BlogPageContent() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-6xl mx-auto">
             <div className="flex items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight font-serif text-primary">Blog</h2>
                     <p className="text-muted-foreground">
-                        Create blog entries with a title, long description and featured image from your media library.
+                        Create blog entries with a title, rich-text description and featured image.
                     </p>
                 </div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base">Add Blog Post</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="grid gap-6 md:grid-cols-2">
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="blog-title">Title</Label>
-                                <Input
-                                    id="blog-title"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="e.g. Styling Linen Sarees for Summer"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="blog-description">Long Description</Label>
-                                <textarea
-                                    id="blog-description"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="Write the main content or a detailed summary for this blog post. HTML tags supported."
-                                    className="w-full min-h-[140px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
-                                    required
-                                />
-                            </div>
-                            <Button type="submit" className="mt-2 w-full md:w-auto" disabled={loading}>
-                                {loading ? "Saving..." : "Save Blog Post"}
-                            </Button>
+            <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[1fr_300px] items-start">
+                <Card className="order-2 xl:order-1">
+                    <CardHeader>
+                        <CardTitle className="text-base">Blog Content</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="blog-title" className="text-sm font-bold">Title</Label>
+                            <Input
+                                id="blog-title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="e.g. Styling Linen Sarees for Summer"
+                                className="h-12 text-lg font-serif"
+                                required
+                            />
                         </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="blog-description" className="text-sm font-bold">Content</Label>
+                            <RichTextEditor 
+                                value={description} 
+                                onChange={setDescription} 
+                                placeholder="Write your blog post here..." 
+                            />
+                        </div>
+                        <Button type="submit" size="lg" className="mt-4 w-full md:w-auto font-bold" disabled={loading}>
+                            {loading ? "Publishing..." : "Publish Blog Post"}
+                        </Button>
+                    </CardContent>
+                </Card>
 
-                        <div className="space-y-3">
-                            <Label>Featured Image</Label>
-                            <p className="text-xs text-muted-foreground">
-                                Choose an image from your existing product media.
+                <Card className="order-1 xl:order-2 bg-muted/5">
+                    <CardHeader>
+                        <CardTitle className="text-base">Featured Image</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Choose an image from your existing product media to be used as the blog post thumbnail.
                             </p>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full md:w-auto"
-                                onClick={handleOpenMedia}
-                            >
-                                Open Media Library
-                            </Button>
-                            <div className="mt-3 relative h-40 w-full overflow-hidden rounded-md border bg-muted flex items-center justify-center">
+                            <div className="relative aspect-video w-full overflow-hidden rounded-xl border-2 border-dashed bg-muted flex items-center justify-center transition-all">
                                 {image ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img
@@ -137,15 +133,23 @@ function BlogPageContent() {
                                         className="h-full w-full object-cover"
                                     />
                                 ) : (
-                                    <span className="text-xs text-muted-foreground">
-                                        No image selected yet
+                                    <span className="text-xs text-muted-foreground font-medium">
+                                        No image selected
                                     </span>
                                 )}
                             </div>
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                className="w-full font-bold shadow-sm"
+                                onClick={handleOpenMedia}
+                            >
+                                {image ? "Change Media" : "Open Media Library"}
+                            </Button>
                         </div>
-                    </form>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </form>
 
             <div className="pt-8">
                 <h3 className="text-xl font-bold font-serif mb-4">Published Blogs</h3>
@@ -171,9 +175,10 @@ function BlogPageContent() {
                                     <CardTitle className="line-clamp-2 text-lg">{blog.title}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="p-4 pt-0 flex-1">
-                                    <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                                        {blog.description}
-                                    </p>
+                                    <div 
+                                        className="text-sm text-muted-foreground line-clamp-3 leading-relaxed prose prose-sm prose-p:my-0"
+                                        dangerouslySetInnerHTML={{ __html: blog.description }}
+                                    />
                                 </CardContent>
                                 <CardFooter className="p-4 border-t bg-muted/20 gap-2">
                                     <Button

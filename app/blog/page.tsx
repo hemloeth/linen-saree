@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -9,87 +9,60 @@ import Link from "next/link"
 import Image from "next/image"
 import { resolveMediaUrl } from "@/lib/media"
 
-// Sample blog data - in a real app, this would come from a CMS or API
-const blogPosts = [
-  {
-    id: 1,
-    slug: "art-of-handloom-weaving",
-    title: "The Art of Handloom Weaving: Preserving Ancient Traditions",
-    excerpt: "Discover the intricate process behind our handwoven sarees and the skilled artisans who bring these masterpieces to life.",
-    content: "Full article content here...",
-    author: "Priya Sharma",
-    date: "2024-01-15",
-    category: "Craftsmanship",
-    image: "/images/handloom-saree.jpg",
-    featured: true
-  },
-  {
-    id: 2,
-    slug: "styling-linen-sarees-modern-woman",
-    title: "Styling Linen Sarees for the Modern Woman",
-    excerpt: "Learn how to style linen sarees for different occasions, from office wear to evening parties.",
-    content: "Full article content here...",
-    author: "Meera Patel",
-    date: "2024-01-10",
-    category: "Fashion",
-    image: "/images/casual-saree.jpg",
-    featured: false
-  },
-  {
-    id: 3,
-    slug: "sustainable-fashion-linen-sarees",
-    title: "Sustainable Fashion: Why Linen Sarees are the Future",
-    excerpt: "Explore how linen sarees contribute to sustainable fashion and eco-friendly clothing choices.",
-    content: "Full article content here...",
-    author: "Anjali Gupta",
-    date: "2024-01-05",
-    category: "Sustainability",
-    image: "/images/designer-saree.jpg",
-    featured: true
-  },
-  {
-    id: 4,
-    slug: "care-guide-linen-sarees",
-    title: "Complete Care Guide for Your Linen Sarees",
-    excerpt: "Essential tips to maintain the beauty and longevity of your precious linen sarees.",
-    content: "Full article content here...",
-    author: "Kavya Reddy",
-    date: "2024-01-01",
-    category: "Care Tips",
-    image: "/images/festive-saree.jpg",
-    featured: false
-  },
-  {
-    id: 5,
-    slug: "history-of-linen-in-indian-textiles",
-    title: "The Rich History of Linen in Indian Textiles",
-    excerpt: "Journey through time to understand how linen became an integral part of Indian textile heritage.",
-    content: "Full article content here...",
-    author: "Dr. Sunita Iyer",
-    date: "2023-12-28",
-    category: "History",
-    image: "/images/bridal-saree.jpg",
-    featured: false
-  },
-  {
-    id: 6,
-    slug: "choosing-perfect-linen-saree",
-    title: "How to Choose the Perfect Linen Saree for Your Body Type",
-    excerpt: "Expert advice on selecting linen sarees that flatter your figure and enhance your natural beauty.",
-    content: "Full article content here...",
-    author: "Ritu Malhotra",
-    date: "2023-12-25",
-    category: "Fashion",
-    image: "/images/celebrity-look.jpg",
-    featured: false
-  }
-]
+interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  date: string;
+  category: string;
+  image: string;
+  featured: boolean;
+}
 
 const categories = ["All", "Fashion", "Craftsmanship", "Sustainability", "Care Tips", "History"]
 
 export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [searchQuery, setSearchQuery] = useState("")
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'
+        const response = await fetch(`${apiUrl}/api/blog/allblogs`)
+        const data = await response.json()
+        
+        if (data.success && data.blogs) {
+          // Map backend data to the frontend shape
+          const mappedBlogs: BlogPost[] = data.blogs.map((b: any, index: number) => ({
+            id: b._id,
+            slug: b._id, // Using ID as slug for now since there's no backend slug field
+            title: b.title,
+            // Strip HTML for excerpt
+            excerpt: b.description ? b.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : 'Read our latest blog post...',
+            content: b.description,
+            author: "Linen Saree Team",
+            date: b.createdAt || new Date().toISOString(),
+            category: "Fashion", // Default category since it's not in the backend schema
+            image: b.image || "/images/placeholder.jpg",
+            featured: index === 0 // Make the newest post featured
+          }))
+          setBlogPosts(mappedBlogs)
+        }
+      } catch (error) {
+        console.error("Error fetching blogs:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBlogs()
+  }, [])
 
   const filteredPosts = blogPosts.filter(post => {
     const matchesCategory = selectedCategory === "All" || post.category === selectedCategory
@@ -154,63 +127,13 @@ export default function BlogPage() {
           </div>
         </div>
 
-        {/* Featured Posts */}
-        {selectedCategory === "All" && searchQuery === "" && featuredPosts.length > 0 && (
-          <div className="mb-16">
-            <h2 className="font-serif text-3xl lg:text-4xl font-light mb-8">Featured Articles</h2>
-            <div className="grid lg:grid-cols-2 gap-8">
-              {featuredPosts.slice(0, 2).map((post) => (
-                <article key={post.id} className="group">
-                  <Link href={`/blog/${post.slug}`}>
-                    <div className="relative aspect-[16/10] mb-6 overflow-hidden rounded-2xl">
-                      <Image
-                        src={resolveMediaUrl(post.image)}
-                        alt={post.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <span className="inline-block px-3 py-1 bg-primary text-primary-foreground text-sm font-medium rounded-full mb-3">
-                          {post.category}
-                        </span>
-                        <h3 className="font-serif text-xl lg:text-2xl font-medium text-white mb-2 group-hover:text-primary-foreground transition-colors">
-                          {post.title}
-                        </h3>
-                      </div>
-                    </div>
-                  </Link>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                    <div className="flex items-center gap-1">
-                      <User className="w-4 h-4" />
-                      <span>{post.author}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(post.date).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    {post.excerpt}
-                  </p>
-                  <Link 
-                    href={`/blog/${post.slug}`}
-                    className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-medium transition-colors"
-                  >
-                    Read More
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </article>
-              ))}
-            </div>
+        {/* Posts Grid */}
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="font-serif text-2xl lg:text-3xl font-light">
+              {filteredPosts.length} Articles
+            </h2>
           </div>
-        )}
-
-        {/* Regular Posts */}
-        <div>
-          <h2 className="font-serif text-3xl lg:text-4xl font-light mb-8">
-            {selectedCategory === "All" ? "Latest Articles" : `${selectedCategory} Articles`}
-          </h2>
           
           {filteredPosts.length === 0 ? (
             <div className="text-center py-16">
@@ -219,48 +142,47 @@ export default function BlogPage() {
               </p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {(selectedCategory === "All" && searchQuery === "" ? regularPosts : filteredPosts).map((post) => (
-                <article key={post.id} className="group">
-                  <Link href={`/blog/${post.slug}`}>
-                    <div className="relative aspect-[4/3] mb-4 overflow-hidden rounded-xl">
-                      <Image
-                        src={resolveMediaUrl(post.image)}
-                        alt={post.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+              {(selectedCategory === "All" && searchQuery === "" ? blogPosts : filteredPosts).map((post) => (
+                <article key={post.id} className="group bg-card hover:bg-muted/10 rounded-2xl overflow-hidden transition-all duration-300 border border-border/50 hover:shadow-md hover:border-border">
+                  <div className="flex flex-col sm:flex-row h-full">
+                    {/* Image on left (or top on mobile) */}
+                    <div className="sm:w-2/5 relative aspect-video sm:aspect-auto sm:h-full min-h-[320px] overflow-hidden shrink-0">
+                      <Link href={`/blog/${post.slug}`}>
+                        <Image
+                          src={resolveMediaUrl(post.image)}
+                          alt={post.title}
+                          fill
+                          className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </Link>
                     </div>
-                  </Link>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                    <span className="px-2 py-1 bg-muted text-muted-foreground text-xs font-medium rounded">
-                      {post.category}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{new Date(post.date).toLocaleDateString()}</span>
+                    
+                    {/* Content on right (or bottom on mobile) */}
+                    <div className="sm:w-3/5 p-6 md:p-8 flex flex-col justify-center">
+                      <div className="flex items-center gap-2 text-xs font-bold text-primary mb-3 uppercase tracking-wider">
+                        <span>{post.category}</span>
+                        <span className="text-muted-foreground/40">/</span>
+                        <span className="text-muted-foreground">{new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric'})}</span>
+                      </div>
+                      
+                      <Link href={`/blog/${post.slug}`}>
+                        <h3 className="font-serif text-xl lg:text-2xl font-medium mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                          {post.title}
+                        </h3>
+                      </Link>
+                      
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-6 line-clamp-3">
+                        {post.excerpt}
+                      </p>
+                      
+                      <div className="flex items-center gap-3 mt-auto pt-4 border-t border-border/50">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                           <User className="w-4 h-4 text-primary" />
+                        </div>
+                        <span className="text-sm font-medium text-foreground">{post.author}</span>
+                      </div>
                     </div>
-                  </div>
-                  <Link href={`/blog/${post.slug}`}>
-                    <h3 className="font-serif text-xl font-medium mb-3 group-hover:text-primary transition-colors">
-                      {post.title}
-                    </h3>
-                  </Link>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <User className="w-3 h-3" />
-                      <span>{post.author}</span>
-                    </div>
-                    <Link 
-                      href={`/blog/${post.slug}`}
-                      className="inline-flex items-center gap-1 text-primary hover:text-primary/80 text-sm font-medium transition-colors"
-                    >
-                      Read More
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
                   </div>
                 </article>
               ))}
