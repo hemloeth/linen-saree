@@ -24,12 +24,11 @@ export default function AdminLayout({
 
     useEffect(() => {
         const verifyAdminSession = async () => {
-            const token = localStorage.getItem("auth_token")
             const userStr = localStorage.getItem("auth_user")
 
             // 1. Check local credentials existence
-            if (!token || !userStr) {
-                console.log("[Admin Guard] Missing authorization tokens, redirecting to login.");
+            if (!userStr) {
+                console.log("[Admin Guard] Missing administrator account, redirecting to login.");
                 router.push("/admin")
                 return
             }
@@ -52,7 +51,6 @@ export default function AdminLayout({
                 console.error("[Admin Guard Error]:", err)
                 
                 // Clear potentially compromised/expired storage
-                localStorage.removeItem("auth_token")
                 localStorage.removeItem("auth_user")
                 
                 setAuthError(err.message || "Session expired. Please log in again.")

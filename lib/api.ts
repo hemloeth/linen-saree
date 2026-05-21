@@ -29,23 +29,12 @@ export class ApiError extends Error {
     }
 }
 
-// Get auth token from localStorage (client-side only)
-function getAuthToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('auth_token');
-}
-
 // Build headers
 function buildHeaders(customHeaders?: Record<string, string>, isFormData = false): Record<string, string> {
     const headers: Record<string, string> = {};
 
     if (!isFormData) {
         headers['Content-Type'] = 'application/json';
-    }
-
-    const token = getAuthToken();
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
     }
 
     if (customHeaders) {
@@ -63,6 +52,7 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout: numb
     try {
         const response = await fetch(url, {
             ...options,
+            credentials: 'include',
             signal: controller.signal,
         });
         return response;

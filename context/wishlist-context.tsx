@@ -99,7 +99,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   // If user is already logged in on page load, fetch server wishlist
   useEffect(() => {
-    if (isAuthenticated && isHydrated && localStorage.getItem('auth_token')) {
+    if (isAuthenticated && isHydrated) {
       fetchServerWishlist()
     }
   }, [isHydrated]) // Only on initial hydration
@@ -108,7 +108,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
    * Fetch server wishlist and replace local state
    */
   const fetchServerWishlist = async () => {
-    if (!localStorage.getItem('auth_token')) return
+    if (!isAuthenticated) return
 
     try {
       const data = await apiGet('/api/wishlist')

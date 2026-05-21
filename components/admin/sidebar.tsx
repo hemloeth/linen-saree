@@ -175,7 +175,6 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                     variant="outline"
                     className="w-full justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 hover:border-destructive/30 transition-colors"
                     onClick={() => {
-                        localStorage.removeItem("auth_token")
                         localStorage.removeItem("auth_user")
                         window.location.href = "/admin"
                     }}

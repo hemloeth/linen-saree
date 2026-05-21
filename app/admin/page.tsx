@@ -29,19 +29,24 @@ export default function AdminAuthPage() {
 
     // Load any existing session on mount
     useEffect(() => {
-        const token = localStorage.getItem("auth_token")
-        const userStr = localStorage.getItem("auth_user")
-        if (token && userStr) {
-            try {
-                const user = JSON.parse(userStr)
-                if (user.role === "admin") {
-                    router.push("/admin/dashboard")
+        const verifySessionOnMount = async () => {
+            const userStr = localStorage.getItem("auth_user")
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr)
+                    if (user.role === "admin") {
+                        // Check if backend session is active
+                        const res = await apiGet<{ success: boolean }>("/api/admin-auth/verify-token")
+                        if (res.success) {
+                            router.push("/admin/dashboard")
+                        }
+                    }
+                } catch {
+                    localStorage.removeItem("auth_user")
                 }
-            } catch {
-                localStorage.removeItem("auth_token")
-                localStorage.removeItem("auth_user")
             }
         }
+        verifySessionOnMount()
     }, [router])
 
     // Countdown Timer logic
@@ -102,8 +107,7 @@ export default function AdminAuthPage() {
                 message: string
             }>("/api/admin-auth/verify-otp", { email, otp: otpCode })
 
-            if (data.success && data.token) {
-                localStorage.setItem("auth_token", data.token)
+            if (data.success) {
                 localStorage.setItem("auth_user", JSON.stringify(data.user))
                 toast.success("Authenticated successfully")
                 router.push("/admin/dashboard")

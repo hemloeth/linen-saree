@@ -116,7 +116,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // If user is already logged in on page load, fetch server cart
   useEffect(() => {
-    if (isAuthenticated && isHydrated && localStorage.getItem('auth_token')) {
+    if (isAuthenticated && isHydrated) {
       fetchServerCart()
     }
   }, [isHydrated]) // Only on initial hydration
@@ -125,7 +125,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
    * Fetch server cart and replace local state
    */
   const fetchServerCart = async () => {
-    if (!localStorage.getItem('auth_token')) return
+    if (!isAuthenticated) return
 
     try {
       const data = await apiGet('/api/cart')
