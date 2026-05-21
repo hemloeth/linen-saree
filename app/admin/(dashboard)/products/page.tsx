@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Search, AlertTriangle, Trash2, X, CheckSquare, Square, ListChecks } from "lucide-react"
+import { MoreHorizontal, Search, AlertTriangle, Trash2, X, CheckSquare, Square, ListChecks, Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useProducts } from "@/context/product-context"
 import { AdminToast, ToastItem } from "@/components/admin/admin-toast"
@@ -423,6 +423,13 @@ export default function AdminProductsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => {
+                          const slug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                          window.location.href = `/product/${slug}`;
+                        }}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Preview
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push(`/admin/edit-product/${product._id}`)}>Edit details</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget({ id: product._id, name: product.name })}>
                           Delete product

@@ -246,45 +246,36 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           {/* Product Info */}
-          <div className="lg:py-8">
-            <div className="flex items-center gap-4 mb-4">
+          <div className="lg:py-4 flex flex-col justify-center">
+            
+            {/* Header: Category & Reviews */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
               <Link
                 href={`/categories/${product.categorySlug}`}
-                className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary uppercase tracking-wider"
+                className="text-[10px] sm:text-xs font-bold text-muted-foreground hover:text-primary uppercase tracking-wider"
               >
                 {product.category}
               </Link>
+              <div className="flex items-center gap-2">
+                <StarRating rating={totalReviews > 0 ? avgRating : 0} size="sm" showRating={totalReviews > 0} />
+                <Link href="#reviews" className="text-xs text-muted-foreground hover:text-primary underline-offset-4 hover:underline">
+                  {totalReviews > 0 ? `(${totalReviews})` : "No reviews yet"}
+                </Link>
+              </div>
             </div>
 
-            <h1 className="font-serif text-lg sm:text-3xl lg:text-4xl mb-1 sm:mb-4 leading-tight">{product.name}</h1>
-
-            {/* Reviews */}
-            <div className="flex items-center gap-3 mb-6">
-              <StarRating
-                rating={totalReviews > 0 ? avgRating : 0}
-                size="md"
-                showRating={totalReviews > 0}
-              />
-              <Link
-                href="#reviews"
-                className="text-sm text-muted-foreground hover:text-primary underline decoration-muted-foreground/30 underline-offset-4"
-              >
-                {totalReviews > 0
-                  ? `(${totalReviews} review${totalReviews !== 1 ? 's' : ''})`
-                  : "Be the first to review"
-                }
-              </Link>
-            </div>
+            {/* Title */}
+            <h1 className="font-serif text-xl sm:text-3xl lg:text-4xl mb-4 leading-tight">{product.name}</h1>
 
             {/* Price */}
-            <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
-              <span className="text-xl sm:text-3xl font-bold">₹{product.price.toLocaleString('en-IN')}</span>
+            <div className="flex items-baseline gap-3 mb-4">
+              <span className="text-2xl sm:text-3xl font-bold">₹{product.price.toLocaleString('en-IN')}</span>
               {product.originalPrice > product.price && (
                 <>
-                  <span className="text-xl text-muted-foreground line-through">
+                  <span className="text-sm sm:text-base text-muted-foreground line-through">
                     ₹{product.originalPrice.toLocaleString('en-IN')}
                   </span>
-                  <span className="bg-red-600 text-white text-[10px] sm:text-xs px-2 py-1 font-bold rounded-full shadow-md animate-pulse">
+                  <span className="bg-red-600 text-white text-[10px] sm:text-xs px-2 py-0.5 font-bold rounded-sm shadow-sm animate-pulse">
                     {discount}% OFF
                   </span>
                 </>
@@ -296,82 +287,78 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               )}
             </div>
 
-            {/* Description */}
-            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-6 sm:mb-8">
+            {/* Description (Clamped to save space) */}
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6 line-clamp-3">
               {product.description}
             </p>
 
-            {/* Color */}
-            <div className="mb-6">
-              <p className="text-sm font-medium mb-2">Color: <span className="text-muted-foreground">{product.color}</span></p>
-            </div>
-
-            {/* Quantity */}
-            <div className="mb-4 sm:mb-6">
-              <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <p className="text-xs sm:text-sm font-medium">Quantity</p>
-                {!outOfStock && availableStock < 10 && availableStock > 0 && (
-                  <p className="text-xs text-red-500 font-medium">Only {availableStock} left in stock</p>
-                )}
+            {/* Color & Quantity Row */}
+            <div className="flex flex-wrap items-end gap-6 mb-6">
+              <div>
+                <p className="text-xs sm:text-sm font-medium mb-2 text-muted-foreground">Color</p>
+                <div className="text-sm font-medium px-4 py-2 border border-border rounded-md bg-muted/30">
+                  {product.color}
+                </div>
               </div>
-              <div className="flex items-center border border-border w-fit opacity-100 disabled:opacity-50">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={outOfStock}
-                  className="p-2 sm:p-3 hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
-                <span className="px-4 sm:px-6 text-base sm:text-lg font-medium">{outOfStock ? 0 : quantity}</span>
-                <button
-                  onClick={() => setQuantity(Math.min(availableStock, quantity + 1))}
-                  disabled={outOfStock || quantity >= availableStock}
-                  className="p-2 sm:p-3 hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
+
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Quantity</p>
+                  {!outOfStock && availableStock < 10 && availableStock > 0 && (
+                    <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Only {availableStock} left</span>
+                  )}
+                </div>
+                <div className="flex items-center border border-border rounded-md overflow-hidden bg-background">
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={outOfStock} className="p-2.5 hover:bg-muted transition-colors disabled:opacity-50">
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-12 text-center text-sm font-medium">{outOfStock ? 0 : quantity}</span>
+                  <button onClick={() => setQuantity(Math.min(availableStock, quantity + 1))} disabled={outOfStock || quantity >= availableStock} className="p-2.5 hover:bg-muted transition-colors disabled:opacity-50">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-3 sm:gap-4 mb-8">
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 mb-6">
+              <div className="flex flex-row gap-3">
                 {outOfStock ? (
                   <Button
                     size="lg"
                     disabled
-                    className="flex-1 w-full h-auto py-4 px-8 text-sm sm:text-base font-bold btn-premium bg-muted text-muted-foreground cursor-not-allowed"
+                    className="flex-1 w-full h-12 px-4 text-xs sm:text-sm font-bold btn-premium bg-muted text-muted-foreground cursor-not-allowed"
                   >
                     Out of Stock
                   </Button>
                 ) : (
                   <>
-                    <Link href="/checkout" className="flex-1 order-1 sm:order-2">
+                    <Link href="/checkout" className="flex-1">
                       <Button
                         size="lg"
-                        className="w-full h-auto py-4 px-8 text-sm sm:text-base font-bold btn-premium bg-primary text-white hover:bg-primary/95 group"
+                        className="w-full h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium bg-primary text-white hover:bg-primary/95 group"
                         onClick={() => addToCart(product, quantity)}
                       >
                         <div className="absolute inset-0 animate-shimmer opacity-30 pointer-events-none" />
                         <span className="relative z-10">Buy It Now</span>
-                        <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform duration-500" />
+                        <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-500" />
                       </Button>
                     </Link>
 
                     <Button
                       size="lg"
-                      className={`flex-1 order-2 sm:order-1 h-auto py-4 px-8 text-sm sm:text-base font-bold btn-premium border-2 border-primary/20 text-primary bg-transparent hover:bg-primary/5 hover:border-primary/40 ${isAdded ? "text-green-600 border-green-600/30 bg-green-50" : ""
+                      className={`flex-1 h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium border-2 border-primary/20 text-primary bg-transparent hover:bg-primary/5 hover:border-primary/40 ${isAdded ? "text-green-600 border-green-600/30 bg-green-50" : ""
                         }`}
                       onClick={handleAddToCart}
                     >
                       {isAdded ? (
                         <>
-                          <Check className="w-5 h-5 mr-2 animate-[bounceIn_0.4s_ease-out]" />
+                          <Check className="w-4 h-4 mr-1 sm:mr-2 animate-[bounceIn_0.4s_ease-out]" />
                           Added
                         </>
                       ) : (
                         <>
-                          <ShoppingBag className="w-4 h-4 mr-2" />
+                          <ShoppingBag className="w-4 h-4 mr-1 sm:mr-2" />
                           Add to Cart
                         </>
                       )}
@@ -379,25 +366,25 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   </>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-row gap-3">
                 <Button
                   size="lg"
                   variant="outline"
-                  className={`flex-1 h-16 bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 btn-premium lowercase tracking-widest font-light italic ${isWishlisted ? 'text-primary border-primary bg-primary/5' : ''}`}
+                  className={`flex-1 h-12 bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 btn-premium lowercase tracking-widest font-light italic text-xs sm:text-sm ${isWishlisted ? 'text-primary border-primary bg-primary/5' : ''}`}
                   onClick={handleWishlistClick}
                   aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  <Heart className={`w-5 h-5 mr-2 ${isWishlisted ? 'fill-primary' : ''}`} />
+                  <Heart className={`w-4 h-4 mr-2 ${isWishlisted ? 'fill-primary' : ''}`} />
                   {isWishlisted ? "wishlisted" : "Add to Wishlist"}
                 </Button>
-                <Button size="lg" variant="outline" className="w-16 h-16 flex items-center justify-center bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 rounded-sm">
-                  <Share2 className="w-5 h-5" />
+                <Button size="lg" variant="outline" className="w-12 h-12 flex shrink-0 items-center justify-center bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 rounded-sm">
+                  <Share2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
             {/* Trust Badges */}
-            <div className="py-4 sm:py-6 border-t border-b border-border mb-6 sm:mb-8">
+            <div className="py-4 border-t border-b border-border mb-6">
               <TrustBadges
                 variant="horizontal"
                 showDescription={false}
