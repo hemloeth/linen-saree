@@ -407,37 +407,37 @@ export default function AddProductPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4">
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="material" className="text-[10px] uppercase text-muted-foreground font-bold">Material</Label>
-                                        <Input id="material" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="Pure Linen" required className="h-8 text-xs" />
+                                        <Input id="material" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="e.g. Pure Linen" required className="h-8 text-xs placeholder:text-muted-foreground/60" />
                                     </div>
                                     <div className="grid gap-1.5">
-                                        <Label htmlFor="wash-care" className="text-[10px] uppercase text-muted-foreground font-bold">Wash Care</Label>
-                                        <Input id="wash-care" value={washCare} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
+                                        <Label htmlFor="wash-care" className="text-[10px] uppercase text-muted-foreground font-bold flex items-center gap-1">Wash Care <span className="text-[8px] font-normal opacity-60">(Fixed)</span></Label>
+                                        <Input id="wash-care" value={washCare} readOnly tabIndex={-1} className="h-8 text-xs bg-muted border-dashed border-muted-foreground/30 text-muted-foreground/80 cursor-not-allowed shadow-inner focus-visible:ring-0" />
                                     </div>
                                     <div className="grid gap-1.5">
                                         <Label htmlFor="color" className="text-[10px] uppercase text-muted-foreground font-bold">Color</Label>
-                                        <Input id="color" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Royal Blue" required className="h-8 text-xs" />
+                                        <Input id="color" value={color} onChange={(e) => setColor(e.target.value)} placeholder="e.g. Royal Blue" required className="h-8 text-xs placeholder:text-muted-foreground/60" />
                                     </div>
                                     <div className="grid gap-1.5">
-                                        <Label htmlFor="saree-size" className="text-[10px] uppercase text-muted-foreground font-bold">Saree Size</Label>
-                                        <Input id="saree-size" value={sareeSize} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
+                                        <Label htmlFor="saree-size" className="text-[10px] uppercase text-muted-foreground font-bold flex items-center gap-1">Saree Size <span className="text-[8px] font-normal opacity-60">(Fixed)</span></Label>
+                                        <Input id="saree-size" value={sareeSize} readOnly tabIndex={-1} className="h-8 text-xs bg-muted border-dashed border-muted-foreground/30 text-muted-foreground/80 cursor-not-allowed shadow-inner focus-visible:ring-0" />
                                     </div>
                                     <div className="grid gap-1.5">
-                                        <Label htmlFor="blouse-size" className="text-[10px] uppercase text-muted-foreground font-bold">Blouse Size</Label>
-                                        <Input id="blouse-size" value={blouseSize} disabled className="h-8 text-xs bg-muted/50 cursor-not-allowed opacity-80" />
+                                        <Label htmlFor="blouse-size" className="text-[10px] uppercase text-muted-foreground font-bold flex items-center gap-1">Blouse Size <span className="text-[8px] font-normal opacity-60">(Fixed)</span></Label>
+                                        <Input id="blouse-size" value={blouseSize} readOnly tabIndex={-1} className="h-8 text-xs bg-muted border-dashed border-muted-foreground/30 text-muted-foreground/80 cursor-not-allowed shadow-inner focus-visible:ring-0" />
                                     </div>
                                     <div className="grid gap-1.5">
-                                        <Label htmlFor="dispatch" className="text-[10px] uppercase text-muted-foreground font-bold">Dispatch</Label>
-                                        <Input id="dispatch" value={dispatch} readOnly className="h-8 text-xs bg-muted/50 cursor-not-allowed" />
+                                        <Label htmlFor="dispatch" className="text-[10px] uppercase text-muted-foreground font-bold flex items-center gap-1">Dispatch <span className="text-[8px] font-normal opacity-60">(Fixed)</span></Label>
+                                        <Input id="dispatch" value={dispatch} readOnly tabIndex={-1} className="h-8 text-xs bg-muted border-dashed border-muted-foreground/30 text-muted-foreground/80 cursor-not-allowed shadow-inner focus-visible:ring-0" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                                     <div className="grid gap-1.5">
-                                        <Label htmlFor="disclaimer" className="text-[10px] uppercase text-muted-foreground font-bold">Disclaimer</Label>
-                                        <Input id="disclaimer" value={disclaimer} readOnly className="h-8 text-xs bg-muted/50 cursor-not-allowed" />
+                                        <Label htmlFor="disclaimer" className="text-[10px] uppercase text-muted-foreground font-bold flex items-center gap-1">Disclaimer <span className="text-[8px] font-normal opacity-60">(Fixed)</span></Label>
+                                        <Input id="disclaimer" value={disclaimer} readOnly tabIndex={-1} className="h-8 text-xs bg-muted border-dashed border-muted-foreground/30 text-muted-foreground/80 cursor-not-allowed shadow-inner focus-visible:ring-0" />
                                     </div>
                                     <div className="grid gap-1.5">
-                                        <Label htmlFor="international-note" className="text-[10px] uppercase text-muted-foreground font-bold">Intl Note</Label>
-                                        <Input id="international-note" value={internationalNote} readOnly className="h-8 text-xs bg-muted/50 cursor-not-allowed" />
+                                        <Label htmlFor="international-note" className="text-[10px] uppercase text-muted-foreground font-bold flex items-center gap-1">Intl Note <span className="text-[8px] font-normal opacity-60">(Fixed)</span></Label>
+                                        <Input id="international-note" value={internationalNote} readOnly tabIndex={-1} className="h-8 text-xs bg-muted border-dashed border-muted-foreground/30 text-muted-foreground/80 cursor-not-allowed shadow-inner focus-visible:ring-0" />
                                     </div>
                                 </div>
                             </div>

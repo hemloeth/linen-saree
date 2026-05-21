@@ -50,6 +50,7 @@ export default function EditProductPage() {
     const [videoUrl, setVideoUrl] = useState("")
     const [videoFile, setVideoFile] = useState<string | null>(null)
     const [videoFileRaw, setVideoFileRaw] = useState<File | null>(null)
+    const [removeVideo, setRemoveVideo] = useState(false)
     const [color, setColor] = useState("")
     const [isOnSale, setIsOnSale] = useState(false)
     const [productCollection, setProductCollection] = useState("")
@@ -85,7 +86,7 @@ export default function EditProductPage() {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/products/${productId}`);
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/product/${productId}`);
                 const data = await res.json();
                 if (data && data.success && data.product) {
                     const product = data.product;
@@ -202,6 +203,13 @@ export default function EditProductPage() {
             formData.append("internationalNote", internationalNote)
             formData.append("isOnSale", String(isOnSale))
             formData.append("productCollection", productCollection)
+            if (removeVideo) {
+                formData.append("removeVideo", "true")
+            }
+
+            // Identify which existing gallery images were kept vs removed
+            const existingUrls = galleryImages.filter(img => !img.startsWith('blob:') && !img.startsWith('data:'));
+            formData.append("existingGalleryImages", JSON.stringify(existingUrls.map(url => ({ url }))));
 
             // Only append image files if new ones were selected
             if (mainImageFile) {
@@ -501,7 +509,12 @@ export default function EditProductPage() {
                                                 <span className="text-xs text-green-600 font-semibold">Video uploaded</span>
                                                 <button
                                                     type="button"
-                                                    onClick={(e) => { e.stopPropagation(); setVideoFile(null); setVideoFileRaw(null); }}
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        setVideoFile(null); 
+                                                        setVideoFileRaw(null); 
+                                                        setRemoveVideo(true);
+                                                    }}
                                                     className="text-xs text-destructive hover:underline"
                                                 >
                                                     Remove
