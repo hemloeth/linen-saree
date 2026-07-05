@@ -9,6 +9,8 @@ import { useWishlist } from "@/context/wishlist-context"
 import { StarRating } from "@/components/common/star-rating"
 import type { Product } from "@/lib/products"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
+import { useTransition } from "react"
 import {
   Carousel,
   CarouselContent,
@@ -18,6 +20,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 interface ProductCardProps {
   product: Product
   className?: string
@@ -62,6 +65,16 @@ export function ProductCard({ product, className }: ProductCardProps) {
     }
   }
 
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  const handleNavigate = (e: React.MouseEvent) => {
+    e.preventDefault()
+    startTransition(() => {
+      router.push(`/product/${product.slug}`)
+    })
+  }
+
   return (
     <div className={cn("group relative w-full max-w-[280px] mx-auto", className)}>
       <div className="relative w-full mb-4">
@@ -77,6 +90,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
             api.scrollTo(0)
           }}
         >
+          {isPending && (
+            <div className="absolute inset-0 z-[100] flex items-center justify-center bg-background/50 backdrop-blur-sm">
+              <LoadingSpinner size="md" />
+            </div>
+          )}
           {product.images && product.images.length > 1 ? (
             <Carousel
               className="w-full h-full group/carousel"
@@ -89,7 +107,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               <CarouselContent className="-ml-0 h-full">
                 {product.images.map((img, index) => (
                   <CarouselItem key={index} className="pl-0 basis-full">
-                    <Link href={`/product/${product.slug}`} className="block w-full">
+                    <Link href={`/product/${product.slug}`} className="block w-full" onClick={handleNavigate}>
                       <Image
                         src={img || "/placeholder.svg"}
                         alt={`${product.name} - Image ${index + 1}`}
@@ -119,7 +137,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               />
             </Carousel>
           ) : (
-            <Link href={`/product/${product.slug}`} className="block w-full">
+            <Link href={`/product/${product.slug}`} className="block w-full" onClick={handleNavigate}>
               <Image
                 src={product.image || "/placeholder.svg"}
                 alt={product.name}
@@ -161,7 +179,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
       </div >
 
-      <Link href={`/product/${product.slug}`} className="block">
+      <Link href={`/product/${product.slug}`} className="block" onClick={handleNavigate}>
         <h3 className="font-medium text-xs md:text-sm leading-tight mb-1 md:mb-2 group-hover:text-primary transition-colors line-clamp-2">
           {product.name}
         </h3>
