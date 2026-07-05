@@ -16,7 +16,7 @@ export function NewsletterSection() {
 
   return (
     <section className="py-20 lg:py-32 bg-primary text-primary-foreground">
-      <div className="max-w-[800px] mx-auto px-4 lg:px-8 text-center">
+      <div className="max-w-[800px] mx-auto px-6 lg:px-10 text-center">
         <p className="font-sans text-sm tracking-[0.3em] uppercase opacity-70 mb-4">
           Stay Connected
         </p>

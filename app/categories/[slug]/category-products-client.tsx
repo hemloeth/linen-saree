@@ -48,7 +48,7 @@ export function CategoryProductsClient({
   }
 
   return (
-    <section className="py-16 px-4 lg:px-8">
+    <section className="py-16 px-6 lg:px-10">
       <div className="max-w-[1400px] mx-auto space-y-8">
         {/* Filters */}
         <ProductFilters

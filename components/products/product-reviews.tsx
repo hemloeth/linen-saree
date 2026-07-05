@@ -95,7 +95,7 @@ export function ProductReviews({ productId, productName, className }: ProductRev
 
   return (
     <section className={cn("py-4 sm:py-8 lg:py-16", className)}>
-      <div className="max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="space-y-8">
           {isLoading ? (
             <div className="flex items-center justify-center p-8">

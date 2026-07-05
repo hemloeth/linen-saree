@@ -43,7 +43,7 @@ export default async function CollectionsPage() {
 
       {/* Collections Sub-nav */}
       <section className="bg-secondary border-b border-border py-8">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/collections"

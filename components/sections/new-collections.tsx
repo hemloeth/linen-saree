@@ -30,7 +30,7 @@ export function NewCollections() {
   const products = mappedProducts.slice(0, 8)
 
   return (
-    <section className="py-20 px-4 lg:px-8 bg-background">
+    <section className="py-20 px-6 lg:px-10 bg-background">
       <div className="max-w-[1400px] mx-auto">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">

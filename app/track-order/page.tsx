@@ -78,7 +78,7 @@ export default function TrackOrderPage() {
       <Header />
 
       <div className="relative bg-gradient-to-b from-muted/50 to-background pt-[96px] lg:pt-[104px]">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-12 lg:py-16">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-12 lg:py-16">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif text-3xl lg:text-5xl font-light mb-4">
               Order Tracking
@@ -90,7 +90,7 @@ export default function TrackOrderPage() {
         </div>
       </div>
 
-      <div className="max-w-[1000px] mx-auto px-4 lg:px-8 py-8 lg:py-12">
+      <div className="max-w-[1000px] mx-auto px-6 lg:px-10 py-8 lg:py-12">
         <div className="bg-muted/30 rounded-2xl p-8 lg:p-12 mb-8">
           <form onSubmit={handleTrackOrder} className="space-y-6">
             <div>

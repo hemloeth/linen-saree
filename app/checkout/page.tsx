@@ -305,7 +305,7 @@ export default function CheckoutPage() {
       <Header />
 
       <div className="pt-[96px] lg:pt-[104px]">
-        <section className="py-8 lg:py-12 px-4 lg:px-8">
+        <section className="py-8 lg:py-12 px-6 lg:px-10">
           <div className="max-w-[1200px] mx-auto">
             {/* Back Link */}
             <Link

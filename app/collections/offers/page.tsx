@@ -53,7 +53,7 @@ export default async function OffersCollectionPage() {
       </div>
 
       {/* Offer Banner */}
-      <section className="py-8 px-4 lg:px-8 bg-red-50">
+      <section className="py-8 px-6 lg:px-10 bg-red-50">
         <div className="max-w-[1400px] mx-auto text-center">
           <div className="inline-flex items-center gap-4 bg-red-600 text-white px-8 py-4 rounded-lg">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,7 +65,7 @@ export default async function OffersCollectionPage() {
       </section>
 
       {/* Collection Description */}
-      <section className="py-12 px-4 lg:px-8 bg-secondary">
+      <section className="py-12 px-6 lg:px-10 bg-secondary">
         <div className="max-w-[1400px] mx-auto text-center">
           <h2 className="text-3xl lg:text-4xl font-light mb-6">Special Offers</h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
@@ -77,7 +77,7 @@ export default async function OffersCollectionPage() {
       </section>
 
       {/* Products Grid */}
-      <section className="py-12 px-4 lg:px-8">
+      <section className="py-12 px-6 lg:px-10">
         <div className="max-w-[1400px] mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {offerProducts.map((product) => (

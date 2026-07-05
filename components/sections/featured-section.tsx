@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react"
 export function FeaturedSection() {
   return (
     <section className="py-20 lg:py-32 bg-secondary">
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Image */}
           <div className="relative aspect-[4/5] lg:aspect-[3/4] overflow-hidden">

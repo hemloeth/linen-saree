@@ -13,7 +13,7 @@ export default function StarTestPage() {
       <Header />
       
       <div className="pt-[96px] lg:pt-[104px]">
-        <section className="py-16 px-4 lg:px-8">
+        <section className="py-16 px-6 lg:px-10">
           <div className="max-w-[800px] mx-auto text-center">
             <h1 className="font-serif text-4xl mb-8">Interactive Star Rating Test</h1>
             

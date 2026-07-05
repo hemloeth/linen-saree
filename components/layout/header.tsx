@@ -75,7 +75,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       {/* Top Bar */}
       <div className="bg-foreground text-background overflow-hidden">
-        <div className="max-w-[1500px] mx-auto px-2 sm:px-4 lg:px-8 py-2">
+        <div className="max-w-[1500px] mx-auto px-2 sm:px-6 lg:px-10 py-2">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-4 text-center sm:text-left">
             <div className="text-[10px] sm:text-xs tracking-wide leading-tight">
               Free Shipping on orders above ₹999 | Hassle-Free Returns within 7 Days
@@ -89,7 +89,7 @@ export function Header() {
         </div>
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-2 sm:px-4 lg:px-8">
+      <div className="max-w-[1500px] mx-auto px-2 sm:px-6 lg:px-10">
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Left Side - Logo and Mobile Menu */}
           <div className="flex items-center gap-4">

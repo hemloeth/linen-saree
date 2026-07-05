@@ -14,7 +14,7 @@ export default function AboutPage() {
       
       {/* Hero Section */}
       <div className="relative bg-gradient-to-b from-muted/50 to-background pt-[96px] lg:pt-[104px]">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-20 lg:py-32">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif text-4xl lg:text-6xl font-light mb-6">
               About Linen Sarees
@@ -27,7 +27,7 @@ export default function AboutPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-8 py-16 lg:py-24">
+      <div className="max-w-[1200px] mx-auto px-6 lg:px-10 py-16 lg:py-24">
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
           {/* Our Mission */}
           <div>

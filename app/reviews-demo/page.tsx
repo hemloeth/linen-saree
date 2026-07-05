@@ -20,7 +20,7 @@ export default async function ReviewsDemoPage() {
       <Header />
 
       <div className="pt-[96px] lg:pt-[104px]">
-        <section className="py-16 px-4 lg:px-8">
+        <section className="py-16 px-6 lg:px-10">
           <div className="max-w-[1400px] mx-auto">
             <div className="text-center mb-12">
               <h1 className="font-serif text-4xl lg:text-5xl mb-4">

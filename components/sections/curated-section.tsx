@@ -49,7 +49,7 @@ export function CuratedSection() {
 
   return (
     <section id="collections" className="py-20 lg:py-32 bg-background">
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
         {/* Section Header */}
         <div className="text-center mb-16 lg:mb-20">
           <p className="font-sans text-sm tracking-[0.3em] uppercase text-primary mb-4">

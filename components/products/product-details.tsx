@@ -98,7 +98,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   }
 
   return (
-    <section className="py-2 sm:py-16 px-2 sm:px-4 lg:px-8">
+    <section className="py-2 sm:py-16 px-6 lg:px-10">
       <div className="max-w-[1400px] mx-auto">
         {/* Breadcrumb */}
         <nav className="text-[9px] sm:text-xs sm:text-sm text-muted-foreground mb-3 flex flex-wrap items-center gap-y-0.5">

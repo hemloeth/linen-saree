@@ -118,7 +118,7 @@ export default function BlogPostPage() {
       
       <div className="pt-[96px] lg:pt-[104px]">
         {/* Back to Blog */}
-        <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-6 lg:px-10 py-8">
           <Link 
             href="/blog"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -138,7 +138,7 @@ export default function BlogPostPage() {
         </div>
 
         {/* Article Content */}
-        <div className="max-w-4xl mx-auto px-4 lg:px-8 pb-16">
+        <div className="max-w-4xl mx-auto px-6 lg:px-10 pb-16">
           <article>
             {/* Article Header */}
             <header className="mb-8">

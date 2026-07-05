@@ -14,7 +14,7 @@ export function RelatedProducts({ products, category }: RelatedProductsProps) {
   if (products.length === 0) return null
 
   return (
-    <section className="py-8 sm:py-16 px-2 sm:px-4 lg:px-8 bg-secondary">
+    <section className="py-8 sm:py-16 px-6 lg:px-10 bg-secondary">
       <div className="max-w-[1400px] mx-auto">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
