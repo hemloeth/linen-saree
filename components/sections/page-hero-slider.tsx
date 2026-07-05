@@ -80,7 +80,7 @@ export function PageHeroSlider({
               src={slide.image}
               alt={slide.title}
               fill
-              className="object-cover object-center"
+              className="object-cover object-top"
               priority={index === 0}
             />
           </div>

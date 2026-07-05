@@ -115,7 +115,7 @@ export function AutoScrollHero() {
   return (
     <section className="relative h-screen w-full overflow-hidden">
       {/* Background Images with Ken Burns + Crossfade */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-x-0 bottom-0 top-[96px] lg:top-0 z-0">
         {slides.map((slide, index) => (
           <div
             key={slide._id || slide.id || index}
@@ -126,7 +126,7 @@ export function AutoScrollHero() {
               src={slide.image}
               alt={slide.title}
               fill
-              className={`object-cover object-center transition-transform duration-[8000ms] ease-out ${index === currentSlide ? "scale-110" : "scale-100"
+              className={`object-cover object-top origin-top transition-transform duration-[8000ms] ease-out ${index === currentSlide ? "scale-110" : "scale-100"
                 }`}
               priority={index === 0}
               sizes="100vw"
@@ -148,7 +148,7 @@ export function AutoScrollHero() {
       <div className="absolute bottom-20 right-8 md:right-16 z-10 w-16 h-16 md:w-24 md:h-24 border-b border-r border-white/20" />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4 pt-[96px] lg:pt-0">
         <div className="max-w-5xl mx-auto">
           {/* Category Badge */}
           <div

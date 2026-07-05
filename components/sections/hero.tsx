@@ -104,7 +104,7 @@ export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Images */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 top-[96px] lg:top-[104px]">
         {activeSlides.map((slide, index) => (
           <div
             key={slide._id || index}
