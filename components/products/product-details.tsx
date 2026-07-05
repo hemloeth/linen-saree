@@ -322,7 +322,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
             {/* Actions */}
             <div className="flex flex-col gap-3 mb-6">
-              <div className="flex flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 {outOfStock ? (
                   <Button
                     size="lg"
@@ -333,33 +333,33 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   </Button>
                 ) : (
                   <>
-                    <Link href="/checkout" className="flex-1">
+                    <Link href="/checkout" className="flex-1 w-full">
                       <Button
                         size="lg"
                         className="w-full h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium bg-primary text-white hover:bg-primary/95 group"
                         onClick={() => addToCart(product, quantity)}
                       >
                         <div className="absolute inset-0 animate-shimmer opacity-30 pointer-events-none" />
-                        <span className="relative z-10">Buy It Now</span>
-                        <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-500" />
+                        <span className="relative z-10 whitespace-nowrap">Buy It Now</span>
+                        <ChevronRight className="w-4 h-4 ml-1 shrink-0 group-hover:translate-x-1 transition-transform duration-500" />
                       </Button>
                     </Link>
 
                     <Button
                       size="lg"
-                      className={`flex-1 h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium border-2 border-primary/20 text-primary bg-transparent hover:bg-primary/5 hover:border-primary/40 ${isAdded ? "text-green-600 border-green-600/30 bg-green-50" : ""
+                      className={`flex-1 w-full h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium border-2 border-primary/20 text-primary bg-transparent hover:bg-primary/5 hover:border-primary/40 ${isAdded ? "text-green-600 border-green-600/30 bg-green-50" : ""
                         }`}
                       onClick={handleAddToCart}
                     >
                       {isAdded ? (
                         <>
-                          <Check className="w-4 h-4 mr-1 sm:mr-2 animate-[bounceIn_0.4s_ease-out]" />
-                          Added
+                          <Check className="w-4 h-4 mr-1 sm:mr-2 shrink-0 animate-[bounceIn_0.4s_ease-out]" />
+                          <span className="whitespace-nowrap">Added</span>
                         </>
                       ) : (
                         <>
-                          <ShoppingBag className="w-4 h-4 mr-1 sm:mr-2" />
-                          Add to Cart
+                          <ShoppingBag className="w-4 h-4 mr-1 sm:mr-2 shrink-0" />
+                          <span className="whitespace-nowrap">Add to Cart</span>
                         </>
                       )}
                     </Button>
@@ -370,14 +370,14 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 <Button
                   size="lg"
                   variant="outline"
-                  className={`flex-1 h-12 bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 btn-premium lowercase tracking-widest font-light italic text-xs sm:text-sm ${isWishlisted ? 'text-primary border-primary bg-primary/5' : ''}`}
+                  className={`flex-1 h-12 px-2 bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 btn-premium lowercase tracking-widest font-light italic text-[10px] sm:text-sm ${isWishlisted ? 'text-primary border-primary bg-primary/5' : ''}`}
                   onClick={handleWishlistClick}
                   aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 >
-                  <Heart className={`w-4 h-4 mr-2 ${isWishlisted ? 'fill-primary' : ''}`} />
-                  {isWishlisted ? "wishlisted" : "Add to Wishlist"}
+                  <Heart className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 shrink-0 ${isWishlisted ? 'fill-primary' : ''}`} />
+                  <span className="truncate">{isWishlisted ? "wishlisted" : "Add to Wishlist"}</span>
                 </Button>
-                <Button size="lg" variant="outline" className="w-12 h-12 flex shrink-0 items-center justify-center bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 rounded-sm">
+                <Button size="lg" variant="outline" className="w-12 h-12 shrink-0 flex items-center justify-center bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 rounded-sm">
                   <Share2 className="w-4 h-4" />
                 </Button>
               </div>
