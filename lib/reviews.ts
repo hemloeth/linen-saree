@@ -8,6 +8,7 @@ export interface Review {
   rating: number // 1-5 stars
   title: string
   comment: string
+  photos?: string[]
   createdAt: string
   updatedAt: string
 }

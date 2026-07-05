@@ -23,6 +23,7 @@ export function WriteReviewForm({
   const [rating, setRating] = useState(0)
   const [title, setTitle] = useState("")
   const [comment, setComment] = useState("")
+  const [photos, setPhotos] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -41,17 +42,27 @@ export function WriteReviewForm({
     setIsSubmitting(true)
 
     try {
-      const { apiPost } = await import("@/lib/api")
-
-      const payload = {
-        rating,
-        title: title.trim(),
-        comment: comment.trim(),
+      const { apiUpload } = await import("@/lib/api")
+      
+      const formData = new FormData()
+      formData.append('rating', String(rating))
+      if (title.trim()) formData.append('title', title.trim())
+      formData.append('comment', comment.trim())
+      
+      if (photos.length > 0) {
+        photos.forEach(photo => {
+          formData.append('photos', photo)
+        })
       }
-
-      await apiPost(`/api/review/product/${productId}`, payload)
+      
+      await apiUpload(`/api/review/product/${productId}`, formData)
 
       if (onSubmit) {
+        const payload = {
+          rating,
+          title: title.trim(),
+          comment: comment.trim(),
+        }
         onSubmit(payload)
       }
 
@@ -59,6 +70,7 @@ export function WriteReviewForm({
       setRating(0)
       setTitle("")
       setComment("")
+      setPhotos([])
 
       alert('Review submitted successfully!')
     } catch (error: any) {
@@ -112,6 +124,35 @@ export function WriteReviewForm({
           <p className="text-xs text-muted-foreground mt-1">
             {comment.length}/1000 characters
           </p>
+        </div>
+
+        {/* Photos */}
+        <div>
+          <label htmlFor="photos" className="block text-sm font-medium mb-1">
+            Add Photos (up to 5)
+          </label>
+          <input
+            type="file"
+            id="photos"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              if (e.target.files) {
+                const selectedFiles = Array.from(e.target.files).slice(0, 5)
+                setPhotos(selectedFiles)
+              }
+            }}
+            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+          />
+          {photos.length > 0 && (
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {photos.map((photo, i) => (
+                 <div key={i} className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[150px]">
+                   {photo.name}
+                 </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Submit Buttons */}

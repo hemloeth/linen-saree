@@ -49,6 +49,22 @@ export function ReviewCard({ review, className }: ReviewCardProps) {
           {review.comment}
         </p>
 
+        {/* Photos */}
+        {review.photos && review.photos.length > 0 && (
+          <div className="flex gap-2 mt-4 flex-wrap">
+            {review.photos.map((photoUrl, idx) => (
+              <div key={idx} className="relative w-20 h-20 rounded-md overflow-hidden border border-border">
+                <Image
+                  src={photoUrl}
+                  alt={`Review photo ${idx + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
     </>
   )
