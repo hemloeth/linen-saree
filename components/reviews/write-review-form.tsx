@@ -33,7 +33,7 @@ export function WriteReviewForm({
       return
     }
 
-    if (!title.trim() || !comment.trim()) {
+    if (!comment.trim()) {
       alert('Please fill in all required fields')
       return
     }

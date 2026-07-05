@@ -149,7 +149,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             {/* Main Media with Swipe Support */}
             <div className="relative flex-1 w-full">
               <div
-                className="relative overflow-hidden select-none w-full aspect-[9/8] rounded-sm"
+                className="relative overflow-hidden select-none w-full aspect-[4/5] lg:aspect-[9/8] rounded-sm"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -247,7 +247,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
           {/* Product Info */}
           <div className="lg:py-4 flex flex-col justify-center">
-            
+
             {/* Header: Category & Reviews */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
               <Link

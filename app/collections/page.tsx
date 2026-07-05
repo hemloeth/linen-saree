@@ -4,7 +4,8 @@ import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import { categories } from "@/lib/products"
 import Link from "next/link"
 import { CategoryProductsClient } from "../categories/[slug]/category-products-client"
-import { fetchProductsFromDB, apiServerGet } from "@/lib/api"
+import { fetchProductsFromDB } from "@/lib/products"
+import { apiServerGet } from "@/lib/api"
 
 export const metadata = {
   title: "Our Collections | Linen Sarees",
@@ -12,14 +13,11 @@ export const metadata = {
 }
 
 export default async function CollectionsPage() {
-  // Fetch all products
-  const productsResponse = await apiServerGet('/api/product/allproducts')
-  const allProducts = productsResponse.success ? productsResponse.products : []
+  // Fetch all products mapped to frontend types
+  const allProducts = await fetchProductsFromDB()
   
-  // Filter products that belong to ANY marketing collection
-  const collectionProducts = allProducts.filter((p: any) => 
-    p.productCollection && p.productCollection !== 'none' || p.isFestive || p.isOnSale
-  )
+  // Show all products instead of filtering by marketing collection
+  const collectionProducts = allProducts
 
   // Fetch marketing collection names for the filter bar
   const colRes = await apiServerGet('/api/marketing-collections')

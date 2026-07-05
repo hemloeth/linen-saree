@@ -14,7 +14,7 @@ export interface Product {
   fabric: string
   color: string
   isOnSale: boolean
-  isFestive: boolean
+  isFestive?: boolean
   isFeatured: boolean
   isNew: boolean
   productCollection?: string
@@ -50,20 +50,23 @@ function mapProductFromDB(dbProduct: any): Product {
       ...(dbProduct.galleryImages ? dbProduct.galleryImages.map((img: any) => img.url) : [])
     ].filter(Boolean),
     videos: isVideoStr ? [
-        (() => {
-          const v = dbProduct.videoFile || dbProduct.videoUrl;
-          if (v && !v.startsWith('http') && !v.startsWith('/videos/')) {
-            return `/videos/${v.replace(/^\//, '')}`;
-          }
-          return v;
-        })()
-      ].filter(Boolean) : [],
+      (() => {
+        const v = dbProduct.videoFile || dbProduct.videoUrl;
+        if (v && !v.startsWith('http') && !v.startsWith('/videos/')) {
+          return `/videos/${v.replace(/^\//, '')}`;
+        }
+        return v;
+      })()
+    ].filter(Boolean) : [],
     description: dbProduct.shortDescription || "",
     details: [
       dbProduct.material ? `Material: ${dbProduct.material}` : "",
       dbProduct.sareeSize ? `Saree Size: ${dbProduct.sareeSize}` : "",
       dbProduct.blouseSize ? `Blouse Size: ${dbProduct.blouseSize}` : "",
-      dbProduct.washCare ? `Care: ${dbProduct.washCare}` : ""
+      dbProduct.washCare ? `Care: ${dbProduct.washCare}` : "",
+      dbProduct.dispatch ? `Dispatch: ${dbProduct.dispatch}` : "",
+      dbProduct.disclaimer ? `Disclaimer: ${dbProduct.disclaimer}` : "",
+      dbProduct.internationalNote ? `International Note: ${dbProduct.internationalNote}` : ""
     ].filter(Boolean),
     fabric: dbProduct.material || "Linen",
     color: dbProduct.color || "Multicolor",

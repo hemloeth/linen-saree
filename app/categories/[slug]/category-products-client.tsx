@@ -26,11 +26,18 @@ export function CategoryProductsClient({
   const [showFilters, setShowFilters] = useState(true)
   const [filteredProducts, setFilteredProducts] = useState(initialProducts)
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
   useEffect(() => {
     let result = filterProducts(initialProducts, filters)
     result = sortProducts(result, sortBy)
     setFilteredProducts(result)
+    setCurrentPage(1) // Reset to first page on filter/sort
   }, [initialProducts, filters, sortBy])
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
     setFilters(newFilters)
@@ -62,12 +69,43 @@ export function CategoryProductsClient({
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+        {paginatedProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+              {paginatedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-12 pt-8 border-t border-border">
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.max(prev - 1, 1))
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm font-medium border border-border rounded-md disabled:opacity-50 hover:bg-muted hover:text-foreground transition-colors bg-background"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-muted-foreground font-medium">
+                  Page <span className="text-foreground">{currentPage}</span> of {totalPages}
+                </span>
+                <button
+                  onClick={() => {
+                    setCurrentPage(prev => Math.min(prev + 1, totalPages))
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm font-medium border border-border rounded-md disabled:opacity-50 hover:bg-muted hover:text-foreground transition-colors bg-background"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-20">
             <p className="text-muted-foreground text-lg mb-4">
