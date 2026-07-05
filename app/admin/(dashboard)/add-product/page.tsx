@@ -223,8 +223,12 @@ export default function AddProductPage() {
             setShowSuccessModal(true)
         } catch (err: any) {
             console.error("Detailed error adding product:", err)
-            const errorMsg = err instanceof Error ? err.message : String(err);
-            showToast("Failed to Add Product", `The product might have been added, but the server connection was lost. ${errorMsg}`);
+            let errorMsg = err instanceof Error ? err.message : String(err);
+            // Clean up the 'ApiError: ' prefix if present for a cleaner UI
+            if (errorMsg.startsWith("ApiError: ")) {
+                errorMsg = errorMsg.replace("ApiError: ", "");
+            }
+            showToast("Failed to Add Product", errorMsg);
         } finally {
             setIsSubmitting(false)
         }
