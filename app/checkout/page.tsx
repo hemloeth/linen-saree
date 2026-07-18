@@ -12,6 +12,21 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X, ChevronDown, Search } from "lucide-react"
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (document.getElementById('razorpay-script')) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'razorpay-script';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart, isHydrated } = useCart()
   const [step, setStep] = useState(1)
@@ -229,9 +244,79 @@ export default function CheckoutPage() {
       const data = await apiPost('/api/order', orderData)
 
       if (data.success) {
-        setPlacedOrderId(data.order.orderId)
-        setOrderPlaced(true)
-        clearCart()
+        if (formData.paymentMethod !== "cod") {
+          if (!data.order.razorpayOrderId) {
+            toast.error("Payment ID missing from server. Please check backend keys.");
+            setIsPlacingOrder(false);
+            return;
+          }
+          // Online payment flow
+          const res = await loadRazorpayScript()
+          if (!res) {
+            toast.error("Razorpay SDK failed to load. Are you online?")
+            setIsPlacingOrder(false)
+            return
+          }
+
+          const options = {
+            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || data.order.key,
+            amount: data.order.amount,
+            currency: data.order.currency,
+            name: "Linen Saree",
+            description: "Order Payment",
+            order_id: data.order.razorpayOrderId,
+            handler: async function (response: any) {
+              setIsPlacingOrder(true) // re-set loading during verification
+              try {
+                const verifyData = await apiPost('/api/order/verify-payment', {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  orderId: data.order.orderId
+                })
+
+                if (verifyData.success) {
+                  setPlacedOrderId(data.order.orderId)
+                  setOrderPlaced(true)
+                  clearCart()
+                } else {
+                  toast.error("Payment verification failed.")
+                }
+              } catch (verifyErr: any) {
+                toast.error(verifyErr.message || "Payment verification failed.")
+              } finally {
+                setIsPlacingOrder(false)
+              }
+            },
+            prefill: {
+              name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              contact: formData.phone
+            },
+            theme: {
+              color: "#0f172a"
+            },
+            modal: {
+              ondismiss: function() {
+                setIsPlacingOrder(false)
+              }
+            }
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const paymentObject = new (window as any).Razorpay(options)
+          paymentObject.on('payment.failed', function (response: any) {
+             toast.error(response.error.description || "Payment failed")
+             setIsPlacingOrder(false)
+          })
+          paymentObject.open()
+          return // Keep isPlacingOrder true until modal is dismissed or payment completes
+        } else {
+          // COD flow
+          setPlacedOrderId(data.order.orderId)
+          setOrderPlaced(true)
+          clearCart()
+        }
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to place order. Please try again.")
@@ -285,9 +370,18 @@ export default function CheckoutPage() {
             <p className="text-muted-foreground mb-2">
               Thank you for your order. We{"'"}ve sent a confirmation email to {formData.email || "your email"}.
             </p>
-            <p className="text-sm text-muted-foreground mb-8">
-              Order ID: #{placedOrderId || "Processing..."}
-            </p>
+            <div className="bg-muted/50 rounded-lg p-6 mb-8 text-left space-y-3 border border-border">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Order ID</span>
+                <span className="font-medium">#{placedOrderId || "Processing..."}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Payment Method</span>
+                <span className="font-medium">
+                  {formData.paymentMethod === "cod" ? "Cash on Delivery" : "Paid Online (Razorpay)"}
+                </span>
+              </div>
+            </div>
             <Link href="/collections">
               <Button className="bg-primary hover:bg-primary/90">
                 Continue Shopping
@@ -610,65 +704,51 @@ export default function CheckoutPage() {
                               name="paymentMethod"
                               value="card"
                               checked={formData.paymentMethod === "card"}
-                              onChange={handleInputChange}
+                              onChange={() => setFormData({ ...formData, paymentMethod: "card" })}
                               className="w-4 h-4 accent-primary"
                             />
-                            <CreditCard className="w-5 h-5" />
-                            <span>Credit / Debit Card</span>
+                            <CreditCard className="w-5 h-5 text-primary" />
+                            <div className="flex flex-col">
+                              <span className="font-medium">Credit / Debit Card</span>
+                              <span className="text-xs text-muted-foreground mt-0.5">Powered by Razorpay Secure</span>
+                            </div>
                           </label>
+                          
                           <label className="flex items-center gap-4 p-4 border border-border cursor-pointer hover:bg-muted/50 transition-colors">
                             <input
                               type="radio"
                               name="paymentMethod"
                               value="upi"
                               checked={formData.paymentMethod === "upi"}
-                              onChange={handleInputChange}
+                              onChange={() => setFormData({ ...formData, paymentMethod: "upi" })}
                               className="w-4 h-4 accent-primary"
                             />
-                            <span className="font-bold text-lg">UPI</span>
-                            <span>Pay with UPI</span>
+                            <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                            <div className="flex flex-col">
+                              <span className="font-medium">UPI / NetBanking / Wallets</span>
+                              <span className="text-xs text-muted-foreground mt-0.5">GPay, PhonePe, Paytm & more</span>
+                            </div>
                           </label>
+
                           <label className="flex items-center gap-4 p-4 border border-border cursor-pointer hover:bg-muted/50 transition-colors">
                             <input
                               type="radio"
                               name="paymentMethod"
                               value="cod"
                               checked={formData.paymentMethod === "cod"}
-                              onChange={handleInputChange}
+                              onChange={() => setFormData({ ...formData, paymentMethod: "cod" })}
                               className="w-4 h-4 accent-primary"
                             />
-                            <Truck className="w-5 h-5" />
-                            <span>Cash on Delivery</span>
+                            <Truck className="w-5 h-5 text-primary" />
+                            <div className="flex flex-col">
+                              <span className="font-medium">Cash on Delivery</span>
+                              <span className="text-xs text-muted-foreground mt-0.5">Pay when you receive your order</span>
+                            </div>
                           </label>
                         </div>
                       </div>
-
-                      {formData.paymentMethod === "card" && (
-                        <div className="space-y-4 p-4 bg-muted/50 border border-border">
-                          <input
-                            type="text"
-                            placeholder="Card number"
-                            className="w-full px-4 py-3 border border-border bg-background text-sm"
-                          />
-                          <div className="grid grid-cols-2 gap-4">
-                            <input
-                              type="text"
-                              placeholder="MM/YY"
-                              className="w-full px-4 py-3 border border-border bg-background text-sm"
-                            />
-                            <input
-                              type="text"
-                              placeholder="CVV"
-                              className="w-full px-4 py-3 border border-border bg-background text-sm"
-                            />
-                          </div>
-                          <input
-                            type="text"
-                            placeholder="Name on card"
-                            className="w-full px-4 py-3 border border-border bg-background text-sm"
-                          />
-                        </div>
-                      )}
 
                       <div className="flex gap-4">
                         <Button
@@ -681,10 +761,10 @@ export default function CheckoutPage() {
                         </Button>
                         <Button
                           type="submit"
-                          className="flex-1 bg-primary hover:bg-primary/90 py-6"
+                          className="flex-1 bg-primary hover:bg-primary/90 py-6 text-primary-foreground font-medium flex items-center justify-center gap-2"
                           disabled={isPlacingOrder}
                         >
-                          {isPlacingOrder ? "Placing Order..." : "Place Order"}
+                          {isPlacingOrder ? "Processing..." : formData.paymentMethod === "cod" ? "Place Order (COD)" : "Pay Now with Razorpay"}
                         </Button>
                       </div>
                     </div>
