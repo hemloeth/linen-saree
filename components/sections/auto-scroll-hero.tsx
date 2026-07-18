@@ -83,12 +83,12 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
                 className="relative flex-[0_0_100%] min-w-0 h-full"
               >
                 {/* Background Image */}
-                <div className="absolute inset-x-0 bottom-0 top-[96px] lg:top-0 z-0 overflow-hidden">
+                <div className="absolute inset-0 z-0 overflow-hidden">
                   <Image
                     src={slide.image}
                     alt={slide.title || "Hero image"}
                     fill
-                    className={`object-cover object-top origin-top transition-transform duration-[8000ms] ease-out ${
+                    className={`object-cover object-[center_10%] lg:object-top origin-top transition-transform duration-[8000ms] ease-out ${
                       isActive ? "scale-110" : "scale-100"
                     }`}
                     priority={index === 0}
