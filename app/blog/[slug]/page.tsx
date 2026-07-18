@@ -21,7 +21,7 @@ export default function BlogPostPage() {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://linensaree.in' : 'http://127.0.0.1:5000')
         const id = params.slug
         
         // Fetch all blogs since the /:id endpoint might not be deployed yet

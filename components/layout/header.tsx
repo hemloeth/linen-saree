@@ -10,6 +10,7 @@ import { useAuth } from "@/context/auth-context"
 import { SearchModal } from "@/components/search/search-modal"
 import { TrustBadgesCompact } from "@/components/common/trust-badges"
 import { cn } from "@/lib/utils"
+import { apiGet } from "@/lib/api"
 
 type NavLink = {
   name: string
@@ -51,11 +52,10 @@ export function Header() {
   useEffect(() => {
     const fetchCollections = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/marketing-collections`)
-        const data = await response.json().catch(() => null)
-        if (data && data.success) {
+        const response = await apiGet('/api/marketing-collections')
+        if (response.success && response.data) {
           // Only include the 3 main marketing collections (exclude 'none')
-          const filtered = data.data.filter((col: any) => col.key !== 'none')
+          const filtered = response.data.filter((col: any) => col.key !== 'none')
           setMarketingCollections(filtered)
         }
       } catch (error: any) {

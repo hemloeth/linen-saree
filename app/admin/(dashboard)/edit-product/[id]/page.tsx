@@ -61,7 +61,7 @@ export default function EditProductPage() {
     useEffect(() => {
         const fetchCollections = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/marketing-collections`)
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://linensaree.in' : 'http://127.0.0.1:5000')}/api/marketing-collections`)
                 const data = await res.json().catch(() => null)
                 if (data && data.success) {
                     setDbCollections(data.data)
@@ -86,7 +86,7 @@ export default function EditProductPage() {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000'}/api/product/${productId}`);
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://linensaree.in' : 'http://127.0.0.1:5000')}/api/product/${productId}`);
                 const data = await res.json();
                 if (data && data.success && data.product) {
                     const product = data.product;
