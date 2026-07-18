@@ -327,16 +327,16 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <Button
                     size="lg"
                     disabled
-                    className="flex-1 w-full h-12 px-4 text-xs sm:text-sm font-bold btn-premium bg-muted text-muted-foreground cursor-not-allowed"
+                    className="w-full sm:flex-1 h-14 sm:h-12 px-4 text-xs sm:text-sm font-bold btn-premium bg-muted text-muted-foreground cursor-not-allowed"
                   >
                     Out of Stock
                   </Button>
                 ) : (
                   <>
-                    <Link href="/checkout" className="flex-1 w-full">
+                    <Link href="/checkout" className="w-full sm:flex-1 block">
                       <Button
                         size="lg"
-                        className="w-full h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium bg-primary text-white hover:bg-primary/95 group"
+                        className="w-full h-14 sm:h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium bg-primary text-white hover:bg-primary/95 group"
                         onClick={() => addToCart(product, quantity)}
                       >
                         <div className="absolute inset-0 animate-shimmer opacity-30 pointer-events-none" />
@@ -347,7 +347,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
                     <Button
                       size="lg"
-                      className={`flex-1 w-full h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium border-2 border-primary/20 text-primary bg-transparent hover:bg-primary/5 hover:border-primary/40 ${isAdded ? "text-green-600 border-green-600/30 bg-green-50" : ""
+                      className={`w-full sm:flex-1 h-14 sm:h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium border-2 border-primary/20 text-primary bg-transparent hover:bg-primary/5 hover:border-primary/40 ${isAdded ? "text-green-600 border-green-600/30 bg-green-50" : ""
                         }`}
                       onClick={handleAddToCart}
                     >

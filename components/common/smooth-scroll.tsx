@@ -21,8 +21,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     useEffect(() => {
         lenisRef.current = new Lenis({
             lerp: 0.07,
-            syncTouch: true,
-            syncTouchLerp: 0.075,
+            syncTouch: false,
             touchMultiplier: 1.5,
             orientation: 'vertical',
         })

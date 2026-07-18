@@ -72,8 +72,27 @@ export function Header() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  // Track header height dynamically for other components to use
+  useEffect(() => {
+    const headerEl = document.getElementById('main-header')
+    if (!headerEl) return
+
+    const updateHeight = () => {
+      document.documentElement.style.setProperty('--header-offset', `${headerEl.offsetHeight}px`)
+    }
+
+    // Initial set
+    updateHeight()
+
+    // Observe size changes (e.g. closing announcement bar or resizing window)
+    const observer = new ResizeObserver(updateHeight)
+    observer.observe(headerEl)
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
+    <header id="main-header" className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       {/* Top Bar */}
       {isAnnouncementVisible && (
         <div className="bg-foreground text-background overflow-hidden relative">

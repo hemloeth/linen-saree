@@ -27,7 +27,7 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
   const slides = initialSlides
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 }, [
-    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
+    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }) as any
   ])
 
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -65,7 +65,7 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
   }
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-black group">
+    <section className="relative h-screen w-full overflow-hidden bg-background group">
       <div className="overflow-hidden h-full w-full" ref={emblaRef}>
         <div className="flex h-full touch-pan-y">
           {slides.map((slide, index) => {
@@ -75,13 +75,13 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
                 key={slide._id || slide.id || index} 
                 className="relative flex-[0_0_100%] min-w-0 h-full"
               >
-                {/* Background Image */}
-                <div className="absolute inset-0 z-0 overflow-hidden">
+                {/* Background Image Container - Pushed down dynamically on mobile to clear header */}
+                <div className="absolute inset-x-0 bottom-0 top-[var(--header-offset,115px)] lg:top-0 lg:inset-0 z-0 overflow-hidden bg-black">
                   <Image
                     src={slide.image}
                     alt={slide.title || "Hero image"}
                     fill
-                    className={`object-cover object-[center_10%] lg:object-top origin-top transition-transform duration-[8000ms] ease-out ${
+                    className={`object-cover object-top origin-top transition-transform duration-[8000ms] ease-out ${
                       isActive ? "scale-110" : "scale-100"
                     }`}
                     priority={index === 0}

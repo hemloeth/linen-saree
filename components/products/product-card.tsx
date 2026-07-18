@@ -210,12 +210,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
       </Link>
 
-      {/* Persistent Action Buttons - Asymmetric Layout */}
-      <div className="flex gap-1.5 md:gap-2">
+      <div className="flex gap-1.5 md:gap-2 h-9 md:h-10">
         <button
           onClick={handleAddToCart}
           disabled={outOfStock}
-          className={`w-10 md:w-12 py-2 sm:py-2.5 flex items-center justify-center transition-all duration-300 rounded-sm active:scale-95 shadow-sm ${outOfStock
+          className={`w-10 md:w-12 h-full flex items-center justify-center transition-all duration-300 rounded-sm active:scale-95 shadow-sm ${outOfStock
             ? "bg-muted text-muted-foreground cursor-not-allowed active:scale-100"
             : isAdded
               ? "bg-green-600 text-white scale-105"
@@ -231,17 +230,17 @@ export function ProductCard({ product, className }: ProductCardProps) {
           )}
         </button>
         {outOfStock ? (
-          <div className="flex-1 flex items-center justify-center bg-muted/50 border border-muted text-muted-foreground py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold rounded-sm uppercase tracking-wider cursor-not-allowed">
+          <div className="flex-1 h-full flex items-center justify-center bg-muted/50 border border-muted text-muted-foreground px-3 text-[10px] md:text-xs font-bold rounded-sm uppercase tracking-wider cursor-not-allowed">
             Out of Stock
           </div>
         ) : (
           <Link
             href={`/checkout?product=${product.id}`}
-            className="flex-1"
+            className="flex-1 h-full"
             onClick={() => addToCart(product)}
           >
             <button 
-              className="w-full h-full bg-background border border-primary text-primary hover:bg-primary/5 py-2 sm:py-2.5 px-3 text-[10px] md:text-xs font-bold transition-all rounded-sm active:scale-95 shadow-sm uppercase tracking-wider"
+              className="w-full h-full flex items-center justify-center bg-background border border-primary text-primary hover:bg-primary/5 px-3 text-[10px] md:text-xs font-bold transition-all rounded-sm active:scale-95 shadow-sm uppercase tracking-wider"
               suppressHydrationWarning
             >
               Buy Now
