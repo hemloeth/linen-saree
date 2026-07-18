@@ -32,8 +32,8 @@ export const metadata: Metadata = {
   description: 'Discover our exquisite collection of premium linen sarees. Handcrafted elegance for the modern woman.',
   generator: 'v0.app',
   icons: {
-    icon: '/linen-saree-logo.png',
-    apple: '/linen-saree-logo.png',
+    icon: '/faveicon.jpg',
+    apple: '/faveicon.jpg',
   },
 }
 

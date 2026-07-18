@@ -11,7 +11,13 @@ import { SearchModal } from "@/components/search/search-modal"
 import { TrustBadgesCompact } from "@/components/common/trust-badges"
 import { cn } from "@/lib/utils"
 
-const navLinks = [
+type NavLink = {
+  name: string
+  href: string
+  submenu?: { name: string; href: string }[]
+}
+
+const navLinks: NavLink[] = [
   {
     name: "Categories",
     href: "/categories",
@@ -134,11 +140,11 @@ export function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center">
               <Image
-                src="/linen-saree-logo.png"
+                src="/logo.jpg"
                 alt="Linen Sarees"
                 width={80}
                 height={40}
-                className="h-8 lg:h-10 w-auto"
+                className="h-8 lg:h-10 w-auto object-contain mix-blend-multiply"
                 priority
               />
             </Link>
@@ -149,7 +155,7 @@ export function Header() {
                 <div
                   key={link.name}
                   className="relative group"
-                  onMouseEnter={() => (link.submenu?.length > 0 || link.name === "Collections") && setActiveSubmenu(link.name)}
+                  onMouseEnter={() => ((link.submenu?.length ?? 0) > 0 || link.name === "Collections") && setActiveSubmenu(link.name)}
                   onMouseLeave={() => setActiveSubmenu(null)}
                 >
                   <Link
@@ -160,7 +166,7 @@ export function Header() {
                     )}
                   >
                     {link.name}
-                    {(link.submenu?.length > 0 || link.name === "Collections") && <ChevronDown className="w-3 h-3" />}
+                    {((link.submenu?.length ?? 0) > 0 || link.name === "Collections") && <ChevronDown className="w-3 h-3" />}
                   </Link>
 
                   {/* Submenu */}
@@ -409,7 +415,7 @@ export function Header() {
               >
                 {link.name}
               </Link>
-              {(link.submenu?.length > 0 || link.name === "Collections") && (
+              {((link.submenu?.length ?? 0) > 0 || link.name === "Collections") && (
                 <div className="pl-4 border-l border-border ml-2">
                   {link.name === "Collections" ? (
                     marketingCollections.map((col) => (
@@ -423,7 +429,7 @@ export function Header() {
                       </Link>
                     ))
                   ) : (
-                    link.submenu.map((sublink) => (
+                    link.submenu?.map((sublink) => (
                       <Link
                         key={sublink.name}
                         href={sublink.href}
