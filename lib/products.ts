@@ -92,7 +92,7 @@ function mapProductFromDB(dbProduct: any): Product {
 export async function fetchProductsFromDB(): Promise<Product[]> {
   try {
     const { apiServerGet } = await import("@/lib/api");
-    const data = await apiServerGet('/api/product/allproducts', { cache: 'no-store' });
+    const data = await apiServerGet('/api/product/allproducts', { revalidate: 60 });
 
     if (data.success && data.products) {
       return data.products.map(mapProductFromDB);
@@ -100,10 +100,9 @@ export async function fetchProductsFromDB(): Promise<Product[]> {
   } catch (error: any) {
     const { API_BASE_URL } = await import("@/lib/api");
     console.error(`Error fetching products from DB (${API_BASE_URL}/api/product/allproducts):`, error.message || error);
-    console.info("Using fallback products as a safety measure.");
   }
 
-  return fallbackProducts;
+  return [];
 }
 
 export const fallbackProducts: Product[] = [

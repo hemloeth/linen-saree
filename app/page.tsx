@@ -13,7 +13,7 @@ import { apiServerGet } from "@/lib/api"
 export default async function Home() {
   let heroSlides = [];
   try {
-    const data = await apiServerGet('/api/hero', { cache: 'no-store' });
+    const data = await apiServerGet('/api/hero', { revalidate: 60 });
     if (data && data.slides) {
       heroSlides = data.slides;
     }
