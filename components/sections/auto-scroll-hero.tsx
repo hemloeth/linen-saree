@@ -18,24 +18,13 @@ interface SareeSlide {
   link: string
 }
 
-const fallbackSlides: SareeSlide[] = [
-  {
-    id: "original-hero",
-    image: "/images/hero-saree.jpg",
-    title: "Timeless Elegance",
-    subtitle: "in Every Thread",
-    description: "Discover our exquisite collection of premium linen sarees, crafted with love by master artisans.",
-    category: "Handcrafted Excellence",
-    link: "/collections"
-  }
-]
 
 interface AutoScrollHeroProps {
   initialSlides?: SareeSlide[]
 }
 
 export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
-  const slides = initialSlides.length > 0 ? initialSlides : fallbackSlides
+  const slides = initialSlides
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 }, [
     Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true })
@@ -69,6 +58,10 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
 
   const scrollToContent = () => {
     window.scrollTo({ top: window.innerHeight, behavior: "smooth" })
+  }
+
+  if (!slides || slides.length === 0) {
+    return null
   }
 
   return (
