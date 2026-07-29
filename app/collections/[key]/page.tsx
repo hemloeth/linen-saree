@@ -112,10 +112,10 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
             {/* Collections Sub-nav */}
             <section className="bg-secondary border-b border-border py-8">
                 <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
-                    <div className="flex flex-wrap justify-center gap-3 lg:gap-4">
+                    <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 lg:gap-4">
                         <Link
                             href="/collections"
-                            className="px-6 py-2 border border-border hover:bg-foreground hover:text-background text-sm tracking-wide transition-all text-center"
+                            className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
                         >
                             All Collections
                         </Link>
@@ -123,7 +123,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
                             <Link
                                 key={col.key}
                                 href={`/collections/${col.key}`}
-                                className={`px-6 py-2 text-sm tracking-wide transition-all text-center ${col.key === key
+                                className={`px-2 sm:px-6 py-2 text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center ${col.key === key
                                     ? "bg-foreground text-background shadow-md"
                                     : "border border-border hover:bg-foreground hover:text-background"
                                     }`}
@@ -159,7 +159,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
             )}
 
             {/* Products Grid */}
-            <section className="py-20 px-6 lg:px-10">
+            <section className="pt-10 pb-20 px-6 lg:px-10">
                 <div className="max-w-[1400px] mx-auto">
                     <div className="flex items-center justify-between mb-12">
                         <div className="space-y-1">
@@ -172,7 +172,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
                     </div>
 
                     {products.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-4 lg:gap-x-6 gap-y-10 lg:gap-y-12">
                             {products.map((product, idx) => (
                                 <motion.div
                                     key={product._id}

@@ -69,7 +69,7 @@ export function CategoryProductsClient({
   }
 
   return (
-    <section className="py-16 px-6 lg:px-10">
+    <section className="pt-8 pb-16 px-6 lg:px-10">
       <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-8 items-start pb-20 lg:pb-0">
         {/* Sidebar Filters (Desktop Only) */}
         <div className="hidden lg:block w-full lg:w-[280px] shrink-0 lg:sticky lg:top-24">
@@ -113,7 +113,7 @@ export function CategoryProductsClient({
           {/* Products Grid */}
           {initialProducts.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 lg:gap-6">
               {initialProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

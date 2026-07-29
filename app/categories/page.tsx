@@ -72,7 +72,7 @@ export default async function CategoriesPage({ searchParams }: { searchParams: P
       </section>
 
       {/* Products Grid */}
-      <div className="py-12">
+      <div>
         <Suspense fallback={<div className="py-20 text-center text-muted-foreground">Loading products...</div>}>
           <CategoryProductsClient 
               initialProducts={allProducts} 
