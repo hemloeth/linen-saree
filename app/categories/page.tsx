@@ -4,7 +4,9 @@ import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import { categories } from "@/lib/products"
 import Link from "next/link"
 import { CategoryProductsClient } from "./[slug]/category-products-client"
-import { fetchProductsFromDB } from "@/lib/products"
+import { fetchPaginatedProducts } from "@/lib/products"
+import { apiServerGet } from "@/lib/api"
+import { Suspense } from "react"
 
 export const metadata = {
   title: "All Categories | Linen Sarees",
@@ -26,8 +28,11 @@ const heroSlides = [
   }
 ]
 
-export default async function CategoriesPage() {
-  const allProducts = await fetchProductsFromDB()
+export default async function CategoriesPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+  const { products: allProducts, pagination } = await fetchPaginatedProducts({
+    ...searchParams,
+    limit: 20
+  })
 
   // Fetch marketing collections for the sub-nav
   const colRes = await apiServerGet('/api/marketing-collections')
@@ -67,10 +72,13 @@ export default async function CategoriesPage() {
 
       {/* Products Grid */}
       <div className="py-12">
-        <CategoryProductsClient 
-            initialProducts={allProducts} 
-            pageTitle="All Saree Categories" 
-        />
+        <Suspense fallback={<div className="py-20 text-center text-muted-foreground">Loading products...</div>}>
+          <CategoryProductsClient 
+              initialProducts={allProducts} 
+              pagination={pagination}
+              pageTitle="All Saree Categories" 
+          />
+        </Suspense>
       </div>
 
       <Footer />

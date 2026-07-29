@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from "react"
+import { usePathname } from 'next/navigation'
 import {
     type Product as FrontendProduct,
     type FilterOptions,
@@ -91,12 +92,18 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
     const [ssrProducts] = useState<FrontendProduct[]>(initialProducts)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const pathname = usePathname()
 
-    // Fetch all products on mount
+    // Fetch all products on mount only for admin panel
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const data = await apiGet('/api/product/allproducts')
+                // If on admin panel, fetch all products. Otherwise, fetch just a limited set or none,
+                // because storefront uses server components for its product lists.
+                const isAdmin = pathname?.startsWith('/admin')
+                const endpoint = isAdmin ? '/api/product/allproducts?limit=0&fullData=true' : '/api/product/allproducts?limit=20'
+                
+                const data = await apiGet(endpoint)
                 if (data.products) {
                     setProducts(data.products)
                 }
@@ -106,7 +113,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
             }
         }
         fetchProducts()
-    }, [])
+    }, [pathname])
 
     const addProduct = async (formData: FormData): Promise<Product | null> => {
         setLoading(true)

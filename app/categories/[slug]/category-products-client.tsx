@@ -1,50 +1,69 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ProductCard } from "@/components/products/product-card"
 import { ProductFilters } from "@/components/products/product-filters"
-import {
-  type Product,
-  type FilterOptions,
-  type SortOption,
-  filterProducts,
-  sortProducts
-} from "@/lib/products"
+import { type Product, type FilterOptions, type SortOption } from "@/lib/products"
 import Link from "next/link"
 
 interface CategoryProductsClientProps {
   initialProducts: Product[]
   pageTitle: string
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalProducts: number;
+    limit: number;
+  }
 }
 
 export function CategoryProductsClient({
   initialProducts,
-  pageTitle
+  pageTitle,
+  pagination
 }: CategoryProductsClientProps) {
-  const [filters, setFilters] = useState<FilterOptions>({})
-  const [sortBy, setSortBy] = useState<SortOption>('featured')
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [showFilters, setShowFilters] = useState(true)
-  const [filteredProducts, setFilteredProducts] = useState(initialProducts)
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 20
+  const currentPage = pagination?.currentPage || 1
+  const totalPages = pagination?.totalPages || 1
+  const totalProducts = pagination?.totalProducts || initialProducts.length
 
-  useEffect(() => {
-    let result = filterProducts(initialProducts, filters)
-    result = sortProducts(result, sortBy)
-    setFilteredProducts(result)
-    setCurrentPage(1) // Reset to first page on filter/sort
-  }, [initialProducts, filters, sortBy])
+  // Construct filters from URL
+  const filters: FilterOptions = {
+    categories: searchParams.get('category') ? searchParams.get('category')?.split(',') : [],
+    colors: searchParams.get('color') ? searchParams.get('color')?.split(',') : [],
+    fabrics: searchParams.get('material') ? searchParams.get('material')?.split(',') : [],
+    isOnSale: searchParams.get('isOnSale') === 'true' ? true : undefined,
+  }
+  const sortBy = (searchParams.get('sortBy') as SortOption) || 'featured'
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
-  const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  const updateUrl = (newParams: Record<string, string | undefined>) => {
+    const params = new URLSearchParams(searchParams.toString())
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === undefined || value === '') {
+        params.delete(key)
+      } else {
+        params.set(key, value)
+      }
+    })
+    router.push(`?${params.toString()}`, { scroll: false })
+  }
 
   const handleFiltersChange = (newFilters: FilterOptions) => {
-    setFilters(newFilters)
+    updateUrl({
+      category: newFilters.categories?.join(','),
+      color: newFilters.colors?.join(','),
+      material: newFilters.fabrics?.join(','),
+      isOnSale: newFilters.isOnSale ? 'true' : undefined,
+      page: '1' // Reset to first page
+    })
   }
 
   const handleSortChange = (newSortBy: SortOption) => {
-    setSortBy(newSortBy)
+    updateUrl({ sortBy: newSortBy, page: '1' })
   }
 
   return (
@@ -58,21 +77,21 @@ export function CategoryProductsClient({
           onSortChange={handleSortChange}
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters(!showFilters)}
-          products={initialProducts}
+          products={initialProducts} // We still pass this to derive available options, though ideally it comes from aggregations
         />
 
         {/* Results Count */}
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground">
-            Showing {filteredProducts.length} products
+            Showing {totalProducts} products
           </p>
         </div>
 
         {/* Products Grid */}
-        {paginatedProducts.length > 0 ? (
+        {initialProducts.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-              {paginatedProducts.map((product) => (
+              {initialProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
@@ -82,7 +101,7 @@ export function CategoryProductsClient({
               <div className="flex justify-center items-center gap-4 mt-12 pt-8 border-t border-border">
                 <button
                   onClick={() => {
-                    setCurrentPage(prev => Math.max(prev - 1, 1))
+                    updateUrl({ page: String(currentPage - 1) })
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
                   disabled={currentPage === 1}
@@ -95,7 +114,7 @@ export function CategoryProductsClient({
                 </span>
                 <button
                   onClick={() => {
-                    setCurrentPage(prev => Math.min(prev + 1, totalPages))
+                    updateUrl({ page: String(currentPage + 1) })
                     window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
                   disabled={currentPage === totalPages}
@@ -117,8 +136,7 @@ export function CategoryProductsClient({
             {Object.keys(filters).length > 0 ? (
               <button
                 onClick={() => {
-                  setFilters({})
-                  setSortBy('featured')
+                  router.push('?', { scroll: false })
                 }}
                 className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >

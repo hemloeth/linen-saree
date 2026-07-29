@@ -4,20 +4,22 @@ import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import { categories } from "@/lib/products"
 import Link from "next/link"
 import { CategoryProductsClient } from "../categories/[slug]/category-products-client"
-import { fetchProductsFromDB } from "@/lib/products"
+import { fetchPaginatedProducts } from "@/lib/products"
 import { apiServerGet } from "@/lib/api"
+
+import { Suspense } from "react"
 
 export const metadata = {
   title: "Our Collections | Linen Sarees",
   description: "Browse our curated themes and special marketing collections."
 }
 
-export default async function CollectionsPage() {
-  // Fetch all products mapped to frontend types
-  const allProducts = await fetchProductsFromDB()
-  
-  // Show all products instead of filtering by marketing collection
-  const collectionProducts = allProducts
+export default async function CollectionsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+  // Pass URL params to backend
+  const { products: collectionProducts, pagination } = await fetchPaginatedProducts({
+    ...searchParams,
+    limit: 20
+  })
 
   // Fetch marketing collection names for the filter bar
   const colRes = await apiServerGet('/api/marketing-collections')
@@ -63,13 +65,15 @@ export default async function CollectionsPage() {
           </div>
         </div>
       </section>
-
       {/* Products Grid */}
       <div className="py-12">
-        <CategoryProductsClient 
-            initialProducts={collectionProducts} 
-            pageTitle="Theme Collections" 
-        />
+        <Suspense fallback={<div className="py-20 text-center text-muted-foreground">Loading products...</div>}>
+          <CategoryProductsClient 
+              initialProducts={collectionProducts} 
+              pagination={pagination}
+              pageTitle="Theme Collections" 
+          />
+        </Suspense>
       </div>
 
       <Footer />

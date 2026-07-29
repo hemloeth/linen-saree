@@ -92,7 +92,7 @@ function mapProductFromDB(dbProduct: any): Product {
 export async function fetchProductsFromDB(): Promise<Product[]> {
   try {
     const { apiServerGet } = await import("@/lib/api");
-    const data = await apiServerGet('/api/product/allproducts', { revalidate: 60 });
+    const data = await apiServerGet('/api/product/allproducts?limit=20', { revalidate: 60 });
 
     if (data.success && data.products) {
       return data.products.map(mapProductFromDB);
@@ -103,6 +103,44 @@ export async function fetchProductsFromDB(): Promise<Product[]> {
   }
 
   return [];
+}
+
+export interface FetchProductsResponse {
+  products: Product[];
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalProducts: number;
+    limit: number;
+  }
+}
+
+// Fetch paginated, filtered, sorted products from backend
+export async function fetchPaginatedProducts(queryParams: Record<string, any> = {}): Promise<FetchProductsResponse> {
+  try {
+    const { apiServerGet } = await import("@/lib/api");
+    
+    // Clean up undefined/null values
+    const cleanParams = Object.entries(queryParams)
+      .filter(([_, v]) => v !== undefined && v !== null && v !== "")
+      .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {});
+      
+    const query = new URLSearchParams(cleanParams).toString();
+    const url = `/api/product/allproducts${query ? `?${query}` : ''}`;
+    
+    const data = await apiServerGet(url, { revalidate: 60 });
+
+    if (data.success && data.products) {
+      return {
+        products: data.products.map(mapProductFromDB),
+        pagination: data.pagination
+      };
+    }
+  } catch (error: any) {
+    console.error(`Error fetching paginated products:`, error.message || error);
+  }
+
+  return { products: [] };
 }
 
 export const fallbackProducts: Product[] = [

@@ -15,7 +15,7 @@ import { fetchProductsFromDB } from "@/lib/products"
 import { Toaster } from "sonner"
 import './globals.css'
 
-export const dynamic = 'force-dynamic'
+// Removed force-dynamic to allow Next.js static rendering and caching
 
 const _cormorant = Cormorant_Garamond({
   subsets: ["latin"],
