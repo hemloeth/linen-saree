@@ -16,9 +16,9 @@ import { apiServerGet, API_BASE_URL } from "@/lib/api"
 import { resolveMediaUrl } from "@/lib/media"
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
@@ -441,7 +441,8 @@ export async function generateMetadata({ params }: CategoryPageProps) {
 }
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
-  const { slug } = params
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
   const resolvedSearchParams = await searchParams;
 
   const MARKETING_SLUGS = ["festive", "sale", "celebrity", "new-arrivals", "big-sale"];
