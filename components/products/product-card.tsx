@@ -96,7 +96,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               <LoadingSpinner size="md" />
             </div>
           )}
-          {product.images && product.images.length > 1 ? (
+          {(product.images && product.images.length > 1) || (product.videos && product.videos.length > 0) ? (
             <Carousel
               className="w-full h-full group/carousel"
               setApi={setApi}
@@ -108,13 +108,29 @@ export function ProductCard({ product, className }: ProductCardProps) {
               <CarouselContent className="-ml-0 h-full">
                 {product.images.map((img, index) => (
                   <CarouselItem key={index} className="pl-0 basis-full">
-                    <Link href={`/product/${product.slug}`} className="block w-full" onClick={handleNavigate}>
+                    <Link href={`/product/${product.slug}`} className="block w-full h-full" onClick={handleNavigate}>
                       <Image
                         src={img ? optimizeCloudinaryUrl(img) : "/placeholder.svg"}
                         alt={`${product.name} - Image ${index + 1}`}
                         width={500}
                         height={650}
                         className="w-full h-auto block transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </Link>
+                  </CarouselItem>
+                ))}
+                
+                {product.videos && product.videos.length > 0 && product.videos.map((vid, index) => (
+                  <CarouselItem key={`vid-${index}`} className="pl-0 basis-full">
+                    <Link href={`/product/${product.slug}`} className="block w-full h-full bg-muted/20" onClick={handleNavigate}>
+                      <video
+                        src={optimizeCloudinaryUrl(vid, true)}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover block transition-transform duration-500 group-hover:scale-105"
+                        style={{ aspectRatio: '500/650' }}
                       />
                     </Link>
                   </CarouselItem>
