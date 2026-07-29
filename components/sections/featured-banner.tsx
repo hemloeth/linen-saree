@@ -58,7 +58,7 @@ export function FeaturedBanner() {
 
   return (
     <section className="py-20 px-6 lg:px-10">
-      <div className="max-w-[1400px] mx-auto">
+      <div className="max-w-[1500px] mx-auto">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           {/* Image */}
           <div className="relative aspect-square lg:aspect-[4/5] max-h-[600px] overflow-hidden rounded-lg shadow-2xl">

@@ -516,7 +516,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
       {/* Categories Sub-nav */}
       <section className="bg-secondary border-b border-border py-8">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1500px] mx-auto px-6 lg:px-10">
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               href="/categories"

@@ -100,7 +100,7 @@ function SearchContent() {
       </div>
       {/* Main Content */}
       <div className="bg-background py-16">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1500px] mx-auto px-6 lg:px-10">
           {/* Search Form */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-12">
             <div className="relative">

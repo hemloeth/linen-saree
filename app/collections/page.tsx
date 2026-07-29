@@ -46,7 +46,7 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
 
       {/* Collections Sub-nav */}
       <section className="bg-secondary border-b border-border py-8">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1500px] mx-auto px-6 lg:px-10">
           <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 lg:gap-4">
             <Link
               href="/collections"

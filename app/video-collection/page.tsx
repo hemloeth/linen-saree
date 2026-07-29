@@ -511,7 +511,7 @@ function VideoCollectionContent() {
 
         {/* Category Filter */}
         <section className="px-6 lg:px-10 py-12 bg-gradient-to-br from-gray-50 via-white to-gray-100">
-          <div className="max-w-[1400px] mx-auto">
+          <div className="max-w-[1500px] mx-auto">
             <div className="text-center mb-12">
               <h2 className="font-serif text-4xl md:text-5xl mb-4 text-gray-900">
                 Browse by Category
@@ -539,7 +539,7 @@ function VideoCollectionContent() {
 
         {/* Video Grid */}
         <section id="video-grid" className="px-6 lg:px-10 py-24 bg-gradient-to-br from-gray-50 via-white to-gray-100">
-          <div className="max-w-[1400px] mx-auto">
+          <div className="max-w-[1500px] mx-auto">
             <div className="text-center mb-16">
               <h2 className="font-serif text-4xl md:text-5xl mb-4 text-gray-900">
                 {selectedCategory === "All" ? "Complete Collection" : `${selectedCategory} Collection`}
@@ -573,7 +573,7 @@ function VideoCollectionContent() {
 
         {/* Bottom CTA */}
         <section className="px-6 lg:px-10 pb-16 bg-gradient-to-br from-gray-50 via-white to-gray-100">
-          <div className="max-w-[1400px] mx-auto text-center">
+          <div className="max-w-[1500px] mx-auto text-center">
             <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl p-12">
               <h2 className="font-serif text-4xl mb-4 text-gray-900">
                 Discover More Collections

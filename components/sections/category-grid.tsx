@@ -49,7 +49,7 @@ export function CategoryGrid() {
 
   return (
     <section className="py-24 px-6 lg:px-10 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
-      <div className="max-w-[1400px] mx-auto">
+      <div className="max-w-[1500px] mx-auto">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-2 text-xs sm:text-sm tracking-[0.3em] uppercase text-muted-foreground mb-4">

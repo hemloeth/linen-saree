@@ -31,7 +31,7 @@ export function NewCollections() {
 
   return (
     <section className="py-20 px-6 lg:px-10 bg-background">
-      <div className="max-w-[1400px] mx-auto">
+      <div className="max-w-[1500px] mx-auto">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
           <div>
