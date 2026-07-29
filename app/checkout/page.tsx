@@ -412,7 +412,7 @@ export default function CheckoutPage() {
 
             <div className="grid lg:grid-cols-2 gap-12">
               {/* Checkout Form */}
-              <div>
+              <div className="order-2 lg:order-1">
                 <h1 className="font-serif text-3xl mb-8">Checkout</h1>
 
                 {/* Progress Steps */}
@@ -785,7 +785,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Order Summary */}
-              <div className="lg:pl-12 lg:border-l border-border">
+              <div className="lg:pl-12 lg:border-l border-border order-1 lg:order-2">
                 <h2 className="font-serif text-2xl mb-6">Order Summary</h2>
 
                 {/* Items */}
