@@ -23,8 +23,29 @@ interface AutoScrollHeroProps {
   initialSlides?: SareeSlide[]
 }
 
+const fallbackSlides: SareeSlide[] = [
+  {
+    id: "fallback-1",
+    image: "/images/s/s1.jpg",
+    title: "Pure Linen Collection",
+    subtitle: "Elegance in every thread",
+    description: "Discover our handcrafted pure linen sarees for everyday comfort and unmatched grace.",
+    category: "New Arrivals",
+    link: "/collections"
+  },
+  {
+    id: "fallback-2",
+    image: "/images/sb/sb1.jpg",
+    title: "Banarasi Silk",
+    subtitle: "Timeless Tradition",
+    description: "Experience the luxury of authentic Banarasi silk blended with the comfort of premium linen.",
+    category: "Featured",
+    link: "/collections"
+  }
+];
+
 export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
-  const slides = initialSlides
+  const slides = initialSlides.length > 0 ? initialSlides : fallbackSlides;
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 }, [
     Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }) as any

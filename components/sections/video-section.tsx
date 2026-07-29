@@ -1,11 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Heart, ShoppingBag, Play, Pause } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { useProducts } from "@/context/product-context"
+import { useInView } from "react-intersection-observer"
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-utils"
 
 interface VideoCardProps {
   product: any
@@ -13,15 +15,53 @@ interface VideoCardProps {
 
 function VideoCard({ product }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [isPlaying, setIsPlaying] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+  
+  // 1. Observer for playing/pausing when visible
+  const { ref: inViewRef, inView } = useInView({
+    // Start playing when it's 100px away from the screen, so it's ready when visible
+    rootMargin: "100px 0px", 
+    threshold: 0,
+  })
+
+  // 2. Observer for lazy mounting (DOM virtualization)
+  const { ref: mountRef, inView: isNearScreen } = useInView({
+    // Mount the video when it's 1200px (about 1.5 screens) away
+    rootMargin: "1200px 0px", 
+    triggerOnce: true,
+  })
+
+  // Helper to merge refs
+  const setRefs = (node: HTMLDivElement | null) => {
+    inViewRef(node)
+    mountRef(node)
+  }
+
+  useEffect(() => {
+    if (videoRef.current) {
+      if (inView) {
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            // Auto-play was prevented
+            setIsPlaying(false)
+          });
+        }
+        setIsPlaying(true)
+      } else {
+        videoRef.current.pause()
+        setIsPlaying(false)
+      }
+    }
+  }, [inView])
 
   const price = product.price
   const originalPrice = product.originalPrice || price
   const discount = Math.round(((originalPrice - price) / originalPrice) * 100)
   const isWishlisted = isInWishlist(product.id)
-  const videoSrc = product.videos?.[0] || ""
+  const videoSrc = product.videos?.[0] ? optimizeCloudinaryUrl(product.videos[0], 'video') : ""
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -46,18 +86,20 @@ function VideoCard({ product }: VideoCardProps) {
 
   return (
     <Link href={`/product/${product.slug}`} className="group relative w-full block cursor-pointer">
-      <div className="relative w-full mb-4">
+      <div className="relative w-full mb-4" ref={setRefs}>
         <div className="aspect-[3/4] overflow-hidden bg-black rounded-sm relative">
-          <video
-            ref={videoRef}
-            src={videoSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onLoadedData={() => setIsPlaying(true)}
-          />
+          {isNearScreen && (
+            <video
+              ref={videoRef}
+              src={videoSrc}
+              loop
+              muted
+              playsInline
+              preload="auto"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onLoadedData={() => { if (inView) setIsPlaying(true) }}
+            />
+          )}
 
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

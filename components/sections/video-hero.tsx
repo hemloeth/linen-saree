@@ -4,19 +4,33 @@ import { useState, useRef, useEffect } from "react"
 import { Volume2, VolumeX, Play, Pause } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useInView } from "react-intersection-observer"
 
 export function VideoHero() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isMuted, setIsMuted] = useState(true)
-  const [isPlaying, setIsPlaying] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const { ref: inViewRef, inView } = useInView({
+    threshold: 0.1,
+  })
 
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.play().catch(() => {
-        setIsPlaying(false)
-      })
+      if (inView) {
+        // Only attempt to play if the state dictates it should be playing
+        // (e.g. user hasn't explicitly paused it)
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => setIsPlaying(true)).catch(() => {
+            setIsPlaying(false)
+          });
+        }
+      } else {
+        videoRef.current.pause()
+        // We do not change isPlaying state here so it resumes if they scroll back
+      }
     }
-  }, [])
+  }, [inView])
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -37,16 +51,22 @@ export function VideoHero() {
   }
 
   return (
-    <section className="relative h-[calc(100vh-104px)] w-full overflow-hidden">
+    <section className="relative h-[calc(100vh-104px)] w-full overflow-hidden" ref={inViewRef}>
       {/* Video Background */}
       <video
         ref={videoRef}
-        autoPlay
         loop
         muted={isMuted}
         playsInline
+        preload="metadata"
         className="absolute inset-0 w-full h-full object-cover"
         poster="/images/hero-saree.jpg"
+        onLoadedData={() => {
+          if (inView) {
+            videoRef.current?.play().catch(() => setIsPlaying(false));
+            setIsPlaying(true);
+          }
+        }}
       >
         <source
           src="https://videos.pexels.com/video-files/3983632/3983632-uhd_2732_1440_25fps.mp4"

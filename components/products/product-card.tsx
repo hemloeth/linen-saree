@@ -11,6 +11,7 @@ import type { Product } from "@/lib/products"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-utils"
 import {
   Carousel,
   CarouselContent,
@@ -109,7 +110,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
                   <CarouselItem key={index} className="pl-0 basis-full">
                     <Link href={`/product/${product.slug}`} className="block w-full" onClick={handleNavigate}>
                       <Image
-                        src={img || "/placeholder.svg"}
+                        src={img ? optimizeCloudinaryUrl(img) : "/placeholder.svg"}
                         alt={`${product.name} - Image ${index + 1}`}
                         width={500}
                         height={650}
@@ -139,7 +140,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           ) : (
             <Link href={`/product/${product.slug}`} className="block w-full" onClick={handleNavigate}>
               <Image
-                src={product.image || "/placeholder.svg"}
+                src={product.image ? optimizeCloudinaryUrl(product.image) : "/placeholder.svg"}
                 alt={product.name}
                 width={500}
                 height={650}

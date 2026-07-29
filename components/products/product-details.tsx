@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { TrustBadges } from "@/components/common/trust-badges"
 import { StarRating } from "@/components/common/star-rating"
 import type { Product } from "@/lib/products"
+import { optimizeCloudinaryUrl } from "@/lib/cloudinary-utils"
 
 interface ProductDetailsProps {
   product: Product
@@ -39,8 +40,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   // Combine images and videos into a single media array
   const mediaItems: MediaItem[] = [
-    ...product.images.map(img => ({ type: 'image' as const, src: img, alt: product.name })),
-    ...(product.videos || []).map(video => ({ type: 'video' as const, src: video, alt: `${product.name} video` }))
+    ...product.images.map(img => ({ type: 'image' as const, src: optimizeCloudinaryUrl(img, 'image'), alt: product.name })),
+    ...(product.videos || []).map(video => ({ type: 'video' as const, src: optimizeCloudinaryUrl(video, 'video'), alt: `${product.name} video` }))
   ]
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
