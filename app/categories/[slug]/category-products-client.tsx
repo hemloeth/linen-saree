@@ -69,7 +69,7 @@ export function CategoryProductsClient({
   }
 
   return (
-    <section className="pt-8 pb-16 px-2 sm:px-6 lg:px-10">
+    <section className="pt-8 pb-16 px-2">
       <div className="max-w-[1500px] mx-auto flex flex-col lg:flex-row gap-8 items-start pb-20 lg:pb-0">
         {/* Sidebar Filters (Desktop Only) */}
         <div className="hidden lg:block w-full lg:w-[280px] shrink-0 lg:sticky lg:top-24">

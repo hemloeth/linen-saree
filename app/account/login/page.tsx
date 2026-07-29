@@ -138,7 +138,7 @@ export default function LoginPage() {
             <AdminToast toasts={toasts} onDismiss={dismissToast} />
 
             <div className="pt-[96px] lg:pt-[104px]">
-                <section className="py-12 lg:py-16 px-2 sm:px-6 lg:px-10">
+                <section className="py-12 lg:py-16 px-2">
                     <div className="max-w-[460px] mx-auto">
                         <h1 className="font-serif text-3xl text-center mb-8">My Account</h1>
 

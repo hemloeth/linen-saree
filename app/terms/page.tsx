@@ -11,7 +11,7 @@ export default function TermsOfServicePage() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-b from-muted/50 to-background">
-        <div className="max-w-[1500px] mx-auto px-2 sm:px-6 lg:px-10 py-20 lg:py-32">
+        <div className="max-w-[1500px] mx-auto px-2 py-20 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif text-4xl lg:text-6xl font-light mb-6">
               Terms of Service
@@ -23,7 +23,7 @@ export default function TermsOfServicePage() {
         </div>
       </div>
 
-      <div className="max-w-[1000px] mx-auto px-2 sm:px-6 lg:px-10 py-16 lg:py-24">
+      <div className="max-w-[1000px] mx-auto px-2 py-16 lg:py-24">
         {/* Introduction */}
         <section className="mb-16">
           <div className="flex items-center gap-4 mb-6">

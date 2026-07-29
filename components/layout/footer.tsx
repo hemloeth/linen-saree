@@ -64,7 +64,7 @@ const socialLinks = [
 export function Footer() {
   return (
     <footer className="bg-foreground text-background">
-      <div className="max-w-[1500px] mx-auto px-2 sm:px-6 lg:px-10">
+      <div className="max-w-[1500px] mx-auto px-2">
         <div className="py-16 lg:py-20 grid grid-cols-2 md:grid-cols-4 gap-10 lg:gap-16">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">

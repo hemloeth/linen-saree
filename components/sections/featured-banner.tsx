@@ -57,7 +57,7 @@ export function FeaturedBanner() {
   }, [])
 
   return (
-    <section className="py-20 px-2 sm:px-6 lg:px-10">
+    <section className="py-20 px-2">
       <div className="max-w-[1500px] mx-auto">
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           {/* Image */}

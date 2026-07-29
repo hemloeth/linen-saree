@@ -54,7 +54,7 @@ export default function SizeGuidePage() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="relative bg-gradient-to-b from-muted/50 to-background">
-        <div className="max-w-[1500px] mx-auto px-2 sm:px-6 lg:px-10 py-20 lg:py-32">
+        <div className="max-w-[1500px] mx-auto px-2 py-20 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif text-4xl lg:text-6xl font-light mb-6">
               Size Guide
@@ -66,7 +66,7 @@ export default function SizeGuidePage() {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-2 sm:px-6 lg:px-10 py-16 lg:py-24">
+      <div className="max-w-[1200px] mx-auto px-2 py-16 lg:py-24">
         {/* Saree Sizing */}
         <section className="mb-20 lg:mb-32">
           <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">

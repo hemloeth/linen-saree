@@ -54,7 +54,7 @@ export default async function FestivalCollectionPage() {
       </div>
 
       {/* Collection Description */}
-      <section className="py-12 px-2 sm:px-6 lg:px-10 bg-secondary">
+      <section className="py-12 px-2 bg-secondary">
         <div className="max-w-[1500px] mx-auto text-center">
           <h2 className="text-3xl lg:text-4xl font-light mb-6">Festival Collection</h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
@@ -66,7 +66,7 @@ export default async function FestivalCollectionPage() {
       </section>
 
       {/* Products Grid */}
-      <section className="py-12 px-2 sm:px-6 lg:px-10">
+      <section className="py-12 px-2">
         <div className="max-w-[1500px] mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {festivalProducts.map((product) => (

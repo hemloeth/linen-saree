@@ -16,7 +16,7 @@ export default async function BestSellersPage() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-muted/50 to-background py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
+        <div className="max-w-7xl mx-auto px-2">
           <div className="text-center">
             <h1 className="text-4xl lg:text-6xl font-serif font-bold text-foreground mb-6">
               Best Sellers
@@ -31,7 +31,7 @@ export default async function BestSellersPage() {
 
       {/* Best Sellers Grid */}
       <section className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
+        <div className="max-w-7xl mx-auto px-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
             {bestSellers.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -42,7 +42,7 @@ export default async function BestSellersPage() {
 
       {/* Why These Are Best Sellers */}
       <section className="py-16 lg:py-24 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10">
+        <div className="max-w-7xl mx-auto px-2">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-serif font-bold text-foreground mb-6">
               Why Our Customers Love These
@@ -91,7 +91,7 @@ export default async function BestSellersPage() {
 
       {/* Explore More Collections */}
       <section className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-10 text-center">
+        <div className="max-w-7xl mx-auto px-2 text-center">
           <h2 className="text-3xl lg:text-4xl font-serif font-bold text-foreground mb-6">
             Explore More Collections
           </h2>

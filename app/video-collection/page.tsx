@@ -510,7 +510,7 @@ function VideoCollectionContent() {
         </section>
 
         {/* Category Filter */}
-        <section className="px-2 sm:px-6 lg:px-10 py-12 bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <section className="px-2 py-12 bg-gradient-to-br from-gray-50 via-white to-gray-100">
           <div className="max-w-[1500px] mx-auto">
             <div className="text-center mb-12">
               <h2 className="font-serif text-4xl md:text-5xl mb-4 text-gray-900">
@@ -538,7 +538,7 @@ function VideoCollectionContent() {
         </section>
 
         {/* Video Grid */}
-        <section id="video-grid" className="px-2 sm:px-6 lg:px-10 py-24 bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <section id="video-grid" className="px-2 py-24 bg-gradient-to-br from-gray-50 via-white to-gray-100">
           <div className="max-w-[1500px] mx-auto">
             <div className="text-center mb-16">
               <h2 className="font-serif text-4xl md:text-5xl mb-4 text-gray-900">
@@ -572,7 +572,7 @@ function VideoCollectionContent() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="px-2 sm:px-6 lg:px-10 pb-16 bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <section className="px-2 pb-16 bg-gradient-to-br from-gray-50 via-white to-gray-100">
           <div className="max-w-[1500px] mx-auto text-center">
             <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl p-12">
               <h2 className="font-serif text-4xl mb-4 text-gray-900">

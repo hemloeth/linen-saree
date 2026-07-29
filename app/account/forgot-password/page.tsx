@@ -115,7 +115,7 @@ export default function ForgotPasswordPage() {
             <AdminToast toasts={toasts} onDismiss={dismissToast} />
 
             <div className="pt-[96px] lg:pt-[104px] flex-grow flex flex-col justify-center pb-20">
-                <section className="px-2 sm:px-6 lg:px-10">
+                <section className="px-2">
                     <div className="max-w-[460px] mx-auto border border-border rounded-xl p-8 bg-card shadow-sm relative mt-8">
                         {/* Back Button */}
                         {step === 1 ? (

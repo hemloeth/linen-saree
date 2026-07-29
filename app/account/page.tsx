@@ -61,7 +61,7 @@ export default function AccountPage() {
       <Header />
 
       <div className="pt-[96px] lg:pt-[104px]">
-        <section className="py-12 lg:py-16 px-2 sm:px-6 lg:px-10">
+        <section className="py-12 lg:py-16 px-2">
           <div className="max-w-[700px] mx-auto">
             <h1 className="font-serif text-3xl text-center mb-2">My Account</h1>
             <p className="text-center text-muted-foreground mb-10">Welcome back, {user.name}!</p>
