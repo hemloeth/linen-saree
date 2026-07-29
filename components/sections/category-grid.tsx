@@ -125,7 +125,7 @@ export function CategoryGrid() {
         <div className="text-center mt-12 sm:mt-16">
           <Link
             href="/collections"
-            className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded-full font-medium tracking-wide text-sm sm:text-base"
+            className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded-none font-medium tracking-wide text-sm sm:text-base"
           >
             View All Collections
             <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />

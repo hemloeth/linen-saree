@@ -245,7 +245,7 @@ export function VideoSection() {
           </div>
           <Link
             href="/video-collection"
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/95 text-primary-foreground px-12 py-4 rounded-full font-bold btn-premium shadow-lg group"
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary/95 text-primary-foreground px-12 py-4 rounded-none font-bold btn-premium shadow-lg group"
             suppressHydrationWarning
           >
             <div className="absolute inset-0 animate-shimmer opacity-20 pointer-events-none" />
