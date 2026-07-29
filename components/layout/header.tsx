@@ -50,6 +50,17 @@ export function Header() {
   const { isAuthenticated, isHydrated: authHydrated, user, logout } = useAuth()
 
   useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isMenuOpen])
+
+  useEffect(() => {
     const fetchCollections = async () => {
       try {
         const response = await apiGet('/api/marketing-collections')
