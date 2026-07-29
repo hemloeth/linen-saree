@@ -111,7 +111,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
 
             {/* Collections Sub-nav */}
             <section className="bg-secondary border-b border-border py-8">
-                <div className="max-w-[1500px] mx-auto px-6 lg:px-10">
+                <div className="max-w-[1500px] mx-auto px-2 sm:px-6 lg:px-10">
                     <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 lg:gap-4">
                         <Link
                             href="/collections"
@@ -138,7 +138,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
             {/* Collection Stats/Offer Section */}
             {(collection.stats?.length > 0 || collection.offer) && (
                 <section className="py-12 bg-secondary/30 border-b border-border">
-                    <div className="max-w-[1500px] mx-auto px-6 lg:px-10">
+                    <div className="max-w-[1500px] mx-auto px-2 sm:px-6 lg:px-10">
                         <div className="flex flex-wrap justify-center items-center gap-12 lg:gap-24">
                             {collection.key === 'big-sale' && collection.offer && (
                                 <div className="text-center">
@@ -159,7 +159,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
             )}
 
             {/* Products Grid */}
-            <section className="pt-10 pb-20 px-6 lg:px-10">
+            <section className="pt-10 pb-20 px-2 sm:px-6 lg:px-10">
                 <div className="max-w-[1500px] mx-auto">
                     <div className="flex items-center justify-between mb-12">
                         <div className="space-y-1">

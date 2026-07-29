@@ -18,7 +18,7 @@ export default function CartPage() {
       <Header />
       
       <div className="pt-[96px] lg:pt-[104px] min-h-[80vh]">
-        <section className="py-12 lg:py-16 px-6 lg:px-10">
+        <section className="py-12 lg:py-16 px-2 sm:px-6 lg:px-10">
           <div className="max-w-[1200px] mx-auto">
             <h1 className="font-serif text-4xl md:text-5xl mb-8">Shopping Cart</h1>
 
