@@ -46,11 +46,11 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
 
       {/* Collections Sub-nav */}
       <section className="bg-secondary border-b border-border py-8">
-        <div className="max-w-[1400px] mx-auto px-0 lg:px-10">
-          <div className="flex overflow-x-auto hide-scrollbar px-6 lg:px-0 lg:flex-wrap lg:justify-center gap-3 lg:gap-4 pb-2 lg:pb-0">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+          <div className="flex flex-wrap justify-center gap-3 lg:gap-4">
             <Link
               href="/collections"
-              className="whitespace-nowrap px-6 py-2 bg-foreground text-background text-sm tracking-wide transition-all rounded-full lg:rounded-none flex-shrink-0"
+              className="px-6 py-2 bg-foreground text-background text-sm tracking-wide transition-all text-center"
             >
               All Collections
             </Link>
@@ -58,7 +58,7 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
               <Link
                 key={col.key}
                 href={`/collections/${col.key}`}
-                className="whitespace-nowrap px-6 py-2 border border-border hover:bg-foreground hover:text-background text-sm tracking-wide transition-all rounded-full lg:rounded-none flex-shrink-0"
+                className="px-6 py-2 border border-border hover:bg-foreground hover:text-background text-sm tracking-wide transition-all text-center"
               >
                 {col.name}
               </Link>
