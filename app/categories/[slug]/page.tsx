@@ -19,7 +19,7 @@ interface CategoryPageProps {
   params: {
     slug: string
   }
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 // Define different slide sets for different productCollection types
@@ -442,6 +442,7 @@ export async function generateMetadata({ params }: CategoryPageProps) {
 
 export default async function CategoryPage({ params, searchParams }: CategoryPageProps) {
   const { slug } = params
+  const resolvedSearchParams = await searchParams;
 
   const MARKETING_SLUGS = ["festive", "sale", "celebrity", "new-arrivals", "big-sale"];
   if (MARKETING_SLUGS.includes(slug)) {
@@ -450,7 +451,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   // Fetch paginated products for this specific category
   const { products: categoryProducts, pagination } = await fetchPaginatedProducts({
-    ...searchParams,
+    ...resolvedSearchParams,
     category: slug,
     limit: 20
   })

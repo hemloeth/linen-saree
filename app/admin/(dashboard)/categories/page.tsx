@@ -83,7 +83,7 @@ export default function CategoriesPage() {
         <div className="space-y-6">
             <AdminToast toasts={toasts} onDismiss={dismissToast} />
 
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight font-serif text-primary">Categories</h2>
                     <p className="text-muted-foreground">
@@ -130,33 +130,6 @@ export default function CategoriesPage() {
                                     required
                                 />
                             </div>
-                            <Button type="submit" className="mt-2 w-full md:w-auto relative overflow-hidden" disabled={loading}>
-                                <AnimatePresence mode="wait">
-                                    {loading ? (
-                                        <motion.span
-                                            key="loading"
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="flex items-center gap-2"
-                                        >
-                                            <LoadingSpinner size="sm" />
-                                            Adding...
-                                        </motion.span>
-                                    ) : (
-                                        <motion.span
-                                            key="idle"
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            Add Category
-                                        </motion.span>
-                                    )}
-                                </AnimatePresence>
-                            </Button>
                         </div>
                         <div className="space-y-3">
                             <Label>Image</Label>
@@ -185,6 +158,35 @@ export default function CategoriesPage() {
                                     )}
                                 </div>
                             </div>
+                        </div>
+                        <div className="md:col-span-2 pt-2">
+                            <Button type="submit" className="w-full sm:w-auto relative overflow-hidden" disabled={loading}>
+                                <AnimatePresence mode="wait">
+                                    {loading ? (
+                                        <motion.span
+                                            key="loading"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <LoadingSpinner size="sm" />
+                                            Adding...
+                                        </motion.span>
+                                    ) : (
+                                        <motion.span
+                                            key="idle"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            Add Category
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
+                            </Button>
                         </div>
                     </form>
                 </CardContent>

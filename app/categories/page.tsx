@@ -28,9 +28,10 @@ const heroSlides = [
   }
 ]
 
-export default async function CategoriesPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function CategoriesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const resolvedSearchParams = await searchParams;
   const { products: allProducts, pagination } = await fetchPaginatedProducts({
-    ...searchParams,
+    ...resolvedSearchParams,
     limit: 20
   })
 

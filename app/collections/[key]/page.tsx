@@ -112,10 +112,10 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
             {/* Collections Sub-nav */}
             <section className="bg-secondary border-b border-border py-8">
                 <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
-                    <div className="flex flex-wrap justify-center gap-4">
+                    <div className="flex overflow-x-auto hide-scrollbar px-6 lg:px-0 lg:flex-wrap lg:justify-center gap-3 lg:gap-4 pb-2 lg:pb-0">
                         <Link
                             href="/collections"
-                            className="px-6 py-2 border border-border hover:bg-foreground hover:text-background text-sm tracking-wide transition-all"
+                            className="whitespace-nowrap px-6 py-2 border border-border hover:bg-foreground hover:text-background text-sm tracking-wide transition-all rounded-full lg:rounded-none flex-shrink-0"
                         >
                             All Collections
                         </Link>
@@ -123,7 +123,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
                             <Link
                                 key={col.key}
                                 href={`/collections/${col.key}`}
-                                className={`px-6 py-2 text-sm tracking-wide transition-all ${col.key === key
+                                className={`whitespace-nowrap px-6 py-2 text-sm tracking-wide transition-all rounded-full lg:rounded-none flex-shrink-0 ${col.key === key
                                     ? "bg-foreground text-background shadow-md"
                                     : "border border-border hover:bg-foreground hover:text-background"
                                     }`}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { ChevronDown, X, Filter } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   FilterOptions,
   SortOption,
@@ -54,6 +55,7 @@ export function ProductFilters({
   const [categories, setCategories] = useState<FilterCategory[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [counts, setCounts] = useState<FilterCounts | null>(null)
+  const [showAllColors, setShowAllColors] = useState(false)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -166,18 +168,6 @@ export function ProductFilters({
       {/* Sort and Filter Toggle */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          {onToggleFilters && (
-            <button
-              onClick={onToggleFilters}
-              className="flex items-center gap-2 px-4 py-2 border border-border hover:bg-muted transition-colors lg:hidden"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-              {hasActiveFilters && (
-                <span className="w-2 h-2 bg-primary rounded-full"></span>
-              )}
-            </button>
-          )}
 
           {hasActiveFilters && (
             <button
@@ -189,31 +179,12 @@ export function ProductFilters({
             </button>
           )}
         </div>
-
-        {/* Sort Dropdown */}
-        <div className="relative">
-          <select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value as SortOption)}
-            className="appearance-none border border-border px-4 py-2 pr-10 bg-background text-sm cursor-pointer hover:bg-muted transition-colors"
-          >
-            <option value="featured">Sort by: Featured</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="newest">Newest First</option>
-            <option value="name-asc">Name: A to Z</option>
-            <option value="name-desc">Name: Z to A</option>
-            <option value="color-asc">Color: Color</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
-        </div>
       </div>
 
       {/* Filters Panel */}
-      {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6 bg-muted/30 rounded-lg">
-          {/* Categories */}
-          <div>
+      <div className={cn("flex-col gap-8", !showFilters ? "hidden lg:flex" : "flex")}>
+        {/* Categories */}
+        <div>
             <h3 className="font-medium mb-3">Categories</h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {loadingCategories ? (
@@ -249,7 +220,7 @@ export function ProductFilters({
           <div>
             <h3 className="font-medium mb-3">Colors</h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {colors.map((color) => (
+              {(showAllColors ? colors : colors.slice(0, 7)).map((color) => (
                 <label key={color} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -265,6 +236,14 @@ export function ProductFilters({
                   )}
                 </label>
               ))}
+              {colors.length > 7 && (
+                <button
+                  onClick={() => setShowAllColors(!showAllColors)}
+                  className="text-sm text-primary hover:underline font-medium pt-1 text-left w-full"
+                >
+                  {showAllColors ? "- Show less" : `+ ${colors.length - 7} more`}
+                </button>
+              )}
             </div>
           </div>
 
@@ -368,7 +347,6 @@ export function ProductFilters({
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
   )
 }

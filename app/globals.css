@@ -243,3 +243,12 @@ input[type=number] {
   background-size: 200% 100%;
   animation: shimmer 3s infinite;
 }
+
+/* Hide scrollbar for horizontal scrolling elements */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
