@@ -172,7 +172,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             {/* Mobile Main Media with Swipe Support */}
             <div className="relative flex-1 w-full lg:hidden">
               <div
-                className="relative overflow-hidden select-none w-full aspect-[4/5] rounded-sm bg-muted/10"
+                className="relative overflow-hidden select-none w-full aspect-[3/4] rounded-sm bg-muted/10"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
