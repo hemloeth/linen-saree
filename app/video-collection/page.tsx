@@ -264,17 +264,17 @@ function VideoCollectionContent() {
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors text-white group"
+                className="absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 p-1.5 md:p-3 bg-white/10 md:bg-white/20 hover:bg-white/20 md:hover:bg-white/30 backdrop-blur-sm transition-colors text-white/70 md:text-white group rounded-full md:rounded-none"
                 aria-label="Previous video"
               >
-                <ChevronLeft className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" />
+                <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 group-hover:-translate-x-0.5 transition-transform" />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors text-white group"
+                className="absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 p-1.5 md:p-3 bg-white/10 md:bg-white/20 hover:bg-white/20 md:hover:bg-white/30 backdrop-blur-sm transition-colors text-white/70 md:text-white group rounded-full md:rounded-none"
                 aria-label="Next video"
               >
-                <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-4 h-4 md:w-6 md:h-6 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </>
           )}
