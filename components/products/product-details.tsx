@@ -132,9 +132,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <span className="text-foreground line-clamp-1">{product.name}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-16">
           {/* Image Gallery */}
-          <div className="flex flex-col-reverse lg:flex-row gap-4">
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col-reverse lg:flex-row gap-4">
             {/* Thumbnails - Vertical on left side (desktop) */}
             <div className="hidden lg:flex lg:flex-col gap-3">
               {mediaItems.map((media, index) => (
@@ -267,7 +267,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           {/* Product Info */}
-          <div className="lg:py-4 flex flex-col justify-center">
+          <div className="lg:col-span-5 xl:col-span-4 lg:py-4 flex flex-col justify-center">
 
             {/* Header: Category & Reviews */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
