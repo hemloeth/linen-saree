@@ -27,8 +27,16 @@ const _montserrat = Montserrat({
   weight: ["300", "400", "500", "600"]
 })
 
+const getBaseUrl = () => {
+  let url = process.env.NEXT_PUBLIC_SITE_URL || 'https://linensarees.com';
+  if (!url.startsWith('http')) {
+    url = `https://${url}`;
+  }
+  return new URL(url);
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://linensarees.com'),
+  metadataBase: getBaseUrl(),
   title: 'Linen Sarees | Premium Handcrafted Sarees',
   description: 'Discover our exquisite collection of premium linen sarees. Handcrafted elegance for the modern woman.',
   generator: 'v0.app',

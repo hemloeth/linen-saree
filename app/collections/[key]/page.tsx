@@ -190,19 +190,28 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
             {/* Products Grid */}
             <Suspense fallback={<div className="py-20 text-center">Loading products...</div>}>
                 <CategoryProductsClient 
-                    initialProducts={products.map(product => ({
-                        id: product._id,
-                        name: product.name,
-                        slug: product.name.toLowerCase().replace(/ /g, '-'),
-                        price: product.price,
-                        originalPrice: product.regularPrice,
-                        image: product.mainImage,
-                        images: [product.mainImage],
-                        isOnSale: product.isOnSale,
-                        isNew: product.isNewArrival,
-                        category: product.category || 'Collection',
-                        categorySlug: (product.category || 'Collection').toLowerCase().replace(/ /g, '-')
-                    }))}
+                    initialProducts={products.map(product => {
+                        const productName = product.name || 'Unnamed Product';
+                        const productCategory = product.category || 'Collection';
+                        
+                        const galleryUrls = product.galleryImages && Array.isArray(product.galleryImages) 
+                            ? product.galleryImages.map((g: any) => g.url).filter(Boolean) 
+                            : [];
+                        
+                        return {
+                            id: product._id,
+                            name: productName,
+                            slug: product.slug || productName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+                            price: product.price || 0,
+                            originalPrice: product.regularPrice || product.price || 0,
+                            image: product.mainImage || galleryUrls[0] || '',
+                            images: galleryUrls.length > 0 ? galleryUrls : (product.mainImage ? [product.mainImage] : []),
+                            isOnSale: product.isOnSale || false,
+                            isNew: product.isNewArrival || false,
+                            category: productCategory,
+                            categorySlug: productCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+                        }
+                    }) as any}
                     pageTitle={collection.name}
                 />
             </Suspense>

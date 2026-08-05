@@ -31,5 +31,9 @@ export function getOpenGraphImageUrl(url: string): string {
   if (!url || !url.includes('res.cloudinary.com')) {
     return url;
   }
-  return url.replace('/upload/', '/upload/w_1200,h_630,c_fill,f_auto,q_auto,g_auto/');
+  let secureUrl = url;
+  if (secureUrl.startsWith('http://')) {
+    secureUrl = secureUrl.replace('http://', 'https://');
+  }
+  return secureUrl.replace('/upload/', '/upload/w_1200,h_630,c_fill,f_auto,q_auto,g_auto/');
 }
