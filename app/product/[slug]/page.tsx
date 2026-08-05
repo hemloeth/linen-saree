@@ -8,6 +8,7 @@ import { fetchProductsFromDB, getProductBySlug, getProductsByCategory } from "@/
 import type { Product } from "@/lib/products"
 import { notFound } from "next/navigation"
 import { resolveMediaUrl } from "@/lib/media"
+import { getOpenGraphImageUrl } from "@/lib/cloudinary-utils"
 import type { Metadata } from "next"
 
 interface Props {
@@ -36,6 +37,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const finalImages = images.length > 0 ? images : ["/placeholder.svg"]
 
+  const ogImageUrl = getOpenGraphImageUrl(finalImages[0]);
+
   return {
     title: `${product.name} | Linen Sarees`,
     description: product.description,
@@ -46,9 +49,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'Linen Sarees',
       images: [
         {
-          url: finalImages[0],
-          width: 800,
-          height: 1000,
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
           alt: product.name,
         },
       ],
@@ -59,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: `${product.name} | Linen Sarees`,
       description: product.description,
-      images: [finalImages[0]],
+      images: [ogImageUrl],
     },
   }
 }
