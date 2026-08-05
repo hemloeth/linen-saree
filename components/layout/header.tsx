@@ -18,6 +18,7 @@ type NavLink = {
   submenu?: { name: string; href: string }[]
 }
 
+const navLinks: NavLink[] = [
   {
     name: "Categories",
     href: "/categories",
