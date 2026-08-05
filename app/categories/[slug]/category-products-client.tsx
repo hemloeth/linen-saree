@@ -85,7 +85,7 @@ export function CategoryProductsClient({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 space-y-6 w-full">
+        <div id="products-grid" className="flex-1 space-y-6 w-full">
           {/* Results Count & Sort */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <p className="text-muted-foreground">
@@ -125,7 +125,11 @@ export function CategoryProductsClient({
                 <button
                   onClick={() => {
                     updateUrl({ page: String(currentPage - 1) })
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                    const grid = document.getElementById('products-grid');
+                    if (grid) {
+                      const y = grid.getBoundingClientRect().top + window.scrollY - 140;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
                   }}
                   disabled={currentPage === 1}
                   className="px-4 py-2 text-sm font-medium border border-border rounded-md disabled:opacity-50 hover:bg-muted hover:text-foreground transition-colors bg-background"
@@ -138,7 +142,11 @@ export function CategoryProductsClient({
                 <button
                   onClick={() => {
                     updateUrl({ page: String(currentPage + 1) })
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                    const grid = document.getElementById('products-grid');
+                    if (grid) {
+                      const y = grid.getBoundingClientRect().top + window.scrollY - 140;
+                      window.scrollTo({ top: y, behavior: 'smooth' });
+                    }
                   }}
                   disabled={currentPage === totalPages}
                   className="px-4 py-2 text-sm font-medium border border-border rounded-md disabled:opacity-50 hover:bg-muted hover:text-foreground transition-colors bg-background"
