@@ -94,7 +94,7 @@ function mapProductFromDB(dbProduct: any): Product {
 export async function fetchProductsFromDB(): Promise<Product[]> {
   try {
     const { apiServerGet } = await import("@/lib/api");
-    const data = await apiServerGet('/api/product/allproducts?limit=20', { revalidate: 60 });
+    const data = await apiServerGet('/api/product/allproducts?limit=100&fullData=true', { revalidate: 60 });
 
     if (data.success && data.products) {
       return data.products.map(mapProductFromDB);
@@ -128,7 +128,7 @@ export async function fetchPaginatedProducts(queryParams: Record<string, any> = 
       .reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {});
       
     const query = new URLSearchParams(cleanParams).toString();
-    const url = `/api/product/allproducts${query ? `?${query}` : ''}`;
+    const url = `/api/product/allproducts${query ? `?${query}&fullData=true` : '?fullData=true'}`;
     
     const data = await apiServerGet(url, { revalidate: 60 });
 

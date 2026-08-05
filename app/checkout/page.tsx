@@ -438,10 +438,10 @@ export default function CheckoutPage() {
 
   if (orderPlaced) {
     return (
-      <main className="min-h-screen">
+      <main className="min-h-screen flex flex-col">
         <Header />
         <div 
-          className="min-h-[80vh] flex items-center justify-center px-4 md:px-8"
+          className="flex-1 flex items-center justify-center px-4 md:px-8 pb-16"
           style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
         >
           <div className="text-center px-4 max-w-md">
@@ -465,7 +465,7 @@ export default function CheckoutPage() {
               </div>
             </div>
             <Link href="/collections">
-              <Button className="bg-primary hover:bg-primary/90">
+              <Button className="bg-primary hover:bg-primary/90 mt-2">
                 Continue Shopping
               </Button>
             </Link>

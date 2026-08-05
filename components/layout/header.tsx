@@ -347,11 +347,12 @@ export function Header() {
       {/* Mobile Menu */}
       <div
         className={cn(
-          "lg:hidden fixed inset-x-0 top-[128px] bg-background border-b border-border transition-all duration-300 overflow-hidden",
-          isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+          "lg:hidden fixed inset-x-0 bg-background border-b border-border transition-all duration-300",
+          isMenuOpen ? "max-h-[calc(100vh-var(--header-offset,120px))] opacity-100 overflow-y-auto" : "max-h-0 opacity-0 overflow-hidden"
         )}
+        style={{ top: 'var(--header-offset, 120px)' }}
       >
-        <nav className="px-4 py-6 flex flex-col gap-2">
+        <nav className="px-4 pt-6 pb-24 flex flex-col gap-2">
           {/* Mobile Search */}
           <button
             onClick={() => {
