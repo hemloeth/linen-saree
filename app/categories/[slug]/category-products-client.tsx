@@ -128,7 +128,7 @@ export function CategoryProductsClient({
                     const grid = document.getElementById('products-grid');
                     if (grid) {
                       const y = grid.getBoundingClientRect().top + window.scrollY - 140;
-                      window.scrollTo({ top: y, behavior: 'smooth' });
+                      window.scrollTo({ top: y, behavior: 'instant' });
                     }
                   }}
                   disabled={currentPage === 1}
@@ -145,7 +145,7 @@ export function CategoryProductsClient({
                     const grid = document.getElementById('products-grid');
                     if (grid) {
                       const y = grid.getBoundingClientRect().top + window.scrollY - 140;
-                      window.scrollTo({ top: y, behavior: 'smooth' });
+                      window.scrollTo({ top: y, behavior: 'instant' });
                     }
                   }}
                   disabled={currentPage === totalPages}
