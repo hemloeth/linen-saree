@@ -18,21 +18,10 @@ type NavLink = {
   submenu?: { name: string; href: string }[]
 }
 
-const navLinks: NavLink[] = [
   {
     name: "Categories",
     href: "/categories",
-    submenu: [
-      { name: "All Categories", href: "/categories" },
-      { name: "Pure Linen", href: "/categories/pure-linen" },
-      { name: "Banarasi Silk", href: "/categories/banarasi-silk" },
-      { name: "Handloom", href: "/categories/handloom" },
-      { name: "Silk Linen", href: "/categories/silk-linen" },
-      { name: "Embroidery", href: "/categories/embroidery" },
-      { name: "Kota Linen", href: "/categories/kota-linen" },
-      { name: "Cotton Linen", href: "/categories/cotton-linen" },
-      { name: "Bridal Collection", href: "/categories/bridal-collection" }
-    ]
+    submenu: [] // Handled dynamically in the component
   },
   {
     name: "New Arrivals",
@@ -60,6 +49,7 @@ export function Header() {
   }
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [marketingCollections, setMarketingCollections] = useState<any[]>([])
+  const [headerCategories, setHeaderCategories] = useState<any[]>([])
   const [isAnnouncementVisible, setIsAnnouncementVisible] = useState(true)
   const { totalItems, setIsCartOpen, isHydrated } = useCart()
   const { totalItems: wishlistItems, isHydrated: wishlistHydrated } = useWishlist()
@@ -93,6 +83,20 @@ export function Header() {
       }
     }
     fetchCollections()
+  }, [])
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await apiGet('/api/category/allcategory')
+        if (response.categories) {
+          setHeaderCategories(response.categories)
+        }
+      } catch (error) {
+        console.warn("Failed to fetch categories:", error)
+      }
+    }
+    fetchCategories()
   }, [])
 
   // Handle keyboard shortcut for search (Ctrl/Cmd + K)
@@ -185,7 +189,7 @@ export function Header() {
                 <div
                   key={link.name}
                   className="relative group"
-                  onMouseEnter={() => ((link.submenu?.length ?? 0) > 0 || link.name === "Collections") && setActiveSubmenu(link.name)}
+                  onMouseEnter={() => ((link.submenu?.length ?? 0) > 0 || link.name === "Collections" || link.name === "Categories") && setActiveSubmenu(link.name)}
                   onMouseLeave={() => setActiveSubmenu(null)}
                 >
                   <Link
@@ -196,7 +200,7 @@ export function Header() {
                     )}
                   >
                     {link.name}
-                    {((link.submenu?.length ?? 0) > 0 || link.name === "Collections") && <ChevronDown className="w-3 h-3" />}
+                    {((link.submenu?.length ?? 0) > 0 || link.name === "Collections" || link.name === "Categories") && <ChevronDown className="w-3 h-3" />}
                   </Link>
 
                   {/* Submenu */}
@@ -228,7 +232,36 @@ export function Header() {
                     </div>
                   )}
 
-                  {link.submenu && link.name !== "Collections" && activeSubmenu === link.name && (
+                  {link.name === "Categories" && activeSubmenu === "Categories" && (
+                    <div className="absolute top-full left-0 pt-2 w-[240px] animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="bg-background border border-border shadow-xl rounded-md overflow-hidden">
+                        <div className="p-2 space-y-1">
+                          <Link
+                            href="/categories"
+                            className="group/item flex items-center justify-between px-4 py-3 text-sm hover:bg-primary/5 rounded-sm transition-all duration-200 font-medium text-foreground"
+                          >
+                            All Categories
+                          </Link>
+                          {headerCategories.map((cat) => {
+                            const slug = cat.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
+                            return (
+                              <Link
+                                key={cat._id || slug}
+                                href={`/categories/${slug}`}
+                                className="group/item flex items-center justify-between px-4 py-3 text-sm hover:bg-primary/5 rounded-sm transition-all duration-200"
+                              >
+                                <span className="font-medium text-foreground group-hover/item:text-primary transition-colors">
+                                  {cat.name}
+                                </span>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {link.submenu && link.name !== "Collections" && link.name !== "Categories" && activeSubmenu === link.name && (
                     <div className="absolute top-full left-0 pt-2 animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="bg-background border border-border shadow-lg py-2 min-w-[200px] rounded-md">
                         {link.submenu.map((sublink) => (
@@ -375,7 +408,7 @@ export function Header() {
 
             {/* Main Navigation Links */}
             {navLinks.map((link) => {
-              const hasSubmenu = (link.submenu?.length ?? 0) > 0 || link.name === "Collections"
+              const hasSubmenu = (link.submenu?.length ?? 0) > 0 || link.name === "Collections" || link.name === "Categories"
               const isExpanded = !!expandedMenus[link.name]
 
               return (
@@ -429,6 +462,29 @@ export function Header() {
                                 {col.name}
                               </Link>
                             ))
+                          ) : link.name === "Categories" ? (
+                            <>
+                              <Link
+                                href="/categories"
+                                className="block py-2.5 px-3 rounded-md text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                All Categories
+                              </Link>
+                              {headerCategories.map((cat) => {
+                                const slug = cat.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
+                                return (
+                                  <Link
+                                    key={cat._id || slug}
+                                    href={`/categories/${slug}`}
+                                    className="block py-2.5 px-3 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                                    onClick={() => setIsMenuOpen(false)}
+                                  >
+                                    {cat.name}
+                                  </Link>
+                                )
+                              })}
+                            </>
                           ) : (
                             link.submenu?.map((sublink) => (
                               <Link
@@ -451,56 +507,7 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Bottom Utility / Account Footer */}
-        <div className="bg-muted/30 border-t border-border px-4 py-6 pb-12 sm:pb-6 mt-auto shrink-0">
-          <div className="grid grid-cols-2 gap-4">
-            <Link
-              href="/wishlist"
-              className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Heart className="w-4 h-4" />
-              Wishlist
-            </Link>
-            
-            {authHydrated && isAuthenticated ? (
-              <>
-                <Link
-                  href="/account"
-                  className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <User className="w-4 h-4" />
-                  My Account
-                </Link>
-                <Link
-                  href="/orders"
-                  className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  My Orders
-                </Link>
-                <button
-                  onClick={() => { logout(); setIsMenuOpen(false); window.location.href = '/account/login'; }}
-                  className="flex items-center gap-2 text-sm font-medium text-destructive hover:text-destructive/80 transition-colors text-left"
-                >
-                  <X className="w-4 h-4" />
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/account/login"
-                className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <User className="w-4 h-4" />
-                Login / Sign Up
-              </Link>
-            )}
-          </div>
-        </div>
+
       </div>
 
       {/* Search Modal */}
