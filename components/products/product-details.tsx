@@ -287,17 +287,27 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               </div>
             </div>
 
-            {/* Title & SKU & Share */}
+            {/* Title & SKU & Actions */}
             <div className="flex items-start justify-between gap-4 mb-2">
               <h1 className="font-serif text-xl sm:text-3xl lg:text-4xl leading-tight">{product.name}</h1>
-              <button
-                onClick={handleShare}
-                className="p-2 rounded-full hover:bg-muted transition-colors shrink-0"
-                aria-label="Share product"
-                title="Share product"
-              >
-                <Share2 className="w-5 h-5 text-foreground/80 hover:text-primary" />
-              </button>
+              <div className="flex flex-col gap-1 mt-1">
+                <button
+                  onClick={handleWishlistClick}
+                  className="p-2 rounded-full hover:bg-muted transition-colors shrink-0"
+                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                  title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                  <Heart className={`w-5 h-5 text-foreground/80 hover:text-primary transition-colors ${isWishlisted ? 'fill-primary text-primary' : ''}`} />
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="p-2 rounded-full hover:bg-muted transition-colors shrink-0"
+                  aria-label="Share product"
+                  title="Share product"
+                >
+                  <Share2 className="w-5 h-5 text-foreground/80 hover:text-primary transition-colors" />
+                </button>
+              </div>
             </div>
             {product.sku && (
               <div className="text-xs sm:text-sm text-muted-foreground mb-4">
@@ -404,21 +414,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   </>
                 )}
               </div>
-              <div className="flex flex-row gap-3">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className={`flex-1 h-12 px-2 bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 btn-premium lowercase tracking-widest font-light italic text-[10px] sm:text-sm ${isWishlisted ? 'text-primary border-primary bg-primary/5' : ''}`}
-                  onClick={handleWishlistClick}
-                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                >
-                  <Heart className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 shrink-0 ${isWishlisted ? 'fill-primary' : ''}`} />
-                  <span className="truncate">{isWishlisted ? "wishlisted" : "Add to Wishlist"}</span>
-                </Button>
-                <Button size="lg" variant="outline" className="w-12 h-12 shrink-0 flex items-center justify-center bg-transparent border-border hover:border-primary/50 hover:bg-muted transition-all duration-500 rounded-sm">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-              </div>
+
             </div>
 
             {/* Trust Badges */}
