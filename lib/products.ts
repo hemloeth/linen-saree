@@ -1,5 +1,6 @@
 export interface Product {
   id: string
+  sku?: string
   name: string
   slug: string
   category: string
@@ -38,6 +39,7 @@ function mapProductFromDB(dbProduct: any): Product {
 
   return {
     id: dbProduct._id.toString(),
+    sku: dbProduct.sku,
     name: dbProduct.name,
     slug: dbProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
     category: dbProduct.category,

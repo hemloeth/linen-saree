@@ -32,6 +32,10 @@ interface Order {
     awbCode?: string
     trackingUrl?: string
   }
+  payment?: {
+    method: string
+    status: string
+  }
 }
 
 export default function OrdersPage() {
@@ -100,6 +104,14 @@ export default function OrdersPage() {
 
   const formatStatus = (status: string) =>
     status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+
+  const getPaymentMethodDisplay = (method?: string) => {
+    if (!method) return "Online Payment";
+    if (method.toLowerCase() === "cod") return "Cash on Delivery";
+    if (method.toLowerCase() === "card") return "Prepaid (Card)";
+    if (method.toLowerCase() === "upi") return "Prepaid (UPI)";
+    return `Prepaid (${method})`;
+  }
 
   const filteredOrders = orders.filter(order =>
     order.orderId.toLowerCase().includes(searchTerm.toLowerCase())
@@ -170,8 +182,15 @@ export default function OrdersPage() {
                         {formatStatus(order.status)}
                       </span>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      Order #{order.orderId}
+                    <div className="flex flex-col">
+                      <span className="text-sm text-foreground font-semibold">
+                        Order #{order.orderId}
+                      </span>
+                      {order.payment?.method && (
+                        <span className="text-xs text-muted-foreground">
+                          {getPaymentMethodDisplay(order.payment.method)}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground">

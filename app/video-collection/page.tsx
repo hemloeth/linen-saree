@@ -290,7 +290,7 @@ function VideoCollectionContent() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-3 md:px-6 py-1.5 md:py-2.5 text-xs md:text-sm font-medium whitespace-nowrap transition-all duration-300 ${selectedCategory === category
+                  className={`px-3 md:px-6 py-1.5 md:py-2.5 text-xs md:text-sm font-medium whitespace-nowrap transition-all duration-300 cursor-pointer ${selectedCategory === category
                     ? "bg-primary text-primary-foreground shadow-md transform scale-105"
                     : "bg-white text-muted-foreground border border-border hover:border-primary/30 hover:text-primary hover:bg-secondary/50"
                     }`}

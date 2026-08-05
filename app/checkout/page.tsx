@@ -78,6 +78,13 @@ export default function CheckoutPage() {
 
   const [orderPlaced, setOrderPlaced] = useState(false)
 
+  // Scroll to top automatically when order is successfully placed
+  useEffect(() => {
+    if (orderPlaced) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [orderPlaced])
+
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",

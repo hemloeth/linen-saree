@@ -7,6 +7,8 @@ import { RelatedProducts } from "@/components/products/related-products"
 import { fetchProductsFromDB, getProductBySlug, getProductsByCategory } from "@/lib/products"
 import type { Product } from "@/lib/products"
 import { notFound } from "next/navigation"
+import { resolveMediaUrl } from "@/lib/media"
+import type { Metadata } from "next"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -18,7 +20,7 @@ async function getProduct(slug: string): Promise<Product | null> {
   return product || null
 }
 
-export async function generateMetadata({ params }: Props) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const product = await getProduct(slug)
 
@@ -28,9 +30,37 @@ export async function generateMetadata({ params }: Props) {
     }
   }
 
+  const images = []
+  if (product.image) images.push(resolveMediaUrl(product.image))
+  if (product.images) images.push(...product.images.map(img => resolveMediaUrl(img)))
+
+  const finalImages = images.length > 0 ? images : ["/placeholder.svg"]
+
   return {
     title: `${product.name} | Linen Sarees`,
-    description: product.description
+    description: product.description,
+    openGraph: {
+      title: `${product.name} | Linen Sarees`,
+      description: product.description,
+      url: `/product/${slug}`,
+      siteName: 'Linen Sarees',
+      images: [
+        {
+          url: finalImages[0],
+          width: 800,
+          height: 1000,
+          alt: product.name,
+        },
+      ],
+      locale: 'en_IN',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name} | Linen Sarees`,
+      description: product.description,
+      images: [finalImages[0]],
+    },
   }
 }
 

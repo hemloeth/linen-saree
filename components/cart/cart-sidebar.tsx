@@ -91,6 +91,9 @@ export function CartSidebar() {
                     <Link href={`/product/${item.product.slug}`} onClick={() => setIsCartOpen(false)} className="hover:text-primary transition-colors">
                       <h3 className="font-medium text-sm leading-tight">{item.product.name}</h3>
                     </Link>
+                    {item.product.sku && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">SKU: <span className="font-mono">{item.product.sku}</span></p>
+                    )}
                     <p className="text-xs text-muted-foreground mt-1">{item.product.category}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="font-semibold">₹{item.product.price.toLocaleString('en-IN')}</span>

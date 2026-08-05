@@ -30,6 +30,7 @@ interface AdminOrder {
   status: string
   items: any[]
   shiprocket?: { courierName?: string; awbCode?: string }
+  payment?: { method: string; status: string }
 }
 
 export default function AdminOrdersPage() {
@@ -146,6 +147,7 @@ export default function AdminOrdersPage() {
               <TableHead>Date</TableHead>
               <TableHead>Items</TableHead>
               <TableHead>Total</TableHead>
+              <TableHead>Payment</TableHead>
               <TableHead>Courier</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -154,7 +156,7 @@ export default function AdminOrdersPage() {
           <TableBody>
             {filteredOrders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   {searchTerm || statusFilter ? "No matching orders" : "No orders yet"}
                 </TableCell>
               </TableRow>
@@ -171,6 +173,18 @@ export default function AdminOrdersPage() {
                   <TableCell>{new Date(order.createdAt).toLocaleDateString('en-IN')}</TableCell>
                   <TableCell>{order.items.length}</TableCell>
                   <TableCell>₹{order.pricing.total.toLocaleString('en-IN')}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        {order.payment?.method === "cod" ? "COD" : "Prepaid"}
+                      </span>
+                      {order.payment?.method && order.payment.method !== "cod" && (
+                        <span className="text-xs text-muted-foreground capitalize">
+                          ({order.payment.method})
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-xs">{order.shiprocket?.courierName || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusColor(order.status) as "default" | "secondary" | "destructive" | "outline"}>

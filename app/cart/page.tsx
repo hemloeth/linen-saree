@@ -99,6 +99,11 @@ export default function CartPage() {
                               >
                                 {item.product.name}
                               </Link>
+                              {item.product.sku && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  SKU: <span className="font-mono">{item.product.sku}</span>
+                                </p>
+                              )}
                               <p className="text-sm text-muted-foreground mt-1">
                                 {item.product.category}
                               </p>

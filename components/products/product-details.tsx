@@ -11,6 +11,7 @@ import { TrustBadges } from "@/components/common/trust-badges"
 import { StarRating } from "@/components/common/star-rating"
 import type { Product } from "@/lib/products"
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-utils"
+import { toast } from "sonner"
 
 interface ProductDetailsProps {
   product: Product
@@ -48,6 +49,25 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const isWishlisted = isInWishlist(product.id)
   const availableStock = product.stock ?? 0
   const outOfStock = availableStock <= 0
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `${product.name} | Linen Sarees`,
+      text: product.description,
+      url: window.location.href,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(shareData.url)
+        toast.success("Link copied to clipboard!")
+      }
+    } catch (err) {
+      console.log('Error sharing:', err)
+    }
+  }
 
   // Handle swipe gestures
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -265,8 +285,23 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               </div>
             </div>
 
-            {/* Title */}
-            <h1 className="font-serif text-xl sm:text-3xl lg:text-4xl mb-4 leading-tight">{product.name}</h1>
+            {/* Title & SKU & Share */}
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <h1 className="font-serif text-xl sm:text-3xl lg:text-4xl leading-tight">{product.name}</h1>
+              <button
+                onClick={handleShare}
+                className="p-2 rounded-full hover:bg-muted transition-colors shrink-0"
+                aria-label="Share product"
+                title="Share product"
+              >
+                <Share2 className="w-5 h-5 text-foreground/80 hover:text-primary" />
+              </button>
+            </div>
+            {product.sku && (
+              <div className="text-xs sm:text-sm text-muted-foreground mb-4">
+                SKU: <span className="font-mono text-foreground/80">{product.sku}</span>
+              </div>
+            )}
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-4">

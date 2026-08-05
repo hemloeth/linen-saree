@@ -65,7 +65,10 @@ export function CheckoutProductMedia({ product, quantity }: CheckoutProductMedia
           <Link href={`/product/${product.slug}`} className="hover:text-primary transition-colors">
             <p className="text-sm font-medium line-clamp-2">{product.name}</p>
           </Link>
-          <p className="text-xs text-muted-foreground">{product.color}</p>
+          {product.sku && (
+            <p className="text-[10px] text-muted-foreground mt-0.5">SKU: <span className="font-mono">{product.sku}</span></p>
+          )}
+          <p className="text-xs text-muted-foreground mt-1">{product.color}</p>
         </div>
         <div className="text-right flex flex-col items-end gap-1">
           <p className="font-medium">
