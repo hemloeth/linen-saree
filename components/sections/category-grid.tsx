@@ -48,7 +48,7 @@ export function CategoryGrid() {
   }, [])
 
   return (
-    <section className="py-24 px-2 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
+    <section className="py-24 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
       <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
