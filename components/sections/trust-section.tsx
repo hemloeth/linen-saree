@@ -13,7 +13,7 @@ export function TrustSection({
 }: TrustSectionProps) {
   return (
     <section className={`py-12 lg:py-16 bg-muted/30 ${className}`}>
-      <div className="max-w-[1500px] mx-auto px-2">
+      <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         <div className="text-center mb-8 lg:mb-12">
           <h2 className="text-2xl lg:text-3xl font-serif font-semibold mb-2">
             {title}

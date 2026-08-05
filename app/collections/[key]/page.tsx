@@ -13,6 +13,8 @@ import { motion } from "framer-motion"
 import { Sparkles, ShoppingBag, Star } from "lucide-react"
 import { categories } from "@/lib/products"
 import { redirect } from "next/navigation"
+import { CategoryProductsClient } from "../../categories/[slug]/category-products-client"
+import { Suspense } from "react"
 
 interface Props {
     params: Promise<{ key: string }>
@@ -33,21 +35,46 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch collection details
-                const colResponse = await apiGet(`/api/marketing-collections/${key}`)
-                if (colResponse.success) {
-                    setCollection(colResponse.data)
-                    document.title = `${colResponse.data.name} | Linen Sarees`
+                // Fetch collection details (with fallback for hardcoded default collections if they aren't in the DB yet)
+                try {
+                    const colResponse = await apiGet(`/api/marketing-collections/${key}`)
+                    if (colResponse.success) {
+                        setCollection(colResponse.data)
+                        document.title = `${colResponse.data.name} | Linen Sarees`
+                    }
+                } catch (colErr) {
+                    const fallbacks: Record<string, any> = {
+                        'new-arrivals': { key: 'new-arrivals', name: 'New Arrivals', title1: 'Just', title2: 'Dropped', description: 'Explore our latest additions.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] },
+                        'festive': { key: 'festive', name: 'Festive Collection', title1: 'Festive', title2: 'Special', description: 'Perfect sarees for your celebrations.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] },
+                        'big-sale': { key: 'big-sale', name: 'Big Sale', title1: 'Clearance', title2: 'Sale', description: 'Incredible discounts on premium sarees.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] },
+                        'celebrity': { key: 'celebrity', name: 'Celebrity Looks', title1: 'Celebrity', title2: 'Style', description: 'Sarees inspired by the stars.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] },
+                        'sale': { key: 'sale', name: 'Sale', title1: 'On', title2: 'Sale', description: 'Discounted items.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] }
+                    }
+                    if (fallbacks[key]) {
+                        setCollection(fallbacks[key])
+                        document.title = `${fallbacks[key].name} | Linen Sarees`
+                    } else {
+                        throw colErr;
+                    }
                 }
 
                 // Fetch all products and filter by collection key
                 const prodResponse = await apiGet('/api/product/allproducts')
                 if (prodResponse.success) {
-                    const filtered = prodResponse.products.filter((p: any) =>
-                        p.productCollection === key ||
-                        (key === 'festive' && p.isFestive) ||
-                        (key === 'big-sale' && p.isOnSale)
-                    )
+                    let filtered = prodResponse.products;
+                    
+                    if (key !== 'new-arrivals') {
+                        filtered = filtered.filter((p: any) =>
+                            p.productCollection === key ||
+                            (key === 'festive' && p.isFestive) ||
+                            (key === 'big-sale' && p.isOnSale)
+                        )
+                    }
+                    
+                    if (key === 'new-arrivals') {
+                        filtered.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+                    }
+                    
                     setProducts(filtered)
                 }
             } catch (error) {
@@ -110,35 +137,37 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
             </div>
 
             {/* Collections Sub-nav */}
-            <section className="bg-secondary border-b border-border py-8">
-                <div className="max-w-[1500px] mx-auto px-2">
-                    <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 lg:gap-4">
-                        <Link
-                            href="/collections"
-                            className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
-                        >
-                            All Collections
-                        </Link>
-                        {allCollections.map((col: any) => (
+            {key !== 'new-arrivals' && (
+                <section className="bg-secondary border-b border-border py-8">
+                    <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
+                        <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 lg:gap-4">
                             <Link
-                                key={col.key}
-                                href={`/collections/${col.key}`}
-                                className={`px-2 sm:px-6 py-2 text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center ${col.key === key
-                                    ? "bg-foreground text-background shadow-md"
-                                    : "border border-border hover:bg-foreground hover:text-background"
-                                    }`}
+                                href="/collections"
+                                className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
                             >
-                                {col.name}
+                                All Collections
                             </Link>
-                        ))}
+                            {allCollections.map((col: any) => (
+                                <Link
+                                    key={col.key}
+                                    href={`/collections/${col.key}`}
+                                    className={`px-2 sm:px-6 py-2 text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center ${col.key === key
+                                        ? "bg-foreground text-background shadow-md"
+                                        : "border border-border hover:bg-foreground hover:text-background"
+                                        }`}
+                                >
+                                    {col.name}
+                                </Link>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* Collection Stats/Offer Section */}
             {(collection.stats?.length > 0 || collection.offer) && (
                 <section className="py-12 bg-secondary/30 border-b border-border">
-                    <div className="max-w-[1500px] mx-auto px-2">
+                    <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
                         <div className="flex flex-wrap justify-center items-center gap-12 lg:gap-24">
                             {collection.key === 'big-sale' && collection.offer && (
                                 <div className="text-center">
@@ -159,54 +188,24 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
             )}
 
             {/* Products Grid */}
-            <section className="pt-10 pb-20 px-2">
-                <div className="max-w-[1500px] mx-auto">
-                    <div className="flex items-center justify-between mb-12">
-                        <div className="space-y-1">
-                            <h2 className="text-3xl font-serif">Curated Pieces</h2>
-                            <p className="text-muted-foreground">Handpicked selection from the {collection.name}</p>
-                        </div>
-                        <div className="text-sm font-medium bg-muted px-4 py-2 rounded-full">
-                            {products.length} Products Found
-                        </div>
-                    </div>
-
-                    {products.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-4 lg:gap-x-6 gap-y-10 lg:gap-y-12">
-                            {products.map((product, idx) => (
-                                <motion.div
-                                    key={product._id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                >
-                                    <ProductCard
-                                        product={{
-                                            id: product._id,
-                                            name: product.name,
-                                            slug: product.name.toLowerCase().replace(/ /g, '-'),
-                                            price: product.price,
-                                            originalPrice: product.regularPrice,
-                                            image: product.mainImage,
-                                            images: [product.mainImage],
-                                            isOnSale: product.isOnSale,
-                                            isNew: product.isNewArrival,
-                                            category: product.category,
-                                            categorySlug: product.category.toLowerCase().replace(/ /g, '-')
-                                        }}
-                                    />
-                                </motion.div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-32 border-2 border-dashed rounded-3xl">
-                            <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-xl font-medium">No products found in this collection yet.</h3>
-                            <p className="text-muted-foreground mt-2">Check back soon for new additions!</p>
-                        </div>
-                    )}
-                </div>
-            </section>
+            <Suspense fallback={<div className="py-20 text-center">Loading products...</div>}>
+                <CategoryProductsClient 
+                    initialProducts={products.map(product => ({
+                        id: product._id,
+                        name: product.name,
+                        slug: product.name.toLowerCase().replace(/ /g, '-'),
+                        price: product.price,
+                        originalPrice: product.regularPrice,
+                        image: product.mainImage,
+                        images: [product.mainImage],
+                        isOnSale: product.isOnSale,
+                        isNew: product.isNewArrival,
+                        category: product.category || 'Collection',
+                        categorySlug: (product.category || 'Collection').toLowerCase().replace(/ /g, '-')
+                    }))}
+                    pageTitle={collection.name}
+                />
+            </Suspense>
 
             <Footer />
         </main>

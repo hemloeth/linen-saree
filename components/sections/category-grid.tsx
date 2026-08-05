@@ -49,7 +49,7 @@ export function CategoryGrid() {
 
   return (
     <section className="py-24 px-2 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
-      <div className="max-w-[1500px] mx-auto">
+      <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-2 text-xs sm:text-sm tracking-[0.3em] uppercase text-muted-foreground mb-4">
@@ -69,14 +69,14 @@ export function CategoryGrid() {
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-[4/5] sm:aspect-[3/4] bg-muted animate-pulse rounded-xl sm:rounded-2xl" />
+              <div key={i} className="aspect-[4/5] sm:aspect-[3/4] bg-muted animate-pulse rounded-none" />
             ))
           ) : categories.length > 0 ? (
             categories.map((category) => (
               <Link
                 key={category.slug}
                 href={`/categories/${category.slug}`}
-                className="group relative overflow-hidden rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                className="group relative overflow-hidden rounded-none shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
               >
                 <div className="relative aspect-[4/5] sm:aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 min-h-[200px] sm:min-h-[250px] md:min-h-[280px]">
                   <Image
@@ -124,10 +124,10 @@ export function CategoryGrid() {
         {/* Bottom CTA */}
         <div className="text-center mt-12 sm:mt-16">
           <Link
-            href="/collections"
+            href="/categories"
             className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded-none font-medium tracking-wide text-sm sm:text-base"
           >
-            View All Collections
+            View All Categories
             <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </Link>
         </div>

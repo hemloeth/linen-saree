@@ -116,7 +116,7 @@ export function Header() {
       {/* Top Bar */}
       {isAnnouncementVisible && (
         <div className="bg-foreground text-background overflow-hidden relative">
-          <div className="max-w-[1500px] mx-auto px-2 py-2 pr-8 sm:pr-12">
+          <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 py-2 pr-8 sm:pr-12">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-4 text-center sm:text-left">
               <div className="text-[10px] sm:text-xs tracking-wide leading-tight">
                 Free Shipping on orders above ₹999 | Hassle-Free Returns within 7 Days
@@ -138,7 +138,7 @@ export function Header() {
         </div>
       )}
 
-      <div className="max-w-[1500px] mx-auto px-2">
+      <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Left Side - Logo and Mobile Menu */}
           <div className="flex items-center gap-4">

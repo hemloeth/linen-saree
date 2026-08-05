@@ -23,7 +23,7 @@ export default function WishlistPage() {
       <Header />
       
       <main className="flex-1 py-8 lg:py-16 px-2 pt-[96px] lg:pt-[104px]">
-        <div className="max-w-[1500px] mx-auto">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">

@@ -39,7 +39,7 @@ export default function AllMarketingCollectionsPage() {
             {/* Hero Section */}
             <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
                 <div className="absolute inset-0 bg-secondary/30 -z-10" />
-                <div className="max-w-[1500px] mx-auto px-2">
+                <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
                     <div className="max-w-3xl">
                         <motion.div 
                             initial={{ opacity: 0, y: 20 }}
@@ -72,7 +72,7 @@ export default function AllMarketingCollectionsPage() {
 
             {/* Collections Grid */}
             <section className="pb-24 px-2">
-                <div className="max-w-[1500px] mx-auto">
+                <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
                     {isLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             {[1, 2, 3].map((n) => (
@@ -133,7 +133,7 @@ export default function AllMarketingCollectionsPage() {
 
             {/* Newsletter or Call to Action */}
             <section className="py-20 bg-secondary/50">
-                <div className="max-w-[1500px] mx-auto px-2 text-center">
+                <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
                     <h2 className="text-3xl font-serif mb-4">Can't find what you're looking for?</h2>
                     <p className="text-muted-foreground mb-8">Browse our entire catalog of premium linen sarees and find your signature style.</p>
                     <Link 

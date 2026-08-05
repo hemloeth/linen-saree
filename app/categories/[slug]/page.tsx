@@ -35,7 +35,7 @@ interface CategoryPageProps {
 
     // Add specific slides based on productCollection type
     switch (slug) {
-      case "pure-linen":
+      case "pure-linen-saree":
         return [
           ...baseSlides,
           {
@@ -230,7 +230,7 @@ interface CategoryPageProps {
 
   // Add specific slides based on productCollection type
   switch (slug) {
-    case "pure-linen":
+    case "pure-linen-saree":
       return [
         ...baseSlides,
         {
@@ -450,26 +450,29 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     redirect(`/collections/${slug}`);
   }
 
-  // Fetch paginated products for this specific category
-  const { products: categoryProducts, pagination } = await fetchPaginatedProducts({
-    ...resolvedSearchParams,
-    category: slug,
-    limit: 20
-  })
+  // Fetch dynamic categories for the sub-nav and current category check
+  const catRes = await apiServerGet('/api/category/allcategory', { cache: 'no-store' })
+  const dynamicCategories = catRes.categories ? catRes.categories.map((c: any) => ({
+    ...c,
+    slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
+  })) : []
 
-  // Fetch marketing collections for the sub-nav
-  const colRes = await apiServerGet('/api/marketing-collections')
-  const marketingCollectionsList = colRes.success ? colRes.data.filter((c: any) => c.key !== 'none') : []
-
-  let category = categories.find(c => c.slug === slug)
-  let pageTitle = category?.name || "Collection"
-  let pageDescription = category?.description || ""
+  let category = slug !== 'all' ? dynamicCategories.find((c: any) => c.slug === slug) : null;
+  let pageTitle = category?.name || (slug === 'all' ? "All Categories" : "Collection");
+  let pageDescription = category?.sortDesc || (slug === 'all' ? "Explore our complete collection of premium sarees" : "");
 
   let festiveBannerData = null; // Unused for normal categories, but kept to satisfy getCollectionSlides signature
 
-  if (!category) {
+  if (!category && !['new-arrivals', 'sale', 'festive', 'celebrity', 'all'].includes(slug)) {
     notFound()
   }
+
+  // Fetch paginated products for this specific category (or all if slug is 'all')
+  const { products: categoryProducts, pagination } = await fetchPaginatedProducts({
+    ...resolvedSearchParams,
+    category: slug === 'all' ? undefined : (category?.name || slug),
+    limit: 20
+  })
 
   // Get slides for this productCollection
   let productCollectionSlides = getCollectionSlides(slug, category, festiveBannerData)
@@ -516,18 +519,18 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
       {/* Categories Sub-nav */}
       <section className="bg-secondary border-b border-border py-8">
-        <div className="max-w-[1500px] mx-auto px-2">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              href="/categories"
+              href="/categories/all"
               className={`px-5 py-2 text-sm tracking-wide transition-colors ${!slug || slug === 'all'
                 ? "bg-foreground text-background"
                 : "border border-border hover:bg-foreground hover:text-background"
                 }`}
             >
-              All Fabrics
+              All Categories
             </Link>
-            {categories.map((cat) => (
+            {dynamicCategories.map((cat: any) => (
               <Link
                 key={cat.slug}
                 href={`/categories/${cat.slug}`}

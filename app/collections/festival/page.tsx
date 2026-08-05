@@ -55,7 +55,7 @@ export default async function FestivalCollectionPage() {
 
       {/* Collection Description */}
       <section className="py-12 px-2 bg-secondary">
-        <div className="max-w-[1500px] mx-auto text-center">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
           <h2 className="text-3xl lg:text-4xl font-light mb-6">Festival Collection</h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Make every celebration memorable with our carefully curated festival collection.
@@ -67,7 +67,7 @@ export default async function FestivalCollectionPage() {
 
       {/* Products Grid */}
       <section className="py-12 px-2">
-        <div className="max-w-[1500px] mx-auto">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {festivalProducts.map((product) => (
               <ProductCard key={product.id} product={product} />

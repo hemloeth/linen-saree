@@ -54,7 +54,7 @@ export default async function OffersCollectionPage() {
 
       {/* Offer Banner */}
       <section className="py-8 px-2 bg-red-50">
-        <div className="max-w-[1500px] mx-auto text-center">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
           <div className="inline-flex items-center gap-4 bg-red-600 text-white px-8 py-4 rounded-lg">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -66,7 +66,7 @@ export default async function OffersCollectionPage() {
 
       {/* Collection Description */}
       <section className="py-12 px-2 bg-secondary">
-        <div className="max-w-[1500px] mx-auto text-center">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
           <h2 className="text-3xl lg:text-4xl font-light mb-6">Special Offers</h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Don't miss out on these incredible deals! Our special offers collection features
@@ -78,7 +78,7 @@ export default async function OffersCollectionPage() {
 
       {/* Products Grid */}
       <section className="py-12 px-2">
-        <div className="max-w-[1500px] mx-auto">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {offerProducts.map((product) => (
               <div key={product.id} className="relative">

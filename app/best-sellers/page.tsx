@@ -100,7 +100,7 @@ export default async function BestSellersPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              href="/collections/pure-linen"
+              href="/categories/pure-linen-saree"
               className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-3 rounded-sm font-medium transition-colors"
             >
               Pure Linen Collection

@@ -52,7 +52,7 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
   return (
     <div className="group relative w-full">
       <div className="relative w-full mb-4">
-        <div className="aspect-[3/4] overflow-hidden bg-black rounded-sm relative">
+        <div className="aspect-[3/4] overflow-hidden bg-black relative">
           <video
             ref={videoRef}
             src={resolveMediaUrl(videoSrc)}
@@ -139,281 +139,44 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
   )
 }
 
-const baseVideoCards = [
-  {
-    title: "Premium Silk Linen Collection",
-    price: 3499,
-    originalPrice: 4999,
-    videoSrc: "/videos/Video-266.mp4",
-    productId: "8",
-    category: "Silk"
-  },
-  {
-    title: "Designer Dupatta Elegance",
-    price: 1899,
-    originalPrice: 3499,
-    videoSrc: "/videos/dupaataa.mp4",
-    productId: "2",
-    category: "Dupatta"
-  },
-  {
-    title: "Festive Special Collection",
-    price: 3999,
-    originalPrice: 6999,
-    videoSrc: "/videos/gemini_vedio.mp4",
-    productId: "3",
-    category: "Festive"
-  },
-  {
-    title: "Banarasi Silk Elegance",
-    price: 4299,
-    originalPrice: 7999,
-    videoSrc: "/videos/bluesaree.mp4",
-    productId: "4",
-    category: "Banarasi"
-  },
-  {
-    title: "Contemporary Elegance",
-    price: 2799,
-    originalPrice: 4999,
-    videoSrc: "/videos/videoplayback.mp4",
-    productId: "5",
-    category: "Contemporary"
-  },
-  {
-    title: "Handloom Heritage Collection",
-    price: 2890,
-    originalPrice: 5290,
-    videoSrc: "/videos/Video-385.mp4",
-    productId: "6",
-    category: "Handloom"
-  },
-  {
-    title: "Pure Linen Comfort",
-    price: 2499,
-    originalPrice: 4799,
-    videoSrc: "/videos/Video-28.mp4",
-    productId: "1",
-    category: "Linen"
-  }
-]
-
-// Extended video collection with more variety
-const extendedVideoCards = [
-  // Silk Collection
-  {
-    title: "Royal Silk Elegance",
-    price: 4599,
-    originalPrice: 7299,
-    videoSrc: "/videos/Video-266.mp4",
-    productId: "9",
-    category: "Silk"
-  },
-  {
-    title: "Luxurious Silk Drape",
-    price: 3899,
-    originalPrice: 6499,
-    videoSrc: "/videos/bluesaree.mp4",
-    productId: "10",
-    category: "Silk"
-  },
-  {
-    title: "Premium Silk Weave",
-    price: 4199,
-    originalPrice: 6999,
-    videoSrc: "/videos/gemini_vedio.mp4",
-    productId: "11",
-    category: "Silk"
-  },
-
-  // Banarasi Collection
-  {
-    title: "Traditional Banarasi Gold",
-    price: 5299,
-    originalPrice: 8999,
-    videoSrc: "/videos/Video-385.mp4",
-    productId: "12",
-    category: "Banarasi"
-  },
-  {
-    title: "Heritage Banarasi Silk",
-    price: 4799,
-    originalPrice: 7999,
-    videoSrc: "/videos/videoplayback.mp4",
-    productId: "13",
-    category: "Banarasi"
-  },
-  {
-    title: "Classic Banarasi Weave",
-    price: 4999,
-    originalPrice: 8499,
-    videoSrc: "/videos/Video-28.mp4",
-    productId: "14",
-    category: "Banarasi"
-  },
-
-  // Handloom Collection
-  {
-    title: "Artisan Handloom Special",
-    price: 3299,
-    originalPrice: 5799,
-    videoSrc: "/videos/dupaataa.mp4",
-    productId: "15",
-    category: "Handloom"
-  },
-  {
-    title: "Traditional Handloom Cotton",
-    price: 2699,
-    originalPrice: 4999,
-    videoSrc: "/videos/Video-266.mp4",
-    productId: "16",
-    category: "Handloom"
-  },
-  {
-    title: "Heritage Handloom Craft",
-    price: 3099,
-    originalPrice: 5499,
-    videoSrc: "/videos/bluesaree.mp4",
-    productId: "17",
-    category: "Handloom"
-  },
-
-  // Linen Collection
-  {
-    title: "Organic Linen Comfort",
-    price: 2799,
-    originalPrice: 4599,
-    videoSrc: "/videos/gemini_vedio.mp4",
-    productId: "18",
-    category: "Linen"
-  },
-  {
-    title: "Premium Linen Blend",
-    price: 2999,
-    originalPrice: 4999,
-    videoSrc: "/videos/Video-385.mp4",
-    productId: "19",
-    category: "Linen"
-  },
-  {
-    title: "Summer Linen Collection",
-    price: 2599,
-    originalPrice: 4299,
-    videoSrc: "/videos/videoplayback.mp4",
-    productId: "20",
-    category: "Linen"
-  },
-
-  // Dupatta Collection
-  {
-    title: "Embroidered Dupatta Set",
-    price: 2199,
-    originalPrice: 3999,
-    videoSrc: "/videos/Video-28.mp4",
-    productId: "21",
-    category: "Dupatta"
-  },
-  {
-    title: "Silk Dupatta Elegance",
-    price: 2499,
-    originalPrice: 4299,
-    videoSrc: "/videos/Video-266.mp4",
-    productId: "22",
-    category: "Dupatta"
-  },
-  {
-    title: "Designer Dupatta Collection",
-    price: 1999,
-    originalPrice: 3699,
-    videoSrc: "/videos/bluesaree.mp4",
-    productId: "23",
-    category: "Dupatta"
-  },
-
-  // Festive Collection
-  {
-    title: "Wedding Special Saree",
-    price: 5999,
-    originalPrice: 9999,
-    videoSrc: "/videos/Video-385.mp4",
-    productId: "24",
-    category: "Festive"
-  },
-  {
-    title: "Celebration Wear Elegance",
-    price: 4599,
-    originalPrice: 7999,
-    videoSrc: "/videos/videoplayback.mp4",
-    productId: "25",
-    category: "Festive"
-  },
-  {
-    title: "Festival Special Collection",
-    price: 4299,
-    originalPrice: 7299,
-    videoSrc: "/videos/dupaataa.mp4",
-    productId: "26",
-    category: "Festive"
-  },
-
-  // Contemporary Collection
-  {
-    title: "Modern Drape Style",
-    price: 3199,
-    originalPrice: 5499,
-    videoSrc: "/videos/Video-28.mp4",
-    productId: "27",
-    category: "Contemporary"
-  },
-  {
-    title: "Fusion Wear Collection",
-    price: 2899,
-    originalPrice: 4999,
-    videoSrc: "/videos/gemini_vedio.mp4",
-    productId: "28",
-    category: "Contemporary"
-  },
-  {
-    title: "Urban Chic Saree",
-    price: 3399,
-    originalPrice: 5799,
-    videoSrc: "/videos/Video-266.mp4",
-    productId: "29",
-    category: "Contemporary"
-  }
-]
-
-const categories = ["All", "Silk", "Banarasi", "Handloom", "Linen", "Dupatta", "Festive", "Contemporary"]
-
 function VideoCollectionContent() {
+  const { mappedProducts } = useProducts()
   const searchParams = useSearchParams()
   const categoryFromUrl = searchParams.get('category')
-  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl || "All")
+  
+  // Extract products with videos and map them to video cards
+  const videoCards = mappedProducts
+    .filter(p => p.videos && p.videos.length > 0)
+    .map(p => ({
+      title: p.name,
+      price: p.price,
+      originalPrice: p.originalPrice,
+      videoSrc: p.videos![0],
+      productId: p.id,
+      category: p.category || "Other"
+    }))
+    
+  // Extract unique categories dynamically
+  const dynamicCategories = ["All", ...Array.from(new Set(videoCards.map(v => v.category)))]
+
+  const [selectedCategory, setSelectedCategory] = useState(
+    categoryFromUrl && dynamicCategories.includes(categoryFromUrl) ? categoryFromUrl : "All"
+  )
   const [currentHeroVideo, setCurrentHeroVideo] = useState(0)
 
   // Update selected category when URL parameter changes
   useEffect(() => {
-    if (categoryFromUrl && categories.includes(categoryFromUrl)) {
+    if (categoryFromUrl && dynamicCategories.includes(categoryFromUrl)) {
       setSelectedCategory(categoryFromUrl)
     }
-  }, [categoryFromUrl])
-
-  // Create comprehensive video collection by combining base and extended videos
-  const videoCards = [...baseVideoCards, ...extendedVideoCards]
+  }, [categoryFromUrl, mappedProducts.length])
 
   const filteredVideos = selectedCategory === "All"
     ? videoCards
     : videoCards.filter(card => card.category === selectedCategory)
 
-  const heroVideos = [
-    baseVideoCards[0], // Silk
-    baseVideoCards[3], // Banarasi
-    baseVideoCards[6], // Linen
-    baseVideoCards[2], // Festive
-    baseVideoCards[5], // Handloom
-    baseVideoCards[4], // Contemporary
-    baseVideoCards[1]  // Dupatta
-  ]
+  // Use top videos for the hero slider
+  const heroVideos = videoCards.slice(0, 7)
 
   // Navigation functions
   const goToPrevious = () => {
@@ -427,10 +190,10 @@ function VideoCollectionContent() {
   // Auto-rotate hero videos every 5 seconds using a mixed selection
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentHeroVideo((prev) => (prev + 1) % heroVideos.length)
+      setCurrentHeroVideo((prev) => (prev + 1) % (heroVideos.length || 1))
     }, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, [heroVideos.length])
 
   return (
     <>
@@ -459,20 +222,24 @@ function VideoCollectionContent() {
           <div className="absolute inset-0 bg-black/40" />
 
           {/* Navigation Arrows */}
-          <button
-            onClick={goToPrevious}
-            className="absolute left-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-colors text-white group"
-            aria-label="Previous video"
-          >
-            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" />
-          </button>
-          <button
-            onClick={goToNext}
-            className="absolute right-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-colors text-white group"
-            aria-label="Next video"
-          >
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
-          </button>
+          {heroVideos.length > 0 && (
+            <>
+              <button
+                onClick={goToPrevious}
+                className="absolute left-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors text-white group"
+                aria-label="Previous video"
+              >
+                <ChevronLeft className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+              <button
+                onClick={goToNext}
+                className="absolute right-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors text-white group"
+                aria-label="Next video"
+              >
+                <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </>
+          )}
 
           {/* Hero Content */}
           <div className="absolute inset-0 flex items-center justify-center text-center text-white z-10">
@@ -499,8 +266,6 @@ function VideoCollectionContent() {
             </div>
           </div>
 
-
-
           {/* Scroll Indicator */}
           <div className="absolute bottom-8 right-8 text-white/60 animate-bounce z-10">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -511,7 +276,7 @@ function VideoCollectionContent() {
 
         {/* Category Filter */}
         <section className="px-2 py-12 bg-gradient-to-br from-gray-50 via-white to-gray-100">
-          <div className="max-w-[1500px] mx-auto">
+          <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
             <div className="text-center mb-12">
               <h2 className="font-serif text-4xl md:text-5xl mb-4 text-gray-900">
                 Browse by Category
@@ -521,13 +286,13 @@ function VideoCollectionContent() {
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-3">
-              {categories.map((category) => (
+              {dynamicCategories.map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${selectedCategory === category
-                      ? 'bg-primary text-primary-foreground shadow-lg scale-105'
-                      : 'bg-white hover:bg-gray-50 text-gray-700 shadow-md hover:shadow-lg hover:scale-105'
+                  className={`px-3 md:px-6 py-1.5 md:py-2.5 text-xs md:text-sm font-medium whitespace-nowrap transition-all duration-300 ${selectedCategory === category
+                    ? "bg-primary text-primary-foreground shadow-md transform scale-105"
+                    : "bg-white text-muted-foreground border border-border hover:border-primary/30 hover:text-primary hover:bg-secondary/50"
                     }`}
                 >
                   {category}
@@ -539,7 +304,7 @@ function VideoCollectionContent() {
 
         {/* Video Grid */}
         <section id="video-grid" className="px-2 py-24 bg-gradient-to-br from-gray-50 via-white to-gray-100">
-          <div className="max-w-[1500px] mx-auto">
+          <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
             <div className="text-center mb-16">
               <h2 className="font-serif text-4xl md:text-5xl mb-4 text-gray-900">
                 {selectedCategory === "All" ? "Complete Collection" : `${selectedCategory} Collection`}
@@ -573,7 +338,7 @@ function VideoCollectionContent() {
 
         {/* Bottom CTA */}
         <section className="px-2 pb-16 bg-gradient-to-br from-gray-50 via-white to-gray-100">
-          <div className="max-w-[1500px] mx-auto text-center">
+          <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
             <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl p-12">
               <h2 className="font-serif text-4xl mb-4 text-gray-900">
                 Discover More Collections

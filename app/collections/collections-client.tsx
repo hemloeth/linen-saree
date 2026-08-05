@@ -33,7 +33,7 @@ export function CollectionsClient() {
 
   return (
     <section className="py-16 px-2">
-      <div className="max-w-[1500px] mx-auto space-y-8">
+      <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 space-y-8">
         {/* Filters */}
         <ProductFilters
           filters={filters}

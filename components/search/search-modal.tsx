@@ -71,7 +71,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
       <div className="fixed inset-x-0 top-0 bg-background border-b border-border">
-        <div className="max-w-[1500px] mx-auto px-2 py-4">
+        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 py-4">
           {/* Search Header */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Search Products</h2>

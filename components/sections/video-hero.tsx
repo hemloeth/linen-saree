@@ -91,7 +91,7 @@ export function VideoHero() {
           Discover our exquisite collection of premium linen sarees, crafted with love by master artisans
         </p>
         <div className="flex gap-4">
-          <Link href="/categories/pure-linen">
+          <Link href="/categories/pure-linen-saree">
             <Button
               size="lg"
               className="bg-white text-foreground hover:bg-white/90 px-8 py-6 text-sm tracking-wide"

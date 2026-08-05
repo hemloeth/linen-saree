@@ -80,9 +80,23 @@ export function ProductFilters({
   }, [])
 
   useEffect(() => {
+    const fetchGlobalFilters = async () => {
+      try {
+        const { apiGet } = await import("@/lib/api")
+        const data = await apiGet('/api/product/filters')
+        if (data.success) {
+          setColors(data.colors || [])
+          setFabrics(data.materials || [])
+        }
+      } catch (err) {
+        console.error("Failed to fetch product filters:", err)
+      }
+    }
+    fetchGlobalFilters()
+  }, [])
+
+  useEffect(() => {
     if (products.length > 0) {
-      setColors(getUniqueColors(products))
-      setFabrics(getUniqueFabrics(products))
       setCounts(getFilterCounts(products))
 
       const newRange = getPriceRange(products)
@@ -194,8 +208,8 @@ export function ProductFilters({
                   <div className="h-4 bg-muted rounded w-5/6"></div>
                 </div>
               ) : categories.length > 0 ? (
-                categories.map((category) => (
-                  <label key={category.slug} className="flex items-center gap-2 cursor-pointer">
+                categories.map((category, idx) => (
+                  <label key={`category-${category.slug}-${idx}`} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={filters.categories?.includes(category.slug) || false}
@@ -220,8 +234,8 @@ export function ProductFilters({
           <div>
             <h3 className="font-medium mb-3">Colors</h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {(showAllColors ? colors : colors.slice(0, 7)).map((color) => (
-                <label key={color} className="flex items-center gap-2 cursor-pointer">
+              {(showAllColors ? colors : colors.slice(0, 7)).map((color, idx) => (
+                <label key={`color-${color}-${idx}`} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={filters.colors?.includes(color) || false}
@@ -251,8 +265,8 @@ export function ProductFilters({
           <div>
             <h3 className="font-medium mb-3">Fabric</h3>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {fabrics.map((fabric) => (
-                <label key={fabric} className="flex items-center gap-2 cursor-pointer">
+              {fabrics.map((fabric, idx) => (
+                <label key={`fabric-${fabric}-${idx}`} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={filters.fabrics?.includes(fabric) || false}
