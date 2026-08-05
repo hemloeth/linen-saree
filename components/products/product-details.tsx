@@ -149,7 +149,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                       alt={media.alt || `${product.name} view ${index + 1}`}
                       width={1000}
                       height={1250}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-top"
                       priority={index < 2}
                       draggable={false}
                     />
@@ -157,7 +157,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     <div className="relative w-full h-full bg-black">
                       <video
                         src={media.src}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-top"
                         controls
                         autoPlay
                         muted
@@ -183,14 +183,14 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     alt={product.name}
                     width={1000}
                     height={1250}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                     priority
                     draggable={false}
                   />
                 ) : (
                   <video
                     src={mediaItems[selectedMedia]?.src}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                     controls
                     autoPlay
                     muted
