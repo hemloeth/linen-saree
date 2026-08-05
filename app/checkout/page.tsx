@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { CheckoutProductMedia } from "@/components/common/checkout-product-media"
 import Link from "next/link"
 import { toast } from "sonner"
-import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X, ChevronDown, Search } from "lucide-react"
+import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X, ChevronDown, Search, Loader2 } from "lucide-react"
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -97,6 +97,48 @@ export default function CheckoutPage() {
     phone: "",
     paymentMethod: "card"
   })
+
+  const [isFetchingPincode, setIsFetchingPincode] = useState(false)
+
+  useEffect(() => {
+    const fetchPincodeDetails = async () => {
+      if (formData.pincode.length === 6) {
+        setIsFetchingPincode(true)
+        try {
+          const response = await fetch(`https://api.postalpincode.in/pincode/${formData.pincode}`)
+          const data = await response.json()
+          if (data && data[0] && data[0].Status === "Success") {
+            const postOffice = data[0].PostOffice[0]
+            const fetchedState = postOffice.State
+            const fetchedCity = postOffice.District || postOffice.Block
+            
+            const allStates = [...indianStates, ...unionTerritories]
+            const stateMatch = allStates.find(s => s.label.toLowerCase() === fetchedState.toLowerCase())
+            
+            setFormData(prev => ({
+              ...prev,
+              city: fetchedCity || prev.city,
+              state: stateMatch ? stateMatch.value : prev.state
+            }))
+            
+            setFormErrors(prev => ({ ...prev, city: '', state: '', pincode: '' }))
+          } else {
+             setFormErrors(prev => ({ ...prev, pincode: 'Invalid PIN code' }))
+          }
+        } catch (error) {
+          console.error("Error fetching pincode details", error)
+        } finally {
+          setIsFetchingPincode(false)
+        }
+      }
+    }
+    
+    const timeoutId = setTimeout(() => {
+      fetchPincodeDetails()
+    }, 500)
+    
+    return () => clearTimeout(timeoutId)
+  }, [formData.pincode])
 
   const filteredStates = indianStates.filter(s => s.label.toLowerCase().includes(stateSearch.toLowerCase()))
   const filteredUTs = unionTerritories.filter(s => s.label.toLowerCase().includes(stateSearch.toLowerCase()))
@@ -360,7 +402,10 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen">
         <Header />
-        <div className="pt-[96px] lg:pt-[104px] min-h-[80vh] flex items-center justify-center">
+        <div 
+          className="min-h-[80vh] flex items-center justify-center px-4 md:px-8"
+          style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+        >
           <div className="animate-pulse text-muted-foreground">Loading checkout...</div>
         </div>
         <Footer />
@@ -372,7 +417,10 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen">
         <Header />
-        <div className="pt-[96px] lg:pt-[104px] min-h-[80vh] flex items-center justify-center">
+        <div 
+          className="min-h-[80vh] flex items-center justify-center px-4 md:px-8"
+          style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+        >
           <div className="text-center px-4">
             <h1 className="font-serif text-3xl mb-4">Your cart is empty</h1>
             <p className="text-muted-foreground mb-8">Add some products to checkout</p>
@@ -392,7 +440,10 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen">
         <Header />
-        <div className="pt-[96px] lg:pt-[104px] min-h-[80vh] flex items-center justify-center">
+        <div 
+          className="min-h-[80vh] flex items-center justify-center px-4 md:px-8"
+          style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+        >
           <div className="text-center px-4 max-w-md">
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <Check className="w-10 h-10 text-primary" />
@@ -429,8 +480,8 @@ export default function CheckoutPage() {
     <main className="min-h-screen bg-background">
       <Header />
 
-      <div className="pt-[96px] lg:pt-[104px]">
-        <section className="py-8 lg:py-12 px-2">
+      <div style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}>
+        <section className="pb-8 lg:pb-12 px-4 md:px-8 lg:px-12 xl:px-16">
           <div className="max-w-[1200px] mx-auto">
             {/* Back Link */}
             <Link
@@ -628,24 +679,31 @@ export default function CheckoutPage() {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <input
-                                type="text"
-                                name="pincode"
-                                placeholder="PIN Code"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                maxLength={6}
-                                value={formData.pincode}
-                                onChange={handleInputChange}
-                                onKeyDown={(e) => {
-                                  if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
-                                    e.preventDefault()
-                                  }
-                                }}
-                                required
-                                className={`w-full px-4 py-3 border bg-background text-sm ${formErrors.pincode ? 'border-red-500' : 'border-border'
-                                  }`}
-                              />
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  name="pincode"
+                                  placeholder="PIN Code"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  maxLength={6}
+                                  value={formData.pincode}
+                                  onChange={handleInputChange}
+                                  onKeyDown={(e) => {
+                                    if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                                      e.preventDefault()
+                                    }
+                                  }}
+                                  required
+                                  className={`w-full px-4 py-3 border bg-background text-sm ${formErrors.pincode ? 'border-red-500' : 'border-border'
+                                    }`}
+                                />
+                                {isFetchingPincode && (
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                                  </div>
+                                )}
+                              </div>
                               {formErrors.pincode && (
                                 <p className="text-xs text-red-500 mt-1">{formErrors.pincode}</p>
                               )}

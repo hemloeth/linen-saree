@@ -74,7 +74,7 @@ export default function AccountPage() {
           {/* Header Section */}
           <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-10 pb-8 border-b border-border/40 gap-6">
             <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-              <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-3xl font-serif shadow-inner">
+              <div className="w-20 h-20 bg-primary/10 text-primary flex items-center justify-center text-3xl font-serif shadow-inner">
                 {initials}
               </div>
               <div>
@@ -85,7 +85,7 @@ export default function AccountPage() {
             
             <button
               onClick={handleLogout}
-              className="group flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-destructive bg-destructive/5 hover:bg-destructive/10 rounded-full transition-all"
+              className="group flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-destructive bg-destructive/5 hover:bg-destructive/10 transition-all"
             >
               <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
               Sign Out
@@ -94,8 +94,8 @@ export default function AccountPage() {
 
           {/* Success Toast */}
           {saveSuccess && (
-            <div className="mb-8 p-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 shadow-sm animate-in fade-in slide-in-from-top-2">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+            <div className="mb-8 p-4 text-sm text-green-700 bg-green-50 border border-green-200 flex items-center gap-3 shadow-sm animate-in fade-in slide-in-from-top-2">
+              <div className="w-6 h-6 bg-green-100 flex items-center justify-center">
                 <Check className="w-4 h-4" />
               </div>
               Profile updated successfully
@@ -109,8 +109,8 @@ export default function AccountPage() {
               <h2 className="font-serif text-xl mb-4">Quick Links</h2>
               
               <Link href="/orders" className="block group">
-                <div className="flex items-center p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                <div className="flex items-center p-4 border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
+                  <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                     <Package className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
                   </div>
                   <div className="flex-1">
@@ -122,8 +122,8 @@ export default function AccountPage() {
               </Link>
               
               <Link href="/wishlist" className="block group">
-                <div className="flex items-center p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                <div className="flex items-center p-4 border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
+                  <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                     <Heart className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
                   </div>
                   <div className="flex-1">
@@ -135,8 +135,8 @@ export default function AccountPage() {
               </Link>
 
               <Link href="/track-order" className="block group">
-                <div className="flex items-center p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                <div className="flex items-center p-4 border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
+                  <div className="w-12 h-12 bg-primary/10 flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                     <Gift className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
                   </div>
                   <div className="flex-1">
@@ -150,7 +150,7 @@ export default function AccountPage() {
 
             {/* Right Column: Profile Info */}
             <div className="lg:col-span-8">
-              <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm">
+              <div className="bg-card border border-border/50 overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-6 sm:px-8 py-6 bg-muted/20 border-b border-border/50">
                   <div>
                     <h2 className="font-serif text-xl">Personal Information</h2>
@@ -160,7 +160,7 @@ export default function AccountPage() {
                     <Button
                       variant="outline"
                       onClick={() => setIsEditing(true)}
-                      className="gap-2 rounded-full px-6"
+                      className="gap-2 px-6"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                       Edit
@@ -170,13 +170,13 @@ export default function AccountPage() {
                       <Button
                         variant="ghost"
                         onClick={() => { setIsEditing(false); setEditName(user.name); setEditPhone(user.phone); }}
-                        className="rounded-full w-full sm:w-auto"
+                        className="w-full sm:w-auto"
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleSave}
-                        className="gap-2 rounded-full px-6 w-full sm:w-auto"
+                        className="gap-2 px-6 w-full sm:w-auto"
                       >
                         Save
                       </Button>
@@ -196,7 +196,7 @@ export default function AccountPage() {
                           type="text"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="w-full max-w-md px-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                          className="w-full max-w-md px-4 py-2 border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         />
                       ) : (
                         <p className="text-base font-medium sm:pt-1.5">{user.name}</p>
@@ -239,7 +239,7 @@ export default function AccountPage() {
                               e.preventDefault()
                             }
                           }}
-                          className="w-full max-w-md px-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                          className="w-full max-w-md px-4 py-2 border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                           placeholder="10-digit number"
                         />
                       ) : (
