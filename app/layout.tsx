@@ -28,6 +28,7 @@ const _montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://linensarees.com'),
   title: 'Linen Sarees | Premium Handcrafted Sarees',
   description: 'Discover our exquisite collection of premium linen sarees. Handcrafted elegance for the modern woman.',
   generator: 'v0.app',
