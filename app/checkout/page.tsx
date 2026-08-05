@@ -143,15 +143,39 @@ export default function CheckoutPage() {
     setFormData({ ...formData, [name]: value })
   }
 
-  const [formErrors, setFormErrors] = useState<{ pincode: string; phone: string; state: string }>({
+  const [formErrors, setFormErrors] = useState<{ email: string; firstName: string; address: string; city: string; pincode: string; phone: string; state: string }>({
+    email: '',
+    firstName: '',
+    address: '',
+    city: '',
     pincode: '',
     phone: '',
     state: '',
   })
 
   const validateAndContinue = () => {
-    const errors = { pincode: '', phone: '', state: '' }
+    const errors = { email: '', firstName: '', address: '', city: '', pincode: '', phone: '', state: '' }
     let hasError = false
+
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address'
+      hasError = true
+    }
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'First name is required'
+      hasError = true
+    }
+
+    if (!formData.address.trim()) {
+      errors.address = 'Address is required'
+      hasError = true
+    }
+
+    if (!formData.city.trim()) {
+      errors.city = 'City is required'
+      hasError = true
+    }
 
     if (!formData.state) {
       errors.state = 'Please select a state'
@@ -450,8 +474,11 @@ export default function CheckoutPage() {
                           value={formData.email}
                           onChange={handleInputChange}
                           required
-                          className="w-full px-4 py-3 border border-border bg-background text-sm"
+                          className={`w-full px-4 py-3 border bg-background text-sm ${formErrors.email ? 'border-red-500' : 'border-border'}`}
                         />
+                        {formErrors.email && (
+                          <p className="text-xs text-red-500 mt-1">{formErrors.email}</p>
+                        )}
                       </div>
 
                       {/* Shipping Address */}
@@ -459,15 +486,20 @@ export default function CheckoutPage() {
                         <h2 className="font-medium text-lg mb-4">Shipping Address</h2>
                         <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
-                            <input
-                              type="text"
-                              name="firstName"
-                              placeholder="First name"
-                              value={formData.firstName}
-                              onChange={handleInputChange}
-                              required
-                              className="w-full px-4 py-3 border border-border bg-background text-sm"
-                            />
+                            <div>
+                              <input
+                                type="text"
+                                name="firstName"
+                                placeholder="First name"
+                                value={formData.firstName}
+                                onChange={handleInputChange}
+                                required
+                                className={`w-full px-4 py-3 border bg-background text-sm ${formErrors.firstName ? 'border-red-500' : 'border-border'}`}
+                              />
+                              {formErrors.firstName && (
+                                <p className="text-xs text-red-500 mt-1">{formErrors.firstName}</p>
+                              )}
+                            </div>
                             <input
                               type="text"
                               name="lastName"
@@ -478,15 +510,20 @@ export default function CheckoutPage() {
                               className="w-full px-4 py-3 border border-border bg-background text-sm"
                             />
                           </div>
-                          <input
-                            type="text"
-                            name="address"
-                            placeholder="Address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            required
-                            className="w-full px-4 py-3 border border-border bg-background text-sm"
-                          />
+                          <div>
+                            <input
+                              type="text"
+                              name="address"
+                              placeholder="Address"
+                              value={formData.address}
+                              onChange={handleInputChange}
+                              required
+                              className={`w-full px-4 py-3 border bg-background text-sm ${formErrors.address ? 'border-red-500' : 'border-border'}`}
+                            />
+                            {formErrors.address && (
+                              <p className="text-xs text-red-500 mt-1">{formErrors.address}</p>
+                            )}
+                          </div>
                           <input
                             type="text"
                             name="landmark"
@@ -496,15 +533,20 @@ export default function CheckoutPage() {
                             className="w-full px-4 py-3 border border-border bg-background text-sm"
                           />
                           <div className="grid grid-cols-2 gap-4">
-                            <input
-                              type="text"
-                              name="city"
-                              placeholder="City"
-                              value={formData.city}
-                              onChange={handleInputChange}
-                              required
-                              className="w-full px-4 py-3 border border-border bg-background text-sm"
-                            />
+                            <div>
+                              <input
+                                type="text"
+                                name="city"
+                                placeholder="City"
+                                value={formData.city}
+                                onChange={handleInputChange}
+                                required
+                                className={`w-full px-4 py-3 border bg-background text-sm ${formErrors.city ? 'border-red-500' : 'border-border'}`}
+                              />
+                              {formErrors.city && (
+                                <p className="text-xs text-red-500 mt-1">{formErrors.city}</p>
+                              )}
+                            </div>
                             <div ref={stateDropdownRef} className="relative">
                               <button
                                 type="button"
