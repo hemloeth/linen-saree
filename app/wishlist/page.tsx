@@ -23,8 +23,11 @@ export default function WishlistPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
-      {/* Adjusted padding top to avoid header overlap */}
-      <main className="flex-1 px-4 md:px-8 pb-16 pt-28 lg:pt-36">
+      {/* Adjusted padding top dynamically to avoid header overlap on any screen size */}
+      <main 
+        className="flex-1 px-4 md:px-8 pb-16"
+        style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+      >
         <div className="max-w-[1500px] mx-auto">
           
           {/* Header */}
