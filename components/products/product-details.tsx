@@ -72,6 +72,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   // Handle swipe gestures
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0].clientX
+    touchEndX.current = e.targetTouches[0].clientX
     setIsDragging(true)
   }
 
@@ -132,45 +133,46 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <span className="text-foreground line-clamp-1">{product.name}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-12 gap-8 lg:gap-16">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 items-start">
           {/* Image Gallery */}
-          <div className="lg:col-span-7 xl:col-span-8 flex flex-col-reverse lg:flex-row gap-4">
-            {/* Thumbnails - Vertical on left side (desktop) */}
-            <div className="hidden lg:flex lg:flex-col gap-3">
+          <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
+            {/* Desktop Image Grid (Myntra style) */}
+            <div className="hidden lg:grid grid-cols-2 gap-4">
               {mediaItems.map((media, index) => (
-                <button
+                <div
                   key={index}
-                  onClick={() => setSelectedMedia(index)}
-                  className={`relative w-20 h-24 flex-shrink-0 border-2 transition-colors ${selectedMedia === index ? "border-primary" : "border-transparent"
-                    }`}
+                  className="relative overflow-hidden select-none w-full aspect-[4/5] rounded-sm bg-muted/10"
                 >
                   {media.type === 'image' ? (
                     <Image
                       src={media.src || "/placeholder.svg"}
                       alt={media.alt || `${product.name} view ${index + 1}`}
-                      fill
-                      className="object-cover"
+                      width={1000}
+                      height={1250}
+                      className="w-full h-full object-cover"
+                      priority={index < 2}
+                      draggable={false}
                     />
                   ) : (
                     <div className="relative w-full h-full bg-black">
                       <video
                         src={media.src}
                         className="w-full h-full object-cover"
+                        controls
+                        autoPlay
                         muted
+                        loop
                       />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Play className="w-6 h-6 text-white" />
-                      </div>
                     </div>
                   )}
-                </button>
+                </div>
               ))}
             </div>
 
-            {/* Main Media with Swipe Support */}
-            <div className="relative flex-1 w-full">
+            {/* Mobile Main Media with Swipe Support */}
+            <div className="relative flex-1 w-full lg:hidden">
               <div
-                className="relative overflow-hidden select-none w-full aspect-[4/5] lg:aspect-[9/8] rounded-sm"
+                className="relative overflow-hidden select-none w-full aspect-[4/5] rounded-sm bg-muted/10"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -181,14 +183,14 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     alt={product.name}
                     width={1000}
                     height={1250}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     priority
                     draggable={false}
                   />
                 ) : (
                   <video
                     src={mediaItems[selectedMedia]?.src}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     controls
                     autoPlay
                     muted
@@ -267,7 +269,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           {/* Product Info */}
-          <div className="lg:col-span-5 xl:col-span-4 lg:py-4 flex flex-col justify-center">
+          <div className="lg:col-span-5 xl:col-span-4 lg:py-4 flex flex-col justify-start lg:sticky lg:top-[calc(var(--header-offset,120px)+2rem)] lg:h-fit lg:pb-12">
 
             {/* Header: Category & Reviews */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
