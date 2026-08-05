@@ -96,7 +96,7 @@ function VideoCard({ product }: VideoCardProps) {
               muted
               playsInline
               preload="auto"
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
               onLoadedData={() => { if (inView) setIsPlaying(true) }}
             />
           )}
