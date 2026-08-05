@@ -280,30 +280,11 @@ function VideoCollectionContent() {
           )}
 
           {/* Hero Content */}
-          <div className="absolute inset-0 flex items-center justify-center text-center text-white z-10">
+          <div className="absolute inset-0 flex items-center justify-center text-center text-white z-10 pointer-events-none">
             <div className="max-w-4xl px-4">
-              <div className="inline-flex items-center gap-3 text-sm tracking-[0.3em] uppercase text-white/80 mb-6">
-                <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-                Video Collection
-                <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-              </div>
-              <h1 className="font-serif text-6xl md:text-7xl lg:text-8xl mb-6 leading-tight">
+              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-tight drop-shadow-xl">
                 Saree Stories
               </h1>
-              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed mb-8">
-                Experience the beauty and elegance of our premium saree collection through immersive video showcases
-              </p>
-              <button
-                onClick={() => {
-                  document.getElementById('video-grid')?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/95 text-primary-foreground px-12 py-4 rounded-none font-bold btn-premium shadow-lg group"
-              >
-                <span className="relative z-10">Explore Collection</span>
-                <svg className="w-5 h-5 relative z-10 group-hover:translate-y-1 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </button>
             </div>
           </div>
 
