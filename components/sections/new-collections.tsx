@@ -26,8 +26,8 @@ function ProductSkeleton() {
 export function NewCollections() {
   const { mappedProducts, loading } = useProducts()
 
-  // Just grab the first 8 items (or filter by isNew if you implement that attribute)
-  const products = mappedProducts.slice(0, 8)
+  // Just grab the first 20 items
+  const products = mappedProducts.slice(0, 20)
 
   return (
     <section className="py-20 bg-background">
@@ -52,7 +52,7 @@ export function NewCollections() {
         {/* Products Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {loading
-            ? Array.from({ length: 8 }).map((_, i) => (
+            ? Array.from({ length: 20 }).map((_, i) => (
               <ProductSkeleton key={i} />
             ))
             : products.length > 0

@@ -22,6 +22,17 @@ const navLinks: NavLink[] = [
   {
     name: "Categories",
     href: "/categories",
+    submenu: [
+      { name: "All Categories", href: "/categories" },
+      { name: "Pure Linen", href: "/categories/pure-linen" },
+      { name: "Banarasi Silk", href: "/categories/banarasi-silk" },
+      { name: "Handloom", href: "/categories/handloom" },
+      { name: "Silk Linen", href: "/categories/silk-linen" },
+      { name: "Embroidery", href: "/categories/embroidery" },
+      { name: "Kota Linen", href: "/categories/kota-linen" },
+      { name: "Cotton Linen", href: "/categories/cotton-linen" },
+      { name: "Bridal Collection", href: "/categories/bridal-collection" }
+    ]
   },
   {
     name: "New Arrivals",
@@ -353,7 +364,7 @@ export function Header() {
       <div
         className={cn(
           "lg:hidden fixed inset-x-0 bg-background border-b border-border transition-all duration-300 flex flex-col",
-          isMenuOpen ? "max-h-[calc(100vh-var(--header-offset,120px))] h-[calc(100vh-var(--header-offset,120px))] opacity-100" : "max-h-0 opacity-0 overflow-hidden pointer-events-none"
+          isMenuOpen ? "max-h-[calc(100dvh-var(--header-offset,120px))] h-[calc(100dvh-var(--header-offset,120px))] opacity-100" : "max-h-0 opacity-0 overflow-hidden pointer-events-none"
         )}
         style={{ top: 'var(--header-offset, 120px)' }}
       >
@@ -441,7 +452,7 @@ export function Header() {
         </div>
 
         {/* Bottom Utility / Account Footer */}
-        <div className="bg-muted/30 border-t border-border px-4 py-6 mt-auto">
+        <div className="bg-muted/30 border-t border-border px-4 py-6 pb-12 sm:pb-6 mt-auto shrink-0">
           <div className="grid grid-cols-2 gap-4">
             <Link
               href="/wishlist"
