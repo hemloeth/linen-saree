@@ -41,7 +41,12 @@ const navLinks: NavLink[] = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({})
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null)
+
+  const toggleExpandedMenu = (menuName: string) => {
+    setExpandedMenus(prev => ({ ...prev, [menuName]: !prev[menuName] }))
+  }
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [marketingCollections, setMarketingCollections] = useState<any[]>([])
   const [isAnnouncementVisible, setIsAnnouncementVisible] = useState(true)
@@ -347,119 +352,144 @@ export function Header() {
       {/* Mobile Menu */}
       <div
         className={cn(
-          "lg:hidden fixed inset-x-0 bg-background border-b border-border transition-all duration-300",
-          isMenuOpen ? "max-h-[calc(100vh-var(--header-offset,120px))] opacity-100 overflow-y-auto" : "max-h-0 opacity-0 overflow-hidden"
+          "lg:hidden fixed inset-x-0 bg-background border-b border-border transition-all duration-300 flex flex-col",
+          isMenuOpen ? "max-h-[calc(100vh-var(--header-offset,120px))] h-[calc(100vh-var(--header-offset,120px))] opacity-100" : "max-h-0 opacity-0 overflow-hidden pointer-events-none"
         )}
         style={{ top: 'var(--header-offset, 120px)' }}
       >
-        <nav className="px-4 pt-6 pb-24 flex flex-col gap-2">
-          {/* Mobile Search */}
-          <button
-            onClick={() => {
-              setIsSearchOpen(true)
-              setIsMenuOpen(false)
-            }}
-            className="flex items-center gap-3 text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2"
-          >
-            <Search className="w-5 h-5" />
-            Search Products
-          </button>
+        {/* Primary Navigation Area */}
+        <div className="flex-1 overflow-y-auto pb-4">
+          <nav className="px-4 pt-6 flex flex-col gap-1">
 
-          {/* Mobile Account Links */}
-          <div className="border-t border-border pt-4 mt-2">
+
+            {/* Main Navigation Links */}
+            {navLinks.map((link) => {
+              const hasSubmenu = (link.submenu?.length ?? 0) > 0 || link.name === "Collections"
+              const isExpanded = !!expandedMenus[link.name]
+
+              return (
+                <div key={link.name} className="border-b border-border/50 last:border-0">
+                  {hasSubmenu ? (
+                    <button
+                      onClick={() => toggleExpandedMenu(link.name)}
+                      className="w-full flex items-center justify-between py-4 text-base font-sans tracking-wide text-foreground hover:text-primary transition-colors"
+                    >
+                      <span className={cn(
+                        link.name === "Sale" && "text-destructive",
+                        link.name === "Best Sellers" && "text-primary font-medium"
+                      )}>
+                        {link.name}
+                      </span>
+                      <ChevronDown className={cn(
+                        "w-4 h-4 text-muted-foreground transition-transform duration-300",
+                        isExpanded && "rotate-180"
+                      )} />
+                    </button>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className={cn(
+                        "block py-4 text-base font-sans tracking-wide text-foreground hover:text-primary transition-colors",
+                        link.name === "Sale" && "text-destructive",
+                        link.name === "Best Sellers" && "text-primary font-medium"
+                      )}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                  )}
+
+                  {/* Submenu Accordion */}
+                  {hasSubmenu && (
+                    <div className={cn(
+                      "grid transition-all duration-300 ease-in-out",
+                      isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                    )}>
+                      <div className="overflow-hidden">
+                        <div className="pb-4 pl-4 space-y-1 border-l-2 border-border/50 ml-2 mb-2">
+                          {link.name === "Collections" ? (
+                            marketingCollections.map((col) => (
+                              <Link
+                                key={col.key}
+                                href={`/collections/${col.key}`}
+                                className="block py-2.5 px-3 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                {col.name}
+                              </Link>
+                            ))
+                          ) : (
+                            link.submenu?.map((sublink) => (
+                              <Link
+                                key={sublink.name}
+                                href={sublink.href}
+                                className="block py-2.5 px-3 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                {sublink.name}
+                              </Link>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </nav>
+        </div>
+
+        {/* Bottom Utility / Account Footer */}
+        <div className="bg-muted/30 border-t border-border px-4 py-6 mt-auto">
+          <div className="grid grid-cols-2 gap-4">
+            <Link
+              href="/wishlist"
+              className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Heart className="w-4 h-4" />
+              Wishlist
+            </Link>
+            
             {authHydrated && isAuthenticated ? (
               <>
                 <Link
                   href="/account"
-                  className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
+                  className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
+                  <User className="w-4 h-4" />
                   My Account
                 </Link>
                 <Link
                   href="/orders"
-                  className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
+                  className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
+                  <ShoppingBag className="w-4 h-4" />
                   My Orders
-                </Link>
-                <Link
-                  href="/track-order"
-                  className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Track Order
                 </Link>
                 <button
                   onClick={() => { logout(); setIsMenuOpen(false); window.location.href = '/account/login'; }}
-                  className="text-lg font-sans tracking-wide text-destructive hover:text-destructive/80 transition-colors py-2 block"
+                  className="flex items-center gap-2 text-sm font-medium text-destructive hover:text-destructive/80 transition-colors text-left"
                 >
+                  <X className="w-4 h-4" />
                   Sign Out
                 </button>
               </>
             ) : (
-              <>
-                <Link
-                  href="/account/login"
-                  className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login / Sign Up
-                </Link>
-              </>
-            )}
-            <Link
-              href="/wishlist"
-              className="text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Wishlist
-            </Link>
-          </div>
-
-          {navLinks.map((link) => (
-            <div key={link.name}>
               <Link
-                href={link.href}
-                className={cn(
-                  "text-lg font-sans tracking-wide text-foreground/80 hover:text-foreground transition-colors py-2 block",
-                  link.name === "Sale" && "text-destructive",
-                  link.name === "Best Sellers" && "text-primary font-medium"
-                )}
+                href="/account/login"
+                className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                {link.name}
+                <User className="w-4 h-4" />
+                Login / Sign Up
               </Link>
-              {((link.submenu?.length ?? 0) > 0 || link.name === "Collections") && (
-                <div className="pl-4 border-l border-border ml-2">
-                  {link.name === "Collections" ? (
-                    marketingCollections.map((col) => (
-                      <Link
-                        key={col.key}
-                        href={`/collections/${col.key}`}
-                        className="block py-3 text-base text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {col.name}
-                      </Link>
-                    ))
-                  ) : (
-                    link.submenu?.map((sublink) => (
-                      <Link
-                        key={sublink.name}
-                        href={sublink.href}
-                        className="block py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {sublink.name}
-                      </Link>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </nav>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Search Modal */}
