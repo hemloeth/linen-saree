@@ -120,7 +120,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   }
 
   return (
-    <section className="py-4 sm:py-16 px-4 sm:px-2">
+    <section className="py-4 sm:py-16">
       <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         {/* Breadcrumb */}
         <nav className="text-[9px] sm:text-xs sm:text-sm text-muted-foreground mb-3 flex flex-wrap items-center gap-y-0.5">
