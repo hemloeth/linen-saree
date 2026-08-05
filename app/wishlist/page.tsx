@@ -75,7 +75,7 @@ export default function WishlistPage() {
               <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                 Discover our latest collections and save your favorite pieces to review them later.
               </p>
-              <Button asChild size="lg" className="rounded-full px-8">
+              <Button asChild size="lg" className="px-8">
                 <Link href="/collections">
                   Explore Collections <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
@@ -95,7 +95,7 @@ export default function WishlistPage() {
 
               {/* Bottom Actions */}
               <div className="flex justify-center mt-16 pt-8 border-t border-border/40">
-                <Button asChild variant="outline" size="lg" className="rounded-full px-10">
+                <Button asChild variant="outline" size="lg" className="px-10">
                   <Link href="/collections">
                     Continue Shopping
                   </Link>

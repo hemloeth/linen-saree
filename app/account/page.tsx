@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
-import { User, Mail, Phone, LogOut, Check, Pencil, Package, Heart, Gift } from "lucide-react"
+import { User, Mail, Phone, LogOut, Check, Pencil, Package, Heart, Gift, ChevronRight } from "lucide-react"
 
 export default function AccountPage() {
   const { user, isAuthenticated, isHydrated, logout, updateProfile } = useAuth()
@@ -34,10 +34,13 @@ export default function AccountPage() {
 
   if (!isHydrated || !isAuthenticated || !user) {
     return (
-      <main className="min-h-screen">
+      <main className="min-h-screen bg-background flex flex-col">
         <Header />
-        <div className="pt-[96px] lg:pt-[104px] min-h-[80vh] flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-pulse flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+            <div className="text-muted-foreground font-medium tracking-wide">Loading Profile...</div>
+          </div>
         </div>
         <Footer />
       </main>
@@ -56,158 +59,200 @@ export default function AccountPage() {
     router.push("/account/login")
   }
 
+  // Get user initials
+  const initials = user.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'U'
+
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      <div className="pt-[96px] lg:pt-[104px]">
-        <section className="py-12 lg:py-16 px-2">
-          <div className="max-w-[700px] mx-auto">
-            <h1 className="font-serif text-3xl text-center mb-2">My Account</h1>
-            <p className="text-center text-muted-foreground mb-10">Welcome back, {user.name}!</p>
-
-            {/* Success Toast */}
-            {saveSuccess && (
-              <div className="mb-6 p-3 text-sm text-primary bg-primary/10 border border-primary/20 rounded flex items-center gap-2">
-                <Check className="w-4 h-4" />
-                Profile updated successfully
+      <div 
+        className="flex-1 px-4 md:px-8 pb-16"
+        style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+      >
+        <div className="max-w-[1100px] mx-auto">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row items-center md:items-start justify-between mb-10 pb-8 border-b border-border/40 gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+              <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center text-3xl font-serif shadow-inner">
+                {initials}
               </div>
-            )}
-
-            {/* Profile Card */}
-            <div className="border border-border rounded-lg overflow-hidden mb-8">
-              <div className="flex items-center justify-between px-6 py-4 bg-muted/30 border-b border-border">
-                <h2 className="font-medium">Profile Information</h2>
-                {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="text-sm text-primary hover:text-primary/80 flex items-center gap-1.5 transition-colors"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                    Edit
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => { setIsEditing(false); setEditName(user.name); setEditPhone(user.phone); }}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <Button
-                      onClick={handleSave}
-                      className="bg-primary hover:bg-primary/90 h-8 px-4 text-xs"
-                    >
-                      Save
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div className="divide-y divide-border">
-                {/* Name */}
-                <div className="flex items-center gap-4 px-6 py-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground mb-0.5">Full Name</p>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="w-full px-3 py-1.5 border border-border bg-background text-sm focus:outline-none focus:border-primary"
-                      />
-                    ) : (
-                      <p className="text-sm font-medium">{user.name}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div className="flex items-center gap-4 px-6 py-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground mb-0.5">Email Address</p>
-                    <p className="text-sm font-medium">{user.email}</p>
-                  </div>
-                </div>
-
-                {/* Phone */}
-                <div className="flex items-center gap-4 px-6 py-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground mb-0.5">Phone Number</p>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        value={editPhone}
-                        inputMode="numeric"
-                        maxLength={10}
-                        onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                        onKeyDown={(e) => {
-                          if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
-                            e.preventDefault()
-                          }
-                        }}
-                        className="w-full px-3 py-1.5 border border-border bg-background text-sm focus:outline-none focus:border-primary"
-                      />
-                    ) : (
-                      <p className="text-sm font-medium">{user.phone}</p>
-                    )}
-                  </div>
-                </div>
+              <div>
+                <h1 className="font-serif text-3xl lg:text-4xl tracking-wide text-foreground mb-2">My Account</h1>
+                <p className="text-muted-foreground">Welcome back, <span className="font-medium text-foreground">{user.name}</span>!</p>
               </div>
             </div>
-
-            {/* Quick Links */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-              <Link href="/orders" className="group">
-                <div className="border border-border rounded-lg p-5 hover:border-primary/50 hover:shadow-md transition-all text-center">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <Package className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="font-medium text-sm">My Orders</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Track your orders</p>
-                </div>
-              </Link>
-              <Link href="/wishlist" className="group">
-                <div className="border border-border rounded-lg p-5 hover:border-primary/50 hover:shadow-md transition-all text-center">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <Heart className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="font-medium text-sm">Wishlist</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Saved items</p>
-                </div>
-              </Link>
-              <Link href="/track-order" className="group">
-                <div className="border border-border rounded-lg p-5 hover:border-primary/50 hover:shadow-md transition-all text-center">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <Gift className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="font-medium text-sm">Track Order</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Shipment status</p>
-                </div>
-              </Link>
-            </div>
-
-            {/* Logout */}
-            <div className="text-center">
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm text-destructive hover:bg-destructive/10 rounded transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
-            </div>
+            
+            <button
+              onClick={handleLogout}
+              className="group flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-destructive bg-destructive/5 hover:bg-destructive/10 rounded-full transition-all"
+            >
+              <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+              Sign Out
+            </button>
           </div>
-        </section>
+
+          {/* Success Toast */}
+          {saveSuccess && (
+            <div className="mb-8 p-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3 shadow-sm animate-in fade-in slide-in-from-top-2">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4" />
+              </div>
+              Profile updated successfully
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            
+            {/* Left Column: Quick Links */}
+            <div className="lg:col-span-4 space-y-4">
+              <h2 className="font-serif text-xl mb-4">Quick Links</h2>
+              
+              <Link href="/orders" className="block group">
+                <div className="flex items-center p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <Package className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm group-hover:text-primary transition-colors">My Orders</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Track & manage shipments</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:text-primary transition-all group-hover:translate-x-1" />
+                </div>
+              </Link>
+              
+              <Link href="/wishlist" className="block group">
+                <div className="flex items-center p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <Heart className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm group-hover:text-primary transition-colors">Wishlist</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">View your saved items</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:text-primary transition-all group-hover:translate-x-1" />
+                </div>
+              </Link>
+
+              <Link href="/track-order" className="block group">
+                <div className="flex items-center p-4 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/50 hover:border-primary/30 transition-all duration-300 shadow-sm">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mr-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <Gift className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-sm group-hover:text-primary transition-colors">Track Order</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Real-time shipment status</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:text-primary transition-all group-hover:translate-x-1" />
+                </div>
+              </Link>
+            </div>
+
+            {/* Right Column: Profile Info */}
+            <div className="lg:col-span-8">
+              <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-6 sm:px-8 py-6 bg-muted/20 border-b border-border/50">
+                  <div>
+                    <h2 className="font-serif text-xl">Personal Information</h2>
+                    <p className="text-sm text-muted-foreground mt-1">Manage your details and contact info</p>
+                  </div>
+                  {!isEditing ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditing(true)}
+                      className="gap-2 rounded-full px-6"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      Edit
+                    </Button>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      <Button
+                        variant="ghost"
+                        onClick={() => { setIsEditing(false); setEditName(user.name); setEditPhone(user.phone); }}
+                        className="rounded-full w-full sm:w-auto"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSave}
+                        className="gap-2 rounded-full px-6 w-full sm:w-auto"
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-6 sm:p-8 space-y-6 sm:space-y-8">
+                  {/* Name Field */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-6 items-start">
+                    <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 sm:pt-2">
+                      <User className="w-4 h-4" /> Full Name
+                    </div>
+                    <div className="sm:col-span-2">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="w-full max-w-md px-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        />
+                      ) : (
+                        <p className="text-base font-medium sm:pt-1.5">{user.name}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-border/40 w-full" />
+
+                  {/* Email Field */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-6 items-start">
+                    <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 sm:pt-2">
+                      <Mail className="w-4 h-4" /> Email Address
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-base font-medium sm:pt-1.5 text-foreground/80">{user.email}</p>
+                      {isEditing && (
+                        <p className="text-xs text-muted-foreground mt-2">Email address cannot be changed.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-border/40 w-full" />
+
+                  {/* Phone Field */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-6 items-start">
+                    <div className="text-sm font-medium text-muted-foreground flex items-center gap-2 sm:pt-2">
+                      <Phone className="w-4 h-4" /> Phone Number
+                    </div>
+                    <div className="sm:col-span-2">
+                      {isEditing ? (
+                        <input
+                          type="tel"
+                          value={editPhone}
+                          inputMode="numeric"
+                          maxLength={10}
+                          onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          onKeyDown={(e) => {
+                            if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                              e.preventDefault()
+                            }
+                          }}
+                          className="w-full max-w-md px-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                          placeholder="10-digit number"
+                        />
+                      ) : (
+                        <p className="text-base font-medium sm:pt-1.5">{user.phone || <span className="text-muted-foreground italic text-sm">Not provided</span>}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
       </div>
 
       <Footer />
