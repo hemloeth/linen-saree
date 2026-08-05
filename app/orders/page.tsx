@@ -121,7 +121,10 @@ export default function OrdersPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="pt-[96px] lg:pt-[104px] min-h-[60vh] flex items-center justify-center">
+        <div 
+          className="min-h-[60vh] flex items-center justify-center"
+          style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+        >
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
         <Footer />
@@ -133,7 +136,10 @@ export default function OrdersPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="pt-[96px] lg:pt-[104px] min-h-[60vh] flex items-center justify-center">
+        <div 
+          className="min-h-[60vh] flex items-center justify-center"
+          style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+        >
           <div className="text-center px-4">
             <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">Please log in</h3>
@@ -151,7 +157,10 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="container mx-auto px-4 py-12 pt-[96px] lg:pt-[104px]">
+      <div 
+        className="container mx-auto px-4 pb-12"
+        style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+      >
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-4">My Orders</h1>
           <p className="text-muted-foreground">Track and manage your orders</p>
