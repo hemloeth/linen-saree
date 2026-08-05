@@ -9,6 +9,7 @@ import { useProducts } from "@/context/product-context"
 import { Header } from "@/components/layout/header"
 import Link from "next/link"
 import { resolveMediaUrl } from "@/lib/media"
+import { useInView } from "react-intersection-observer"
 
 interface VideoCardProps {
   title: string
@@ -21,10 +22,44 @@ interface VideoCardProps {
 
 function VideoCard({ title, price, originalPrice, videoSrc, productId, category }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [isPlaying, setIsPlaying] = useState(true)
+  const [isPlaying, setIsPlaying] = useState(false)
   const { addToCart } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const { mappedProducts } = useProducts()
+
+  // 1. Observer for playing/pausing when visible
+  const { ref: inViewRef, inView } = useInView({
+    rootMargin: "100px 0px", 
+    threshold: 0,
+  })
+
+  // 2. Observer for lazy mounting (DOM virtualization)
+  const { ref: mountRef, inView: isNearScreen } = useInView({
+    rootMargin: "1200px 0px", 
+    triggerOnce: true,
+  })
+
+  const setRefs = (node: HTMLDivElement | null) => {
+    inViewRef(node)
+    mountRef(node)
+  }
+
+  useEffect(() => {
+    if (videoRef.current) {
+      if (inView) {
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            setIsPlaying(false)
+          });
+        }
+        setIsPlaying(true)
+      } else {
+        videoRef.current.pause()
+        setIsPlaying(false)
+      }
+    }
+  }, [inView])
 
   const product = mappedProducts.find(p => p.id === productId) || mappedProducts[0] || ({} as any)
   const discount = Math.round(((originalPrice - price) / originalPrice) * 100)
@@ -50,19 +85,21 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
   }
 
   return (
-    <div className="group relative w-full">
-      <div className="relative w-full mb-4">
+    <div className="group relative w-full block cursor-pointer">
+      <div className="relative w-full mb-4" ref={setRefs}>
         <div className="aspect-[3/4] overflow-hidden bg-black relative">
-          <video
-            ref={videoRef}
-            src={resolveMediaUrl(videoSrc)}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onLoadedData={() => setIsPlaying(true)}
-          />
+          {isNearScreen && (
+            <video
+              ref={videoRef}
+              src={resolveMediaUrl(videoSrc)}
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onLoadedData={() => { if (inView) setIsPlaying(true) }}
+            />
+          )}
 
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -200,22 +237,23 @@ function VideoCollectionContent() {
       <Header />
       <div className="min-h-screen bg-black pt-[96px] lg:pt-[104px]">
         {/* Full-Page Video Cover Hero */}
-        <section className="relative h-screen w-full overflow-hidden">
+        <section className="relative h-[calc(100vh-100px)] w-full overflow-hidden">
           {heroVideos.map((video, index) => (
-            <div
-              key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentHeroVideo ? 'opacity-100' : 'opacity-0'
-                }`}
-            >
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-                src={resolveMediaUrl(video.videoSrc)}
-              />
-            </div>
+            index === currentHeroVideo && (
+              <div
+                key={index}
+                className="absolute inset-0 animate-in fade-in duration-1000"
+              >
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover object-top"
+                  src={resolveMediaUrl(video.videoSrc)}
+                />
+              </div>
+            )
           ))}
 
           {/* Dark Overlay */}
@@ -259,9 +297,12 @@ function VideoCollectionContent() {
                 onClick={() => {
                   document.getElementById('video-grid')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:scale-105"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/95 text-primary-foreground px-12 py-4 rounded-none font-bold btn-premium shadow-lg group"
               >
-                Explore Collection
+                <span className="relative z-10">Explore Collection</span>
+                <svg className="w-5 h-5 relative z-10 group-hover:translate-y-1 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
               </button>
             </div>
           </div>
@@ -349,13 +390,13 @@ function VideoCollectionContent() {
               <div className="flex flex-wrap justify-center gap-4">
                 <Link
                   href="/"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-full font-semibold transition-colors duration-300 inline-block"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-none font-bold btn-premium transition-colors duration-300 inline-block"
                 >
                   View All Products
                 </Link>
                 <Link
                   href="/contact"
-                  className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-3 rounded-full font-semibold border border-gray-200 transition-colors duration-300 inline-block"
+                  className="bg-white hover:bg-gray-50 text-gray-900 px-8 py-4 rounded-none font-bold border border-gray-200 transition-colors duration-300 inline-block"
                 >
                   Contact Us
                 </Link>
