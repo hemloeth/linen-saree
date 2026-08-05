@@ -53,7 +53,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const handleShare = async () => {
     const shareData = {
       title: `${product.name} | Linen Sarees`,
-      text: product.description,
+      text: `Check out ${product.name} on Linen Sarees!`,
       url: window.location.href,
     }
 
