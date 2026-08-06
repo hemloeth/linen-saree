@@ -19,8 +19,20 @@ async function getProduct(slug: string): Promise<Product | null> {
   // Extract SKU from the end of the URL slug (e.g., name-slug-SKU)
   const parts = slug.split('-');
   const sku = parts[parts.length - 1];
-  if (!sku) return null;
-  return await fetchProductBySku(sku);
+  
+  if (sku) {
+    const product = await fetchProductBySku(sku);
+    if (product) return product;
+  }
+
+  // Fallback for old URLs that don't have the SKU at the end
+  const products = await fetchProductsFromDB();
+  const product = products.find(p => {
+    const oldSlug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    return oldSlug === slug;
+  });
+
+  return product || null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
