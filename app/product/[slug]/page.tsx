@@ -25,11 +25,11 @@ async function getProduct(slug: string): Promise<Product | null> {
     if (product) return product;
   }
 
-  // Fallback for old URLs that don't have the SKU at the end
+  // Fallback for old URLs or URLs where SKU parsing failed
   const products = await fetchProductsFromDB();
   const product = products.find(p => {
     const oldSlug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    return oldSlug === slug;
+    return p.slug === slug || oldSlug === slug;
   });
 
   return product || null;

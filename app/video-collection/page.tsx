@@ -18,9 +18,10 @@ interface VideoCardProps {
   videoSrc: string
   productId: string
   category: string
+  slug: string
 }
 
-function VideoCard({ title, price, originalPrice, videoSrc, productId, category }: VideoCardProps) {
+function VideoCard({ title, price, originalPrice, videoSrc, productId, category, slug }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const { addToCart } = useCart()
@@ -85,7 +86,7 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
   }
 
   return (
-    <div className="group relative w-full block cursor-pointer">
+    <Link href={`/product/${slug}`} className="group relative w-full block cursor-pointer">
       <div className="relative w-full mb-4" ref={setRefs}>
         <div className="aspect-[3/4] overflow-hidden bg-black relative">
           {isNearScreen && (
@@ -172,7 +173,7 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category 
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -190,7 +191,8 @@ function VideoCollectionContent() {
       originalPrice: p.originalPrice,
       videoSrc: p.videos![0],
       productId: p.id,
-      category: p.category || "Other"
+      category: p.category || "Other",
+      slug: p.slug
     }))
     
   // Extract unique categories dynamically
@@ -346,6 +348,7 @@ function VideoCollectionContent() {
                   videoSrc={card.videoSrc}
                   productId={card.productId}
                   category={card.category}
+                  slug={card.slug}
                 />
               ))}
             </div>
