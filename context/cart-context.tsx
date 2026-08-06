@@ -38,6 +38,7 @@ function mapServerCartItem(serverItem: any): CartItem | null {
   return {
     product: {
       id: p._id.toString(),
+      sku: p.sku || "",
       name: p.name || "",
       slug: (p.name || "").toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
       category: p.category || "",

@@ -114,7 +114,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                     <span className="sr-only">Close sidebar</span>
                 </Button>
             </div>
-            <div className="flex-1 overflow-auto py-6">
+            <div className="flex-1 overflow-y-auto hide-scrollbar py-6">
                 <nav className="grid items-start px-4 text-sm font-medium gap-8">
                     {sidebarSections.map((section) => (
                         <div key={section.label} className="grid gap-1">
@@ -189,7 +189,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
     return (
         <>
             {/* Desktop Sidebar (Permanent) */}
-            <aside className="hidden lg:flex fixed inset-y-0 left-0 h-screen w-64 flex-col border-r bg-card shrink-0 z-40" suppressHydrationWarning>
+            <aside className="hidden lg:flex fixed inset-y-0 left-0 h-screen w-52 flex-col border-r bg-card shrink-0 z-40" suppressHydrationWarning>
                 {sidebarContent}
             </aside>
 
@@ -219,7 +219,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                             stiffness: 300,
                             damping: 30,
                         }}
-                        className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-card lg:hidden"
+                        className="fixed inset-y-0 left-0 z-50 flex w-52 flex-col border-r bg-card lg:hidden"
                     >
                         {sidebarContent}
                     </motion.aside>

@@ -152,12 +152,20 @@
 
 html {
   scroll-behavior: auto !important;
-  scrollbar-gutter: stable !important;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
 body {
-  overflow-y: scroll !important;
+  overflow-y: auto !important;
   padding-right: 0 !important;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Prevent Radix from adding padding to body */

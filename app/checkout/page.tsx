@@ -297,6 +297,7 @@ export default function CheckoutPage() {
           price: item.product.price,
           quantity: item.quantity,
           image: item.product.image,
+          sku: item.product.sku || "",
         })),
         shippingAddress: {
           firstName: formData.firstName,

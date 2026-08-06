@@ -115,11 +115,11 @@ export default function AdminLayout({
                 <BlogProvider>
                     <div className="flex min-h-screen bg-muted/40" data-lenis-prevent>
                         <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                        <div className="flex flex-1 flex-col min-w-0 lg:pl-64">
+                        <div className="flex flex-1 flex-col min-w-0 lg:pl-52">
                             <div className="sticky top-0 z-30 w-full">
                                 <AdminHeader onMenuClick={() => setIsSidebarOpen(true)} />
                             </div>
-                            <main className="flex-1 p-4 md:p-6 w-full object-contain">
+                            <main className="flex-1 p-4 md:p-6 w-full">
                                 <PageTransition>
                                     {children}
                                 </PageTransition>
