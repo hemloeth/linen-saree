@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
+import { ArrowRight, ChevronLeft, ChevronRight, MoveDown } from "lucide-react"
 import useEmblaCarousel from "embla-carousel-react"
 import Autoplay from "embla-carousel-autoplay"
 
@@ -18,7 +18,6 @@ interface SareeSlide {
   link: string
 }
 
-
 interface AutoScrollHeroProps {
   initialSlides?: SareeSlide[]
 }
@@ -29,7 +28,7 @@ const fallbackSlides: SareeSlide[] = [
     image: "/images/s/s1.jpg",
     title: "Pure Linen Collection",
     subtitle: "Elegance in every thread",
-    description: "Discover our handcrafted pure linen sarees for everyday comfort and unmatched grace.",
+    description: "Discover our handcrafted pure linen sarees for everyday comfort and unmatched grace. Experience luxury woven into every fiber.",
     category: "New Arrivals",
     link: "/collections"
   },
@@ -38,7 +37,7 @@ const fallbackSlides: SareeSlide[] = [
     image: "/images/sb/sb1.jpg",
     title: "Banarasi Silk",
     subtitle: "Timeless Tradition",
-    description: "Experience the luxury of authentic Banarasi silk blended with the comfort of premium linen.",
+    description: "Experience the luxury of authentic Banarasi silk blended with the comfort of premium linen. A masterpiece for your wardrobe.",
     category: "Featured",
     link: "/collections"
   }
@@ -48,7 +47,7 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
   const slides = initialSlides.length > 0 ? initialSlides : fallbackSlides;
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 }, [
-    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }) as any
+    Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true }) as any
   ])
 
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -59,10 +58,6 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
 
   const scrollNext = useCallback(() => {
     if (emblaApi) emblaApi.scrollNext()
-  }, [emblaApi])
-
-  const scrollTo = useCallback((index: number) => {
-    if (emblaApi) emblaApi.scrollTo(index)
   }, [emblaApi])
 
   const onSelect = useCallback(() => {
@@ -86,7 +81,7 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
   }
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-background group">
+    <section className="relative w-full h-[100svh] bg-background text-foreground overflow-hidden group border-b border-foreground/10">
       <div className="overflow-hidden h-full w-full" ref={emblaRef}>
         <div className="flex h-full touch-pan-y">
           {slides.map((slide, index) => {
@@ -94,70 +89,84 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
             return (
               <div 
                 key={slide._id || slide.id || index} 
-                className="relative flex-[0_0_100%] min-w-0 h-full"
+                className="relative flex-[0_0_100%] min-w-0 h-full flex flex-col lg:flex-row lg:pt-[var(--header-offset,80px)]"
               >
-                {/* Background Image Container - Pushed down dynamically on mobile to clear header */}
-                <div className="absolute inset-x-0 bottom-0 top-[var(--header-offset,115px)] lg:top-0 lg:inset-0 z-0 overflow-hidden bg-black">
-                  <Image
-                    src={slide.image}
-                    alt={slide.title || "Hero image"}
-                    fill
-                    className={`object-cover object-top origin-top transition-transform duration-[8000ms] ease-out ${
-                      isActive ? "scale-110" : "scale-100"
-                    }`}
-                    priority={index === 0}
-                    sizes="100vw"
-                    quality={90}
-                  />
-                  {/* Premium Multi-Layer Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/70" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
-                  {/* Vignette effect */}
-                  <div className="absolute inset-0" style={{
-                    background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)"
-                  }} />
+                {/* Image Showcase - Mobile Full Background / Desktop Right Split */}
+                <div className="absolute inset-x-0 bottom-0 top-[var(--header-offset,80px)] z-0 lg:static lg:relative lg:z-10 lg:w-1/2 lg:h-full lg:order-2 flex items-center justify-center cursor-grab active:cursor-grabbing">
+                  <div className="relative w-full h-full overflow-hidden bg-black lg:bg-muted">
+                    <Image
+                      src={slide.image}
+                      alt={slide.title || "Hero image"}
+                      fill
+                      className={`object-cover object-top origin-top transition-transform duration-[20000ms] ease-out ${
+                        isActive ? "scale-105" : "scale-100"
+                      }`}
+                      priority={index === 0}
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      quality={100}
+                    />
+                    {/* Dark gradient for mobile readability */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80 lg:hidden pointer-events-none" />
+                  </div>
                 </div>
 
-                {/* Content inside the slide */}
-                <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4 pt-[96px] lg:pt-0">
-                  <div className="max-w-5xl mx-auto">
-                    {/* Category Badge */}
-                    <div className={`inline-flex items-center gap-2 mb-6 transition-all duration-700 delay-100 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                      <span className="w-8 h-[1px] bg-white/60" />
-                      <p className="text-xs md:text-sm tracking-[0.4em] uppercase font-sans text-white/90 font-light">
-                        {slide.category}
-                      </p>
-                      <span className="w-8 h-[1px] bg-white/60" />
+                {/* Text Content - Mobile Overlay / Desktop Left Split */}
+                <div className="relative z-20 w-full h-full lg:w-1/2 lg:h-full flex flex-col justify-end lg:justify-center px-6 md:px-16 lg:px-24 xl:px-32 pb-[100px] lg:pb-0 order-2 lg:order-1 lg:bg-background lg:border-r border-foreground/5 pointer-events-none lg:pointer-events-auto overflow-hidden">
+                  
+                  {/* --- Colorful Fluid Vector Background (Desktop Only) --- */}
+                  <div className="hidden lg:block absolute inset-0 pointer-events-none z-0 overflow-hidden mix-blend-multiply dark:mix-blend-screen opacity-80">
+                    {/* Fluid Vector 1 - Warm Coral/Amber */}
+                    <div className="absolute top-[5%] left-[5%] w-[50vh] h-[50vh] bg-gradient-to-tr from-rose-400 to-amber-300 opacity-40 blur-2xl animate-spin rounded-[40%_60%_70%_30%_/_40%_50%_60%_50%]" style={{ animationDuration: '25s' }} />
+                    
+                    {/* Fluid Vector 2 - Cool Mint/Cyan */}
+                    <div className="absolute bottom-[-10%] right-[10%] w-[60vh] h-[60vh] bg-gradient-to-tr from-emerald-400 to-cyan-300 opacity-30 blur-3xl animate-spin rounded-[60%_40%_30%_70%_/_60%_30%_70%_40%]" style={{ animationDuration: '30s', animationDirection: 'reverse' }} />
+                    
+                    {/* Fluid Vector 3 - Deep Purple/Indigo */}
+                    <div className="absolute top-[40%] left-[30%] w-[35vh] h-[35vh] bg-gradient-to-tr from-purple-400 to-indigo-400 opacity-30 blur-2xl animate-spin rounded-[50%_50%_20%_80%_/_25%_80%_20%_75%]" style={{ animationDuration: '20s' }} />
+                    
+                    {/* Luxury Architectural Linework */}
+                    <div className="absolute left-[12%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-primary/20 to-transparent" />
+                    
+                    {/* Vertical Accent Text */}
+                    <div className="absolute left-[12%] top-1/2 -translate-y-1/2 -translate-x-1/2 -rotate-90 origin-center text-[10px] tracking-[1em] uppercase text-primary/60 font-medium whitespace-nowrap bg-background px-8">
+                      {slide.category || "Collection"}
+                    </div>
+                  </div>
+
+                  <div className="w-full max-w-lg mx-auto lg:mx-0 relative z-10 pointer-events-auto text-center lg:text-left">
+                    <div className="overflow-hidden mb-3 lg:mb-6">
+                      <div className={`flex items-center gap-4 justify-center lg:justify-start transition-transform duration-1000 delay-100 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                        <span className="hidden lg:block w-8 h-[1px] bg-primary/40" />
+                        <p className="text-xs tracking-[0.4em] uppercase font-sans text-white/90 lg:text-primary font-bold">
+                          {slide.category}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Title */}
-                    <h1 className={`font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-light mb-4 md:mb-6 text-balance leading-[0.95] transition-all duration-700 delay-200 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                      {slide.title}
-                    </h1>
+                    <div className="overflow-hidden mb-3 lg:mb-4">
+                      <h1 className={`font-serif text-5xl sm:text-6xl lg:text-7xl font-light leading-[1.1] tracking-tight transition-transform duration-1000 delay-200 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'} text-white lg:text-foreground`}>
+                        {slide.title}
+                      </h1>
+                    </div>
                     
-                    <p className={`font-serif italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light mb-6 md:mb-8 text-white/90 transition-all duration-700 delay-300 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                      {slide.subtitle}
-                    </p>
+                    <div className="overflow-hidden mb-6 lg:mb-8">
+                      <p className={`font-serif italic text-2xl lg:text-3xl text-white/90 lg:text-foreground/70 font-light transition-transform duration-1000 delay-300 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                        {slide.subtitle}
+                      </p>
+                    </div>
 
-                    {/* Description */}
-                    <p className={`text-base md:text-lg lg:text-xl font-light max-w-2xl mx-auto mb-8 md:mb-10 text-white/80 leading-relaxed transition-all duration-700 delay-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-                      {slide.description}
-                    </p>
+                    <div className="overflow-hidden mb-8 lg:mb-12">
+                      <p className={`text-sm md:text-base text-white/80 lg:text-foreground/60 leading-relaxed max-w-sm mx-auto lg:mx-0 transition-transform duration-1000 delay-500 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                        {slide.description}
+                      </p>
+                    </div>
 
-                    {/* CTA Buttons */}
-                    <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 transition-all duration-700 delay-700 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                    <div className={`transition-all duration-1000 delay-700 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                       <Link
                         href={slide.link || "/collections"}
-                        className="group inline-flex items-center gap-3 bg-white text-black px-8 md:px-10 py-4 md:py-5 font-sans text-sm tracking-wider uppercase hover:bg-white/90 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+                        className="inline-flex items-center justify-center gap-4 bg-white text-black lg:bg-primary lg:text-primary-foreground px-10 py-4 text-xs tracking-[0.2em] uppercase font-bold lg:hover:bg-primary/90 transition-all duration-300 cursor-pointer lg:shadow-[0_10px_40px_-10px_rgba(139,115,85,0.4)] lg:hover:shadow-[0_15px_50px_-10px_rgba(139,115,85,0.6)] lg:hover:-translate-y-1 rounded-none group"
                       >
-                        Shop Collection
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                      <Link
-                        href="/collections"
-                        className="inline-flex items-center gap-3 border border-white/40 text-white px-8 md:px-10 py-4 md:py-5 font-sans text-sm tracking-wider uppercase hover:bg-white hover:text-black transition-all duration-300 backdrop-blur-sm"
-                      >
-                        Explore All
+                        Discover <ArrowRight className="w-4 h-4 lg:group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </div>
                   </div>
@@ -168,80 +177,13 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
         </div>
       </div>
 
-      {/* Decorative Corner Accents */}
-      <div className="absolute top-32 left-8 md:left-16 z-10 w-16 h-16 md:w-24 md:h-24 border-t border-l border-white/20 pointer-events-none" />
-      <div className="absolute bottom-20 right-8 md:right-16 z-10 w-16 h-16 md:w-24 md:h-24 border-b border-r border-white/20 pointer-events-none" />
-
+      {/* Progress Line */}
       {slides.length > 1 && (
-        <>
-          {/* Navigation Arrows */}
-          <button
-            onClick={scrollPrev}
-            className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/10 hover:bg-white/25 backdrop-blur-md border border-white/20 rounded-full transition-all duration-300 text-white opacity-0 group-hover:opacity-100 hover:scale-110 focus:opacity-100"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 group-hover:-translate-x-0.5 transition-transform" />
-          </button>
-          <button
-            onClick={scrollNext}
-            className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 z-20 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/10 hover:bg-white/25 backdrop-blur-md border border-white/20 rounded-full transition-all duration-300 text-white opacity-0 group-hover:opacity-100 hover:scale-110 focus:opacity-100"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-0.5 transition-transform" />
-          </button>
-        </>
-      )}
-
-      {/* Bottom Section: Slide Indicators + Scroll Down */}
-      <div className="absolute bottom-8 md:bottom-10 left-0 right-0 z-20 flex flex-col items-center gap-6">
-        {/* Dot Indicators */}
-        {slides.length > 1 && (
-          <div className="flex items-center gap-2">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => scrollTo(index)}
-                className={`transition-all duration-500 rounded-full ${index === selectedIndex
-                  ? "w-8 h-2 bg-white"
-                  : "w-2 h-2 bg-white/40 hover:bg-white/60"
-                  }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Scroll Down Indicator */}
-        <button
-          onClick={scrollToContent}
-          className="flex flex-col items-center gap-1 text-white/60 hover:text-white transition-colors group cursor-pointer"
-          aria-label="Scroll to content"
-        >
-          <span className="text-[10px] tracking-[0.3em] uppercase font-sans">Scroll</span>
-          <ChevronDown className="w-4 h-4 animate-bounce" />
-        </button>
-      </div>
-
-      {/* Slide Counter */}
-      {slides.length > 1 && (
-        <div className="absolute bottom-10 right-6 md:right-12 z-20 text-white/50 font-sans text-sm tracking-wider hidden md:block">
-          <span className="text-white font-medium">{String(selectedIndex + 1).padStart(2, '0')}</span>
-          <span className="mx-1">/</span>
-          <span>{String(slides.length).padStart(2, '0')}</span>
-        </div>
-      )}
-
-      {/* Progress Bar */}
-      {slides.length > 1 && (
-        <div className="absolute bottom-0 left-0 right-0 z-20">
-          <div className="h-[2px] bg-white/10">
-            <div
-              className="h-full bg-gradient-to-r from-white/60 to-white transition-all duration-500 ease-out"
-              style={{
-                width: `${((selectedIndex + 1) / slides.length) * 100}%`,
-              }}
-            />
-          </div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 lg:bg-primary/10 z-30">
+          <div 
+            className="h-full bg-white lg:bg-primary transition-all duration-500 ease-out"
+            style={{ width: `${((selectedIndex + 1) / slides.length) * 100}%` }}
+          />
         </div>
       )}
     </section>

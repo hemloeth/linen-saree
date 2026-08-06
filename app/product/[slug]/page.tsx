@@ -4,7 +4,7 @@ import { ProductDetails } from "@/components/products/product-details"
 import { ProductReviews } from "@/components/products/product-reviews"
 import { JsonLd } from "@/components/common/json-ld"
 import { RelatedProducts } from "@/components/products/related-products"
-import { fetchProductsFromDB, getProductBySlug, getProductsByCategory } from "@/lib/products"
+import { fetchProductBySku, fetchPaginatedProducts } from "@/lib/products"
 import type { Product } from "@/lib/products"
 import { notFound } from "next/navigation"
 import { resolveMediaUrl } from "@/lib/media"
@@ -16,9 +16,11 @@ interface Props {
 }
 
 async function getProduct(slug: string): Promise<Product | null> {
-  const products = await fetchProductsFromDB()
-  const product = getProductBySlug(products, slug)
-  return product || null
+  // Extract SKU from the end of the URL slug (e.g., name-slug-SKU)
+  const parts = slug.split('-');
+  const sku = parts[parts.length - 1];
+  if (!sku) return null;
+  return await fetchProductBySku(sku);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -70,16 +72,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params
 
-  const products = await fetchProductsFromDB()
-  const product = getProductBySlug(products, slug)
+  const product = await getProduct(slug);
 
   if (!product) {
     notFound()
   }
 
-  const relatedProducts = getProductsByCategory(products, product.categorySlug)
+  // Fetch only related products efficiently
+  const relatedResponse = await fetchPaginatedProducts({ category: product.category, limit: 5 });
+  const relatedProducts = relatedResponse.products
     .filter(p => p.id !== product.id)
-    .slice(0, 4)
+    .slice(0, 4);
 
   const jsonLd = {
     "@context": "https://schema.org",

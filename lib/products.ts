@@ -41,7 +41,7 @@ function mapProductFromDB(dbProduct: any): Product {
     id: dbProduct._id.toString(),
     sku: dbProduct.sku,
     name: dbProduct.name,
-    slug: dbProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
+    slug: `${dbProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')}-${dbProduct.sku}`,
     category: dbProduct.category,
     categorySlug: dbProduct.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
     price: dbProduct.price,
@@ -105,6 +105,22 @@ export async function fetchProductsFromDB(): Promise<Product[]> {
   }
 
   return [];
+}
+
+export async function fetchProductBySku(sku: string): Promise<Product | null> {
+  try {
+    const { apiServerGet } = await import("@/lib/api");
+    const data = await apiServerGet(`/api/product/by-sku/${sku}`, { revalidate: 60 });
+
+    if (data.success && data.product) {
+      return mapProductFromDB(data.product);
+    }
+  } catch (error: any) {
+    const { API_BASE_URL } = await import("@/lib/api");
+    console.error(`Error fetching product by SKU (${API_BASE_URL}/api/product/by-sku/${sku}):`, error.message || error);
+  }
+
+  return null;
 }
 
 export interface FetchProductsResponse {
