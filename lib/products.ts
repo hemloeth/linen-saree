@@ -116,8 +116,10 @@ export async function fetchProductBySku(sku: string): Promise<Product | null> {
       return mapProductFromDB(data.product);
     }
   } catch (error: any) {
-    const { API_BASE_URL } = await import("@/lib/api");
-    console.error(`Error fetching product by SKU (${API_BASE_URL}/api/product/by-sku/${sku}):`, error.message || error);
+    if (error.message !== "Product not found" && error.message !== "\"Product not found\"") {
+      const { API_BASE_URL } = await import("@/lib/api");
+      console.error(`Error fetching product by SKU (${API_BASE_URL}/api/product/by-sku/${sku}):`, error.message || error);
+    }
   }
 
   return null;
@@ -698,7 +700,8 @@ export function searchProducts(
         product.name.toLowerCase().includes(searchTerm),
         product.category.toLowerCase().includes(searchTerm),
         product.color.toLowerCase().includes(searchTerm),
-        product.fabric.toLowerCase().includes(searchTerm)
+        product.fabric.toLowerCase().includes(searchTerm),
+        (product.sku || '').toLowerCase().includes(searchTerm)
       ]
 
       // Partial word matches
@@ -724,8 +727,8 @@ export function searchProducts(
     const searchTerm = query.toLowerCase().trim()
     results = results.sort((a, b) => {
       // Sort by relevance - exact name matches first
-      const aNameMatch = a.name.toLowerCase().includes(searchTerm)
-      const bNameMatch = b.name.toLowerCase().includes(searchTerm)
+      const aNameMatch = a.name.toLowerCase().includes(searchTerm) || (a.sku || '').toLowerCase().includes(searchTerm)
+      const bNameMatch = b.name.toLowerCase().includes(searchTerm) || (b.sku || '').toLowerCase().includes(searchTerm)
 
       if (aNameMatch && !bNameMatch) return -1
       if (!aNameMatch && bNameMatch) return 1

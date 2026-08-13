@@ -232,6 +232,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
             const isVideoStr = typeof dbProduct.videoFile === "string" || typeof dbProduct.videoUrl === "string";
             return {
                 id: dbProduct._id.toString(),
+                sku: dbProduct.sku,
                 name: dbProduct.name,
                 slug: dbProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
                 category: dbProduct.category,

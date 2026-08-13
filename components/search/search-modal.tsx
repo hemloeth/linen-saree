@@ -90,7 +90,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name, color, fabric, or category..."
+                placeholder="Search by SKU, name, color, fabric, or category..."
                 className="w-full px-6 py-3 text-base border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 autoFocus
               />
