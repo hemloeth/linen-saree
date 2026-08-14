@@ -33,31 +33,35 @@ export function CollectionsClient() {
 
   return (
     <section className="py-16 px-2">
-      <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 space-y-8">
-        {/* Filters */}
-        <ProductFilters
-          filters={filters}
-          sortBy={sortBy}
-          onFiltersChange={handleFiltersChange}
-          onSortChange={handleSortChange}
-          showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
-          products={mappedProducts}
-        />
-
-        {/* Results Count */}
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground">
-            Showing {filteredProducts.length} of {mappedProducts.length} products
-          </p>
+      <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 flex flex-col lg:flex-row gap-8 items-start">
+        {/* Sidebar Filters (Desktop Only) */}
+        <div className="hidden lg:block w-full lg:w-[280px] shrink-0 lg:sticky lg:top-24 h-[calc(100vh-120px)] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+          <ProductFilters
+            filters={filters}
+            sortBy={sortBy}
+            onFiltersChange={handleFiltersChange}
+            onSortChange={handleSortChange}
+            showFilters={showFilters}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+            products={mappedProducts}
+          />
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {/* Main Content */}
+        <div className="flex-1 space-y-6 w-full">
+          {/* Results Count */}
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground">
+              Showing {filteredProducts.length} of {mappedProducts.length} products
+            </p>
+          </div>
+
+          {/* Products Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
 
         {/* No Results */}
         {filteredProducts.length === 0 && (

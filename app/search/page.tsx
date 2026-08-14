@@ -40,10 +40,10 @@ const searchSlides = [
 function SearchContent() {
   const { searchProducts } = useProducts()
   const searchParams = useSearchParams()
-  const [query, setQuery] = useState(searchParams.get('q') || '')
+  const [query, setQuery] = useState('')
   const [filters, setFilters] = useState<FilterOptions>({})
   const [sortBy, setSortBy] = useState<SortOption>('featured')
-  const [results, setResults] = useState(() => searchProducts(query, filters, sortBy))
+  const [results, setResults] = useState(() => searchProducts('', {}, 'featured'))
 
   useEffect(() => {
     const searchQuery = searchParams.get('q') || ''
@@ -95,42 +95,34 @@ function SearchContent() {
   return (
     <>
       {/* Hero Section with Auto-Scroll */}
-      <div className="mt-[96px] lg:mt-[104px]">
-        <PageHeroSlider slides={searchSlides} height="30vh" />
-      </div>
+      {!query && (
+        <div className="mt-[96px] lg:mt-[104px]">
+          <PageHeroSlider slides={searchSlides} height="30vh" />
+        </div>
+      )}
       {/* Main Content */}
-      <div className="bg-background py-16">
+      <div className={`bg-background py-16 ${query ? 'mt-[96px] lg:mt-[104px]' : ''}`}>
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
           {/* Search Form */}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-12">
-            <div className="relative">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name, color, fabric, or category..."
-                className="w-full px-6 py-4 text-lg border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </div>
-          </form>
-
-          {/* Search Results Count */}
-          <div className="mb-8">
-            {query && (
-              <p className="text-muted-foreground text-center">
-                {results.length > 0
-                  ? `Found ${results.length} result${results.length === 1 ? '' : 's'} for "${query}"`
-                  : `No results found for "${query}"`
-                }
-              </p>
-            )}
-          </div>
+          {!query && (
+            <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-12">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search by name, color, fabric, or category..."
+                  className="w-full px-6 py-4 text-lg border border-border rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+              </div>
+            </form>
+          )}
 
           {/* Results */}
           <SearchResults

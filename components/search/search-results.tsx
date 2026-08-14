@@ -37,33 +37,39 @@ export function SearchResults({
 
   if (products.length > 0) {
     return (
-      <div className="space-y-6">
-        {/* Filters */}
-        <ProductFilters
-          filters={filters}
-          sortBy={sortBy}
-          onFiltersChange={handleFiltersChange}
-          onSortChange={handleSortChange}
-          showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
-        />
-
-        {/* Results Count */}
-        <div className="flex items-center justify-between">
-          <p className="text-muted-foreground">
-            {products.length > 0 
-              ? `Showing ${products.length} result${products.length === 1 ? '' : 's'}`
-              : 'No results found'
-            }
-            {query && ` for "${query}"`}
-          </p>
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        {/* Sidebar Filters (Desktop Only) */}
+        <div className="hidden lg:block w-full lg:w-[280px] shrink-0 lg:sticky lg:top-24 h-[calc(100vh-120px)] overflow-y-auto pb-10" style={{ scrollbarWidth: 'none' }}>
+          <ProductFilters
+            filters={filters}
+            sortBy={sortBy}
+            onFiltersChange={handleFiltersChange}
+            onSortChange={handleSortChange}
+            showFilters={showFilters}
+            onToggleFilters={() => setShowFilters(!showFilters)}
+            products={products}
+          />
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        {/* Main Content */}
+        <div className="flex-1 space-y-6 w-full">
+          {/* Results Count */}
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground">
+              {products.length > 0 
+                ? `Showing ${products.length} result${products.length === 1 ? '' : 's'}`
+                : 'No results found'
+              }
+              {query && ` for "${query}"`}
+            </p>
+          </div>
+
+          {/* Products Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </div>
       </div>
     )

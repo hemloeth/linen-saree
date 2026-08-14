@@ -694,24 +694,34 @@ export function searchProducts(
   if (query.trim()) {
     const searchTerm = query.toLowerCase().trim()
 
-    results = productsList.filter(product => {
-      // Exact matches get higher priority
-      const exactMatches = [
-        product.name.toLowerCase().includes(searchTerm),
-        product.category.toLowerCase().includes(searchTerm),
-        product.color.toLowerCase().includes(searchTerm),
-        product.fabric.toLowerCase().includes(searchTerm),
-        (product.sku || '').toLowerCase().includes(searchTerm)
-      ]
+    // Check for exact SKU or Name matches first
+    const exactMatches = productsList.filter(product => 
+      (product.sku || '').toLowerCase() === searchTerm ||
+      product.name.toLowerCase() === searchTerm
+    )
 
-      // Partial word matches
-      const partialMatches = [
-        product.description.toLowerCase().includes(searchTerm),
-        product.details.some(detail => detail.toLowerCase().includes(searchTerm))
-      ]
+    if (exactMatches.length > 0) {
+      results = exactMatches
+    } else {
+      results = productsList.filter(product => {
+        // Exact matches get higher priority
+        const exactFieldMatches = [
+          product.name.toLowerCase().includes(searchTerm),
+          product.category.toLowerCase().includes(searchTerm),
+          product.color.toLowerCase().includes(searchTerm),
+          product.fabric.toLowerCase().includes(searchTerm),
+          (product.sku || '').toLowerCase().includes(searchTerm)
+        ]
 
-      return exactMatches.some(match => match) || partialMatches.some(match => match)
-    })
+        // Partial word matches
+        const partialFieldMatches = [
+          product.description.toLowerCase().includes(searchTerm),
+          product.details.some(detail => detail.toLowerCase().includes(searchTerm))
+        ]
+
+        return exactFieldMatches.some(match => match) || partialFieldMatches.some(match => match)
+      })
+    }
   }
 
   // Apply filters

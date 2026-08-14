@@ -125,7 +125,8 @@
 
   html,
   body {
-    @apply overflow-x-hidden max-w-full;
+    overflow-x: clip;
+    @apply max-w-full;
     position: relative;
   }
 

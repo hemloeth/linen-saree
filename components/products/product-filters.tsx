@@ -56,6 +56,8 @@ export function ProductFilters({
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [counts, setCounts] = useState<FilterCounts | null>(null)
   const [showAllColors, setShowAllColors] = useState(false)
+  const [showAllCategories, setShowAllCategories] = useState(false)
+  const [showAllFabrics, setShowAllFabrics] = useState(false)
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -96,7 +98,7 @@ export function ProductFilters({
   }, [])
 
   useEffect(() => {
-    if (products.length > 0) {
+    if (products?.length > 0) {
       setCounts(getFilterCounts(products))
 
       const newRange = getPriceRange(products)
@@ -200,7 +202,7 @@ export function ProductFilters({
         {/* Categories */}
         <div>
             <h3 className="font-medium mb-3">Categories</h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2">
               {loadingCategories ? (
                 <div className="animate-pulse space-y-2">
                   <div className="h-4 bg-muted rounded w-3/4"></div>
@@ -208,22 +210,32 @@ export function ProductFilters({
                   <div className="h-4 bg-muted rounded w-5/6"></div>
                 </div>
               ) : categories.length > 0 ? (
-                categories.map((category, idx) => (
-                  <label key={`category-${category.slug}-${idx}`} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={filters.categories?.includes(category.slug) || false}
-                      onChange={(e) => handleCategoryChange(category.slug, e.target.checked)}
-                      className="rounded border-border text-primary focus:ring-primary h-4 w-4"
-                    />
-                    <span className="text-sm flex-1">{category.name}</span>
-                    {counts?.categories[category.slug] !== undefined && (
-                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                        {counts.categories[category.slug]}
-                      </span>
-                    )}
-                  </label>
-                ))
+                <>
+                  {(showAllCategories ? categories : categories.slice(0, 7)).map((category, idx) => (
+                    <label key={`category-${category.slug}-${idx}`} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filters.categories?.includes(category.slug) || false}
+                        onChange={(e) => handleCategoryChange(category.slug, e.target.checked)}
+                        className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                      />
+                      <span className="text-sm flex-1">{category.name}</span>
+                      {counts?.categories[category.slug] !== undefined && (
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                          {counts.categories[category.slug]}
+                        </span>
+                      )}
+                    </label>
+                  ))}
+                  {categories.length > 7 && (
+                    <button
+                      onClick={() => setShowAllCategories(!showAllCategories)}
+                      className="text-sm text-primary hover:underline font-medium pt-1 text-left w-full"
+                    >
+                      {showAllCategories ? "- Show less" : `+ ${categories.length - 7} more`}
+                    </button>
+                  )}
+                </>
               ) : (
                 <span className="text-sm text-muted-foreground">No categories</span>
               )}
@@ -233,7 +245,7 @@ export function ProductFilters({
           {/* Colors */}
           <div>
             <h3 className="font-medium mb-3">Colors</h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2">
               {(showAllColors ? colors : colors.slice(0, 7)).map((color, idx) => (
                 <label key={`color-${color}-${idx}`} className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -264,8 +276,8 @@ export function ProductFilters({
           {/* Fabrics */}
           <div>
             <h3 className="font-medium mb-3">Fabric</h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {fabrics.map((fabric, idx) => (
+            <div className="space-y-2">
+              {(showAllFabrics ? fabrics : fabrics.slice(0, 7)).map((fabric, idx) => (
                 <label key={`fabric-${fabric}-${idx}`} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -281,6 +293,14 @@ export function ProductFilters({
                   )}
                 </label>
               ))}
+              {fabrics.length > 7 && (
+                <button
+                  onClick={() => setShowAllFabrics(!showAllFabrics)}
+                  className="text-sm text-primary hover:underline font-medium pt-1 text-left w-full"
+                >
+                  {showAllFabrics ? "- Show less" : `+ ${fabrics.length - 7} more`}
+                </button>
+              )}
             </div>
           </div>
 
