@@ -21,16 +21,16 @@ export default function BlogPostPage() {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://linensaree.in' : 'http://127.0.0.1:5000')
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : 'http://127.0.0.1:5000')
         const id = params.slug
-        
+
         // Fetch all blogs since the /:id endpoint might not be deployed yet
         const response = await fetch(`${apiUrl}/api/blog/allblogs`)
         const data = await response.json()
-        
+
         if (data.success && data.blogs) {
           const b = data.blogs.find((blog: any) => blog._id === id)
-          
+
           if (b) {
             const mappedPost = {
               id: b._id,
@@ -68,7 +68,7 @@ export default function BlogPostPage() {
     }
 
     if (params.slug) {
-        fetchBlog()
+      fetchBlog()
     }
   }, [params.slug])
 
@@ -115,11 +115,11 @@ export default function BlogPostPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="pt-[96px] lg:pt-[104px]">
         {/* Back to Blog */}
         <div className="max-w-4xl mx-auto px-2 py-8">
-          <Link 
+          <Link
             href="/blog"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -148,11 +148,11 @@ export default function BlogPostPage() {
                 </span>
                 <span className="text-sm text-muted-foreground">{post.readTime}</span>
               </div>
-              
+
               <h1 className="font-serif text-3xl lg:text-5xl font-light mb-6 leading-tight">
                 {post.title}
               </h1>
-              
+
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div className="flex items-center gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
@@ -161,27 +161,26 @@ export default function BlogPostPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
-                    <span>{new Date(post.date).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
+                    <span>{new Date(post.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
                     })}</span>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-4">
                   <button
                     onClick={handleLike}
-                    className={`flex items-center gap-2 px-3 py-1 rounded-full transition-colors ${
-                      isLiked 
-                        ? 'bg-red-50 text-red-600 border border-red-200' 
+                    className={`flex items-center gap-2 px-3 py-1 rounded-full transition-colors ${isLiked
+                        ? 'bg-red-50 text-red-600 border border-red-200'
                         : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-                    }`}
+                      }`}
                   >
                     <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
                     <span className="text-sm">{likes}</span>
                   </button>
-                  
+
                   <button
                     onClick={handleShare}
                     className="flex items-center gap-2 px-3 py-1 bg-muted hover:bg-muted/80 text-muted-foreground rounded-full transition-colors"
@@ -194,7 +193,7 @@ export default function BlogPostPage() {
             </header>
 
             {/* Article Body */}
-            <div 
+            <div
               className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:font-light prose-p:leading-relaxed prose-p:text-muted-foreground"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
@@ -226,7 +225,7 @@ export default function BlogPostPage() {
               <div>
                 <h3 className="font-serif text-xl font-medium mb-2">About {post.author}</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {post.author} is a fashion expert and textile enthusiast with over 10 years of experience 
+                  {post.author} is a fashion expert and textile enthusiast with over 10 years of experience
                   in the Indian fashion industry. She specializes in traditional textiles and sustainable fashion practices.
                 </p>
               </div>
@@ -281,7 +280,7 @@ export default function BlogPostPage() {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   )

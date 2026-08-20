@@ -33,10 +33,10 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://linensaree.in' : 'http://127.0.0.1:5000')
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : 'http://127.0.0.1:5000')
         const response = await fetch(`${apiUrl}/api/blog/allblogs`)
         const data = await response.json()
-        
+
         if (data.success && data.blogs) {
           // Map backend data to the frontend shape
           const mappedBlogs: BlogPost[] = data.blogs.map((b: any, index: number) => ({
@@ -67,7 +67,7 @@ export default function BlogPage() {
   const filteredPosts = blogPosts.filter(post => {
     const matchesCategory = selectedCategory === "All" || post.category === selectedCategory
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesCategory && matchesSearch
   })
 
@@ -77,7 +77,7 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Hero Section */}
       <div className="relative bg-gradient-to-b from-muted/50 to-background pt-[96px] lg:pt-[104px]">
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 py-20 lg:py-32">
@@ -114,11 +114,10 @@ export default function BlogPage() {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedCategory === category
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {category}
                 </button>
@@ -134,7 +133,7 @@ export default function BlogPage() {
               {filteredPosts.length} Articles
             </h2>
           </div>
-          
+
           {filteredPosts.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg">
@@ -157,28 +156,28 @@ export default function BlogPage() {
                         />
                       </Link>
                     </div>
-                    
+
                     {/* Content on right (or bottom on mobile) */}
                     <div className="sm:w-3/5 p-6 md:p-8 flex flex-col justify-center">
                       <div className="flex items-center gap-2 text-xs font-bold text-primary mb-3 uppercase tracking-wider">
                         <span>{post.category}</span>
                         <span className="text-muted-foreground/40">/</span>
-                        <span className="text-muted-foreground">{new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric'})}</span>
+                        <span className="text-muted-foreground">{new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                       </div>
-                      
+
                       <Link href={`/blog/${post.slug}`}>
                         <h3 className="font-serif text-xl lg:text-2xl font-medium mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                           {post.title}
                         </h3>
                       </Link>
-                      
+
                       <p className="text-muted-foreground text-sm leading-relaxed mb-6 line-clamp-3">
                         {post.excerpt}
                       </p>
-                      
+
                       <div className="flex items-center gap-3 mt-auto pt-4 border-t border-border/50">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                           <User className="w-4 h-4 text-primary" />
+                          <User className="w-4 h-4 text-primary" />
                         </div>
                         <span className="text-sm font-medium text-foreground">{post.author}</span>
                       </div>
@@ -210,7 +209,7 @@ export default function BlogPage() {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   )

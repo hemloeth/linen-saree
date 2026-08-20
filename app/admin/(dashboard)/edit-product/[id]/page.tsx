@@ -61,7 +61,7 @@ export default function EditProductPage() {
     useEffect(() => {
         const fetchCollections = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://linensaree.in' : 'http://127.0.0.1:5000')}/api/marketing-collections`)
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : 'http://127.0.0.1:5000')}/api/marketing-collections`)
                 const data = await res.json().catch(() => null)
                 if (data && data.success) {
                     setDbCollections(data.data)
@@ -86,7 +86,7 @@ export default function EditProductPage() {
     useEffect(() => {
         const fetchProduct = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://linensaree.in' : 'http://127.0.0.1:5000')}/api/product/${productId}`);
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : 'http://127.0.0.1:5000')}/api/product/${productId}`);
                 const data = await res.json();
                 if (data && data.success && data.product) {
                     const product = data.product;
@@ -108,9 +108,9 @@ export default function EditProductPage() {
                     setDisclaimer(product.disclaimer || "Actual product color may differ slightly from the images due to lighting and display differences.")
                     setInternationalNote(product.internationalNote || "Custom duties")
                     setIsOnSale(product.isOnSale || false)
-                    setProductCollection(product.productCollection || 
-                                        (product.isFestive ? "festive" : 
-                                         product.isOnSale ? "big-sale" : "none"))
+                    setProductCollection(product.productCollection ||
+                        (product.isFestive ? "festive" :
+                            product.isOnSale ? "big-sale" : "none"))
                     // Set existing images as previews
                     if (product.mainImage) setMainImage(product.mainImage)
                     if (product.galleryImages?.length) {
@@ -511,10 +511,10 @@ export default function EditProductPage() {
                                                 <span className="text-xs text-green-600 font-semibold">Video uploaded</span>
                                                 <button
                                                     type="button"
-                                                    onClick={(e) => { 
-                                                        e.stopPropagation(); 
-                                                        setVideoFile(null); 
-                                                        setVideoFileRaw(null); 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setVideoFile(null);
+                                                        setVideoFileRaw(null);
                                                         setRemoveVideo(true);
                                                     }}
                                                     className="text-xs text-destructive hover:underline"
