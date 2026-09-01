@@ -8,6 +8,7 @@ import { useWishlist } from "@/context/wishlist-context"
 import { useProducts } from "@/context/product-context"
 import { useInView } from "react-intersection-observer"
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-utils"
+import { resolveMediaUrl } from "@/lib/media"
 
 interface VideoCardProps {
   product: any

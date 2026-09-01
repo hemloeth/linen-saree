@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import { optimizeCloudinaryUrl } from "@/lib/cloudinary-utils"
+import { resolveMediaUrl } from "@/lib/media"
 import {
   Carousel,
   CarouselContent,
