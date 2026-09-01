@@ -93,10 +93,13 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category,
             <video
               ref={videoRef}
               src={resolveMediaUrl(videoSrc)}
+              poster={product.image ? resolveMediaUrl(product.image) : (product.images?.[0] ? resolveMediaUrl(product.images[0]) : undefined)}
               loop
               muted
               playsInline
               preload="metadata"
+              disablePictureInPicture
+              disableRemotePlayback
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               onLoadedData={() => { if (inView) setIsPlaying(true) }}
             />
@@ -251,6 +254,8 @@ function VideoCollectionContent() {
                   loop
                   muted
                   playsInline
+                  preload="auto"
+                  poster={video.image ? resolveMediaUrl(video.image) : undefined}
                   className="w-full h-full object-cover object-top"
                   src={resolveMediaUrl(video.videoSrc)}
                 />

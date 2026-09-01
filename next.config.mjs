@@ -5,7 +5,20 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-    qualities: [100, 75, 90],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'pub-f54fad280ec34c659747cdd738e55b2d.r2.dev',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 }
 

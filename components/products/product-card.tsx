@@ -124,11 +124,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
                   <CarouselItem key={`vid-${index}`} className="pl-0 basis-full">
                     <Link href={`/product/${product.slug}`} className="block w-full h-full bg-muted/20" onClick={handleNavigate}>
                       <video
-                        src={optimizeCloudinaryUrl(vid, true)}
+                        src={resolveMediaUrl(vid)}
+                        poster={product.image ? resolveMediaUrl(product.image) : undefined}
                         autoPlay
                         loop
                         muted
                         playsInline
+                        preload="metadata"
+                        disablePictureInPicture
+                        disableRemotePlayback
                         className="w-full h-full object-cover block transition-transform duration-500 group-hover:scale-105"
                         style={{ aspectRatio: '500/650' }}
                       />

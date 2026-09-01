@@ -92,10 +92,13 @@ function VideoCard({ product }: VideoCardProps) {
             <video
               ref={videoRef}
               src={videoSrc}
+              poster={product.image ? resolveMediaUrl(product.image) : (product.images?.[0] ? resolveMediaUrl(product.images[0]) : undefined)}
               loop
               muted
               playsInline
-              preload="auto"
+              preload="metadata"
+              disablePictureInPicture
+              disableRemotePlayback
               className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
               onLoadedData={() => { if (inView) setIsPlaying(true) }}
             />

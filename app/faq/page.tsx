@@ -112,7 +112,7 @@ const faqData: FAQItem[] = [
   {
     category: "Returns & Exchanges",
     question: "Can we return/exchange or get a refund on the order?",
-    answer: "Yes, we do have a return policy. You may raise your return request on support@linensaree.com mentioning the Order number, reason, and whether you need an exchange or refund. Our team shall check the eligibility as per the terms and conditions mentioned in our return policy https://www.linensaree.com/pages/return-policy and accordingly process your request."
+    answer: "Yes, we do have a return policy. You may raise your return request on support@handloomer.com mentioning the Order number, reason, and whether you need an exchange or refund. Our team shall check the eligibility as per the terms and conditions mentioned in our return policy https://www.linensaree.com/pages/return-policy and accordingly process your request."
   },
   {
     category: "Returns & Exchanges",
@@ -137,7 +137,7 @@ const faqData: FAQItem[] = [
   {
     category: "Returns & Exchanges",
     question: "Can I cancel the return request if I want to retain the product?",
-    answer: "Yes, you may certainly retain the product by notifying us via email at support@linensaree.com"
+    answer: "Yes, you may certainly retain the product by notifying us via email at support@handloomer.com"
   },
   {
     category: "Returns & Exchanges",
@@ -164,7 +164,7 @@ const faqData: FAQItem[] = [
   {
     category: "General",
     question: "Does Linen Saree take bulk orders?",
-    answer: "Yes, we do. Kindly email us the details of your requirements at support@linensaree.com or connect with us at +91 92641-51111"
+    answer: "Yes, we do. Kindly email us the details of your requirements at support@handloomer.com or connect with us at +91 92641-51111"
   },
   {
     category: "General",
@@ -174,7 +174,7 @@ const faqData: FAQItem[] = [
   {
     category: "General",
     question: "What if I still have queries?",
-    answer: "You may certainly read our policies on the website or reach out to us through… Call or WhatsApp: +91 92641-51111, Email id: support@linensaree.com, Facebook Messenger: https://www.facebook.com/Linensareecom-260110851539434, Instagram: https://www.instagram.com/_linensaree/. Our team will be happy to assist. Happy shopping with www.linensaree.com"
+    answer: "You may certainly read our policies on the website or reach out to us through… Call or WhatsApp: +91 92641-51111, Email id: support@handloomer.com, Facebook Messenger: https://www.facebook.com/Linensareecom-260110851539434, Instagram: https://www.instagram.com/_linensaree/. Our team will be happy to assist. Happy shopping with www.linensaree.com"
   }
 ]
 
@@ -331,10 +331,10 @@ export default function FAQPage() {
               Call/WhatsApp: +91 92641-51111
             </a>
             <a
-              href="mailto:support@linensaree.com"
+              href="mailto:support@handloomer.com"
               className="inline-flex items-center gap-2 px-6 py-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
             >
-              Email: support@linensaree.com
+              Email: support@handloomer.com
             </a>
           </div>
         </div>

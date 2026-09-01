@@ -76,13 +76,13 @@ export function Footer() {
               </a>
 
               <a 
-                href="mailto:support@linensaree.com" 
+                href="mailto:support@handloomer.com" 
                 className="flex items-center gap-3 text-sm text-stone-300 hover:text-white transition-colors group"
               >
                 <div className="w-8 h-8 rounded-full bg-stone-800 border border-stone-700 flex items-center justify-center text-stone-300 group-hover:bg-stone-700 group-hover:text-white transition-all">
                   <Mail className="w-4 h-4" />
                 </div>
-                <span>support@linensaree.com</span>
+                <span>support@handloomer.com</span>
               </a>
             </div>
 

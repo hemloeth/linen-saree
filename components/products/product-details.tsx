@@ -161,6 +161,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                         controls
                         autoPlay
                         muted
+                        playsInline
+                        preload="metadata"
                         loop
                       />
                     </div>
@@ -194,6 +196,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                     controls
                     autoPlay
                     muted
+                    playsInline
+                    preload="metadata"
                     loop
                   />
                 )}
@@ -256,6 +260,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                           src={media.src}
                           className="w-full h-full object-cover"
                           muted
+                          playsInline
+                          preload="none"
                         />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <Play className="w-4 h-4 text-white" />

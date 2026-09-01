@@ -56,6 +56,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://pub-f54fad280ec34c659747cdd738e55b2d.r2.dev" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://pub-f54fad280ec34c659747cdd738e55b2d.r2.dev" />
+      </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <SmoothScroll>
           <AuthProvider>
