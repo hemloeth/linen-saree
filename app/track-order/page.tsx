@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -23,7 +23,7 @@ import {
 import { resolveMediaUrl } from '@/lib/media';
 import { toast } from 'sonner';
 
-export default function TrackOrderPage() {
+function TrackOrderContent() {
   const searchParams = useSearchParams();
   const [trackMode, setTrackMode] = useState<'awb' | 'order'>('awb');
   
@@ -537,5 +537,17 @@ export default function TrackOrderPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function TrackOrderPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#faf8f5] dark:bg-[#121212] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-stone-800 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <TrackOrderContent />
+    </Suspense>
   );
 }
