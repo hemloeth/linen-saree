@@ -56,6 +56,31 @@ export function Header() {
   const { totalItems: wishlistItems, isHydrated: wishlistHydrated } = useWishlist()
   const { isAuthenticated, isHydrated: authHydrated, user, logout } = useAuth()
 
+  // Load saved announcement dismissal preference
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const isDismissed = localStorage.getItem("handloomer_announcement_dismissed") === "true"
+        if (isDismissed) {
+          setIsAnnouncementVisible(false)
+        }
+      }
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+  }, [])
+
+  const handleCloseAnnouncement = () => {
+    setIsAnnouncementVisible(false)
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("handloomer_announcement_dismissed", "true")
+      }
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+  }
+
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden'
@@ -150,7 +175,7 @@ export function Header() {
             </div>
           </div>
           <button
-            onClick={() => setIsAnnouncementVisible(false)}
+            onClick={handleCloseAnnouncement}
             className="absolute right-2 top-2 sm:top-1/2 sm:-translate-y-1/2 p-1 text-background/60 hover:text-background transition-colors"
             aria-label="Close announcement"
           >
