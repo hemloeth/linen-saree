@@ -1,5 +1,8 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
-import { TrustBadges } from "@/components/common/trust-badges"
+import { Mail, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react"
 
 // Custom SVG Icons for Social Media
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -26,143 +29,261 @@ const YouTubeIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-const footerLinks = {
-  shop: [
-    { name: "New Arrivals", href: "/categories/new-arrivals" },
-    { name: "Handloom Sarees", href: "/categories/handloom" },
-    { name: "Designer Collection", href: "/collections" },
-    { name: "Celebrity Collection", href: "/collections/celebrity" },
-    { name: "Festive Collection", href: "/collections/festive" },
-    { name: "Best Sellers", href: "/best-sellers" },
-  ],
-  about: [
-    { name: "About Us", href: "/about" },
-    { name: "Why Choose Us", href: "/why-choose-us" },
-    { name: "Blog", href: "/blog" },
-    { name: "Craftsmanship", href: "/craftsmanship" },
-    { name: "Sustainability", href: "/sustainability" },
-    { name: "Press", href: "/press" },
-
-  ],
-  help: [
-    { name: "Contact Us", href: "/contact" },
-    { name: "FAQs", href: "/faq" },
-    { name: "Track Order", href: "/track-order" },
-    { name: "Shipping", href: "/shipping" },
-    { name: "Returns & Exchange", href: "/returns" },
-    { name: "Size Guide", href: "/size-guide" },
-  ],
-}
-
-const socialLinks = [
-  { name: "Instagram", icon: InstagramIcon, href: "https://www.instagram.com/_linensaree/" },
-  { name: "Facebook", icon: FacebookIcon, href: "https://www.facebook.com/people/Linensareecom/100063776541814/" },
-  { name: "WhatsApp", icon: WhatsAppIcon, href: "https://wa.me/9264151111" },
-  { name: "YouTube", icon: YouTubeIcon, href: "https://www.youtube.com/@linensaree" },
-]
-
 export function Footer() {
+  const [email, setEmail] = useState("")
+  const [isSubscribed, setIsSubscribed] = useState(false)
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (email && email.includes("@")) {
+      setIsSubscribed(true)
+      setEmail("")
+    }
+  }
+
   return (
-    <footer className="bg-foreground text-background">
-      <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
-        <div className="py-16 lg:py-20 grid grid-cols-2 md:grid-cols-4 gap-10 lg:gap-16">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="inline-block mb-6">
-              <span className="font-serif text-2xl font-semibold">Linen Sarees</span>
-            </Link>
-            <p className="font-sans text-sm text-background/70 leading-relaxed mb-6 max-w-xs">
-              Handcrafted elegance for the modern woman. Each saree tells a story of heritage and artistry.
-            </p>
-            <div className="flex items-center gap-4">
-              {socialLinks.map((social) => (
-                <Link
-                  key={social.name}
-                  href={social.href}
-                  className="w-10 h-10 border border-background/20 rounded-full flex items-center justify-center hover:bg-background hover:text-foreground transition-colors"
-                  aria-label={social.name}
-                >
-                  <social.icon className="w-4 h-4" />
-                </Link>
-              ))}
+    <footer className="bg-[#121212] text-stone-200 border-t border-stone-800">
+      {/* Main Footer Content */}
+      <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 pt-16 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
+          
+          {/* Column 1: Brand & Contact (4 cols) */}
+          <div className="lg:col-span-4 space-y-6">
+            <div>
+              <Link href="/" className="inline-block group">
+                <span className="font-serif text-2xl md:text-3xl font-semibold tracking-wide text-white group-hover:text-amber-200/90 transition-colors">
+                  The Handloomer
+                </span>
+              </Link>
+              <p className="font-sans text-sm text-stone-400 leading-relaxed mt-3 max-w-sm">
+                Authentic handwoven pure linen sarees directly from master artisans. 
+                Crafted for timeless grace, effortless comfort, and enduring heritage.
+              </p>
+            </div>
+
+            {/* Quick Support Contact */}
+            <div className="space-y-2.5 pt-1">
+              <a 
+                href="https://wa.me/919264151111" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-sm text-stone-300 hover:text-white transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                  <WhatsAppIcon className="w-4 h-4" />
+                </div>
+                <span>WhatsApp: <strong className="text-white font-medium">+91 92641 51111</strong></span>
+              </a>
+
+              <a 
+                href="mailto:support@linensaree.com" 
+                className="flex items-center gap-3 text-sm text-stone-300 hover:text-white transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-full bg-stone-800 border border-stone-700 flex items-center justify-center text-stone-300 group-hover:bg-stone-700 group-hover:text-white transition-all">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <span>support@linensaree.com</span>
+              </a>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex items-center gap-3 pt-2">
+              <a
+                href="https://www.instagram.com/_linensaree/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-400 hover:text-white hover:border-stone-600 hover:bg-stone-800 transition-all"
+                aria-label="Instagram"
+              >
+                <InstagramIcon className="w-4 h-4" />
+              </a>
+              <a
+                href="https://www.facebook.com/people/Linensareecom/100063776541814/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-400 hover:text-white hover:border-stone-600 hover:bg-stone-800 transition-all"
+                aria-label="Facebook"
+              >
+                <FacebookIcon className="w-4 h-4" />
+              </a>
+              <a
+                href="https://wa.me/919264151111"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-400 hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-stone-800 transition-all"
+                aria-label="WhatsApp"
+              >
+                <WhatsAppIcon className="w-4 h-4" />
+              </a>
+              <a
+                href="https://www.youtube.com/@linensaree"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-400 hover:text-red-400 hover:border-red-500/40 hover:bg-stone-800 transition-all"
+                aria-label="YouTube"
+              >
+                <YouTubeIcon className="w-4 h-4" />
+              </a>
             </div>
           </div>
 
-          {/* Shop */}
-          <div>
-            <h3 className="font-sans text-sm tracking-wider uppercase mb-6">Shop</h3>
-            <ul className="space-y-3">
-              {footerLinks.shop.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="font-sans text-sm text-background/70 hover:text-background transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
+          {/* Column 2: Shop Links (2.5 cols) */}
+          <div className="lg:col-span-2 md:pl-2">
+            <h3 className="font-serif text-base tracking-wider uppercase text-white font-medium mb-5">
+              Collections
+            </h3>
+            <ul className="space-y-3 font-sans text-sm">
+              <li>
+                <Link href="/all-collections" className="text-stone-400 hover:text-white transition-colors">
+                  All Sarees
+                </Link>
+              </li>
+              <li>
+                <Link href="/categories" className="text-stone-400 hover:text-white transition-colors">
+                  Shop by Category
+                </Link>
+              </li>
+              <li>
+                <Link href="/all-collections?filter=new" className="text-stone-400 hover:text-white transition-colors flex items-center gap-1.5">
+                  <span>New Arrivals</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-medium uppercase tracking-wider">New</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/best-sellers" className="text-stone-400 hover:text-white transition-colors">
+                  Best Sellers
+                </Link>
+              </li>
+              <li>
+                <Link href="/video-collection" className="text-stone-400 hover:text-white transition-colors flex items-center gap-1.5">
+                  <span>Live Video Shopping</span>
+                  <span className="text-xs">🎥</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/all-collections?filter=sale" className="text-rose-400 hover:text-rose-300 transition-colors font-medium">
+                  Special Offers & Sale
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* About */}
-          <div>
-            <h3 className="font-sans text-sm tracking-wider uppercase mb-6">About</h3>
-            <ul className="space-y-3">
-              {footerLinks.about.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="font-sans text-sm text-background/70 hover:text-background transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
+          {/* Column 3: Customer Care (2.5 cols) */}
+          <div className="lg:col-span-2">
+            <h3 className="font-serif text-base tracking-wider uppercase text-white font-medium mb-5">
+              Customer Care
+            </h3>
+            <ul className="space-y-3 font-sans text-sm">
+              <li>
+                <Link href="/track-order" className="text-stone-400 hover:text-white transition-colors">
+                  Track Your Order
+                </Link>
+              </li>
+              <li>
+                <Link href="/shipping" className="text-stone-400 hover:text-white transition-colors">
+                  Shipping & Delivery
+                </Link>
+              </li>
+              <li>
+                <Link href="/returns" className="text-stone-400 hover:text-white transition-colors">
+                  Returns & Exchange
+                </Link>
+              </li>
+              <li>
+                <Link href="/size-guide" className="text-stone-400 hover:text-white transition-colors">
+                  Saree Draping & Size Guide
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-stone-400 hover:text-white transition-colors">
+                  Frequently Asked Questions
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-stone-400 hover:text-white transition-colors">
+                  Contact Us
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Help */}
-          <div>
-            <h3 className="font-sans text-sm tracking-wider uppercase mb-6">Help</h3>
-            <ul className="space-y-3">
-              {footerLinks.help.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="font-sans text-sm text-background/70 hover:text-background transition-colors"
+          {/* Column 4: VIP Club & Newsletter (3.5 cols) */}
+          <div className="lg:col-span-4 bg-stone-900/60 border border-stone-800/80 rounded-xl p-6 space-y-4">
+            <div>
+              <span className="text-xs uppercase tracking-widest text-amber-400/90 font-medium">Exclusive Privileges</span>
+              <h3 className="font-serif text-lg text-white font-semibold mt-1">
+                Join The Linen Club
+              </h3>
+              <p className="font-sans text-xs text-stone-400 leading-relaxed mt-1.5">
+                Subscribe for early access to limited edition artisan drops, styling guides, and private VIP offers.
+              </p>
+            </div>
+
+            {isSubscribed ? (
+              <div className="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-950/50 border border-emerald-600/40 text-emerald-300 text-xs">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+                <span>You're in! Thank you for joining our VIP circle.</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="space-y-2">
+                <div className="relative flex items-center">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    required
+                    className="w-full bg-stone-950 border border-stone-700/80 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-amber-400 transition-colors pr-10"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-1.5 p-1.5 bg-stone-800 hover:bg-stone-700 text-white rounded-md transition-colors"
+                    aria-label="Subscribe"
                   >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-[11px] text-stone-500 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-stone-400" />
+                  100% Handcrafted Linen • Direct from Weavers
+                </p>
+              </form>
+            )}
           </div>
+
         </div>
 
-        <div className="py-8">
-          <TrustBadges 
-            variant="horizontal" 
-            className="text-background" 
-            iconSize="md"
-          />
-        </div>
+        {/* Bottom Bar with Copyright, Legal & Payment Trust Badges */}
+        <div className="mt-12 pt-8 border-t border-stone-800/80 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-center sm:text-left">
+            <p className="font-sans text-xs text-stone-400">
+              © {new Date().getFullYear()} The Handloomer. All rights reserved.
+            </p>
+            <div className="flex items-center gap-4 text-xs text-stone-400">
+              <Link href="/privacy" className="hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
+              <span>•</span>
+              <Link href="/terms" className="hover:text-white transition-colors">
+                Terms of Service
+              </Link>
+              <span>•</span>
+              <Link href="/shipping" className="hover:text-white transition-colors">
+                Shipping & Returns
+              </Link>
+            </div>
+          </div>
 
-        {/* Bottom Bar */}
-        <div className="py-6 border-t border-background/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="font-sans text-xs text-background/50">
-            © 2026 Linen Sarees. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6">
-            <Link href="/privacy" className="font-sans text-xs text-background/50 hover:text-background transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="font-sans text-xs text-background/50 hover:text-background transition-colors">
-              Terms of Service
-            </Link>
+          {/* Secure Payment Options */}
+          <div className="flex items-center gap-3 text-stone-400 text-xs font-medium bg-stone-900/80 border border-stone-800 px-3.5 py-1.5 rounded-full">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-stone-300">100% Secure Checkout</span>
+            <span className="text-stone-600">|</span>
+            <span className="text-stone-400 text-[11px] font-semibold tracking-wider">UPI • CARDS • NETBANKING</span>
           </div>
         </div>
       </div>
     </footer>
   )
 }
+

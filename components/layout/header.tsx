@@ -176,7 +176,7 @@ export function Header() {
             <Link href="/" className="flex items-center">
               <Image
                 src="/logo.jpg"
-                alt="Linen Sarees"
+                alt="The Handloomer"
                 width={80}
                 height={40}
                 className="h-8 lg:h-10 w-auto object-contain mix-blend-multiply"

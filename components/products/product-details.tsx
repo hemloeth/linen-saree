@@ -52,8 +52,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   const handleShare = async () => {
     const shareData = {
-      title: `${product.name} | Linen Sarees`,
-      text: `Check out ${product.name} on Linen Sarees!`,
+      title: `${product.name} | The Handloomer`,
+      text: `Check out ${product.name} on The Handloomer!`,
       url: window.location.href,
     }
 

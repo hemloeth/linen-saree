@@ -102,7 +102,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         <>
             <div className="flex h-16 items-center justify-between border-b px-6">
                 <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold" onClick={onClose}>
-                    <span className="text-xl font-serif text-primary">Linen Saree Admin</span>
+                    <span className="text-xl font-serif text-primary">The Handloomer Admin</span>
                 </Link>
                 <Button
                     variant="ghost"

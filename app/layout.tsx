@@ -37,8 +37,8 @@ const getBaseUrl = () => {
 
 export const metadata: Metadata = {
   metadataBase: getBaseUrl(),
-  title: 'Linen Sarees | Premium Handcrafted Sarees',
-  description: 'Discover our exquisite collection of premium linen sarees. Handcrafted elegance for the modern woman.',
+  title: 'The Handloomer | Authentic Handcrafted Pure Linen Sarees',
+  description: 'Discover the exquisite collection of authentic handwoven pure linen and handloom sarees. Handcrafted elegance for the modern woman by The Handloomer.',
   generator: 'v0.app',
   icons: {
     icon: '/faveicon.jpg',

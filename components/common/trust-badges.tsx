@@ -1,43 +1,24 @@
-import { Truck, RotateCcw } from "lucide-react"
-
-// Custom SVG Icons for trust badges
-const CODIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-    <line x1="8" y1="21" x2="16" y2="21" />
-    <line x1="12" y1="17" x2="12" y2="21" />
-    <path d="M8 7h8" />
-    <path d="M8 11h8" />
-  </svg>
-)
-
-const SecurePaymentIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    <circle cx="12" cy="16" r="1" />
-  </svg>
-)
+import { Truck, RotateCcw, ShieldCheck, Banknote } from "lucide-react"
 
 const trustBadges = [
   {
-    icon: CODIcon,
+    icon: Banknote,
     title: "COD Available",
-    description: "Cash on Delivery"
+    description: "Pay on delivery across India"
   },
   {
     icon: RotateCcw,
     title: "Easy Returns",
-    description: "7 Days Return Policy"
+    description: "7 days hassle-free exchange"
   },
   {
-    icon: SecurePaymentIcon,
-    title: "Secure Payment",
-    description: "100% Safe & Secure"
+    icon: ShieldCheck,
+    title: "100% Authentic",
+    description: "Certified pure handloom linen"
   },
   {
     icon: Truck,
-    title: "Free Shipping",
+    title: "Free Express Shipping",
     description: "On orders above ₹999"
   }
 ]
@@ -50,63 +31,87 @@ interface TrustBadgesProps {
 }
 
 export function TrustBadges({
-  variant = "horizontal",
+  variant = "grid",
   showDescription = true,
   className = "",
-  iconSize = "md"
 }: TrustBadgesProps) {
-  const iconSizeClasses = {
-    sm: "w-4 h-4",
-    md: "w-5 h-5",
-    lg: "w-6 h-6"
+  if (variant === "grid") {
+    return (
+      <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 ${className}`}>
+        {trustBadges.map((badge, index) => (
+          <div
+            key={index}
+            className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-2.5 sm:gap-3.5 p-3.5 sm:p-4 rounded-xl bg-background/80 border border-border/60 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] transition-all hover:border-border"
+          >
+            <div className="w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center flex-shrink-0 text-stone-800 dark:text-stone-200">
+              <badge.icon className="w-5 h-5 stroke-[1.75]" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="text-xs sm:text-sm font-semibold text-foreground tracking-tight">
+                {badge.title}
+              </div>
+              {showDescription && (
+                <div className="text-[11px] sm:text-xs text-muted-foreground leading-snug">
+                  {badge.description}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
-  const containerClasses = {
-    horizontal: "flex flex-wrap items-center justify-center gap-3 sm:gap-6 lg:gap-8",
-    vertical: "flex flex-col gap-4",
-    grid: "grid grid-cols-2 lg:grid-cols-4 gap-4"
+  if (variant === "vertical") {
+    return (
+      <div className={`flex flex-col gap-3 ${className}`}>
+        {trustBadges.map((badge, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-3 p-3 rounded-lg bg-background border border-border/50"
+          >
+            <div className="w-8 h-8 rounded-md bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-800 dark:text-stone-200 flex-shrink-0">
+              <badge.icon className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-foreground">{badge.title}</div>
+              {showDescription && (
+                <div className="text-[11px] text-muted-foreground">{badge.description}</div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
-    <div className={`${containerClasses[variant]} ${className}`}>
+    <div className={`flex flex-wrap items-center justify-center gap-4 sm:gap-8 ${className}`}>
       {trustBadges.map((badge, index) => (
-        <div
-          key={index}
-          className="flex items-center gap-2 text-center lg:text-left min-w-fit"
-        >
-          <div className="flex-shrink-0 p-1.5 sm:p-2 bg-primary/10 rounded-full">
-            <badge.icon className={`${iconSizeClasses[iconSize]} text-primary`} />
-          </div>
-          {showDescription && (
-            <div className="text-left">
-              <div className="text-[10px] sm:text-sm font-medium text-foreground leading-tight">
-                {badge.title}
-              </div>
-              <div className="hidden sm:block text-xs text-muted-foreground">
-                {badge.description}
-              </div>
-            </div>
-          )}
+        <div key={index} className="flex items-center gap-2 text-xs">
+          <badge.icon className="w-4 h-4 text-stone-700 dark:text-stone-300" />
+          <span className="font-medium text-foreground">{badge.title}</span>
         </div>
       ))}
     </div>
   )
 }
 
-// Compact version for header/footer
+// Compact version for header/announcement bar
 export function TrustBadgesCompact({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center justify-center gap-3 md:gap-6 ${className}`}>
       {trustBadges.map((badge, index) => (
         <div
           key={index}
-          className="flex items-center gap-1 md:gap-1.5 text-xs hover:opacity-100 transition-opacity"
+          className="flex items-center gap-1.5 text-xs text-foreground/80"
           title={`${badge.title} - ${badge.description}`}
         >
-          <badge.icon className="w-3 h-3 md:w-4 md:h-4" />
-          <span className="hidden sm:inline md:hidden xl:inline font-medium">{badge.title}</span>
+          <badge.icon className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="font-medium">{badge.title}</span>
         </div>
       ))}
     </div>
   )
 }
+
