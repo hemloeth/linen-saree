@@ -1,12 +1,20 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { PageHeroSlider } from "@/components/sections/page-hero-slider"
-import { fetchProductsFromDB } from "@/lib/products"
-import { ProductCard } from "@/components/products/product-card"
+import { CategoryProductsClient } from "../../categories/[slug]/category-products-client"
+import { fetchPaginatedProducts, fetchProductsFromDB } from "@/lib/products"
+import { apiServerGet } from "@/lib/api"
+import Link from "next/link"
+import { Suspense } from "react"
+import { Metadata } from "next"
 
-export const metadata = {
-  title: "Festival Collection | Linen Sarees",
-  description: "Celebrate in style with our exquisite festival collection of premium linen sarees."
+export const metadata: Metadata = {
+  title: "Festival Collection - Linen Sarees | Festive Celebration Wear",
+  description: "Celebrate in style with our exquisite festival collection of premium linen and silk sarees.",
+}
+
+interface FestivalPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 const festivalSlides = [
@@ -30,59 +38,88 @@ const festivalSlides = [
   }
 ]
 
-export default async function FestivalCollectionPage() {
-  const allProducts = await fetchProductsFromDB()
+const breadcrumbs = [
+  { label: "Home", href: "/" },
+  { label: "Collections", href: "/collections" },
+  { label: "Festival Collection" }
+]
 
-  // Filter products for festival collection - include Banarasi, Silk Linen, and Embroidery
-  const festivalProducts = allProducts.filter(product =>
-    product.category === 'Banarasi Silk' ||
-    product.category === 'Silk Linen' ||
-    product.category === 'Embroidery' ||
-    product.isFeatured ||
-    ['Royal', 'Golden', 'Emerald', 'Wine', 'Burgundy', 'Royal Purple'].some(color =>
-      product.name.includes(color)
+export default async function FestivalCollectionPage({ searchParams }: FestivalPageProps) {
+  const resolvedSearchParams = await searchParams
+
+  const { products: paginatedProducts, pagination } = await fetchPaginatedProducts({
+    ...resolvedSearchParams,
+    isFestive: true,
+    limit: 20
+  })
+
+  let displayProducts = paginatedProducts
+  if (!displayProducts || displayProducts.length === 0) {
+    const allProducts = await fetchProductsFromDB()
+    displayProducts = allProducts.filter(product =>
+      product.category === 'Banarasi Silk' ||
+      product.category === 'Silk Linen' ||
+      product.category === 'Embroidery' ||
+      product.isFestive ||
+      product.isFeatured
     )
-  )
+  }
+
+  const colRes = await apiServerGet('/api/marketing-collections', { cache: 'no-store' }).catch(() => ({ success: false, data: [] }))
+  const marketingCols = colRes.success && colRes.data ? colRes.data.filter((c: any) => c.key !== 'none') : []
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-background">
       <Header />
 
       {/* Hero Banner */}
       <div className="mt-[96px] lg:mt-[104px]">
-        <PageHeroSlider slides={festivalSlides} height="50vh" />
+        <PageHeroSlider slides={festivalSlides} height="40vh" breadcrumbs={breadcrumbs} />
       </div>
 
-      {/* Collection Description */}
-      <section className="py-12 px-2 bg-secondary">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
-          <h2 className="text-3xl lg:text-4xl font-light mb-6">Festival Collection</h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Make every celebration memorable with our carefully curated festival collection.
-            From traditional ceremonies to modern festivities, our premium linen sarees
-            combine elegance with comfort, ensuring you look stunning on every special occasion.
-          </p>
-        </div>
-      </section>
-
-      {/* Products Grid */}
-      <section className="py-12 px-2">
+      {/* Collections Sub-nav */}
+      <section className="bg-secondary border-b border-border py-8">
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {festivalProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+          <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 lg:gap-4">
+            <Link
+              href="/collections"
+              className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
+            >
+              All Collections
+            </Link>
+            <Link
+              href="/collections/festival"
+              className="px-2 sm:px-6 py-2 bg-foreground text-background shadow-md text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center font-medium"
+            >
+              Festival Collection
+            </Link>
+            <Link
+              href="/collections/new-arrivals"
+              className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
+            >
+              New Arrivals
+            </Link>
+            {marketingCols.map((col: any) => (
+              <Link
+                key={col.key}
+                href={`/collections/${col.key}`}
+                className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
+              >
+                {col.name}
+              </Link>
             ))}
           </div>
-
-          {festivalProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">
-                Festival collection coming soon. Stay tuned for our exclusive festive sarees!
-              </p>
-            </div>
-          )}
         </div>
       </section>
+
+      {/* Products Section with Sidebar Filters & Sorting */}
+      <Suspense fallback={<div className="py-20 text-center text-muted-foreground">Loading festival collection...</div>}>
+        <CategoryProductsClient 
+          initialProducts={displayProducts} 
+          pagination={pagination}
+          pageTitle="Festival Collection" 
+        />
+      </Suspense>
 
       <Footer />
     </main>

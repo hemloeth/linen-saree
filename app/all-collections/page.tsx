@@ -89,7 +89,7 @@ export default function AllMarketingCollectionsPage() {
                                     transition={{ duration: 0.6, delay: index * 0.1 }}
                                 >
                                     <Link 
-                                        href={`/marketing-collections/${collection.key}`}
+                                        href={`/collections/${collection.key}`}
                                         className="group block relative"
                                     >
                                         <div className="relative aspect-[4/5] overflow-hidden rounded-2xl shadow-lg transition-all duration-500 group-hover:shadow-2xl">

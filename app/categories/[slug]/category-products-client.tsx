@@ -132,7 +132,7 @@ export function CategoryProductsClient({
                     }
                   }}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 text-sm font-medium border border-border rounded-md disabled:opacity-50 hover:bg-muted hover:text-foreground transition-colors bg-background"
+                  className="px-4 py-2 text-sm font-medium border border-border rounded-md disabled:opacity-50 hover:bg-muted hover:text-foreground transition-colors bg-background cursor-pointer disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -149,7 +149,7 @@ export function CategoryProductsClient({
                     }
                   }}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 text-sm font-medium border border-border rounded-md disabled:opacity-50 hover:bg-muted hover:text-foreground transition-colors bg-background"
+                  className="px-4 py-2 text-sm font-medium border border-border rounded-md disabled:opacity-50 hover:bg-muted hover:text-foreground transition-colors bg-background cursor-pointer disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -169,7 +169,7 @@ export function CategoryProductsClient({
                 onClick={() => {
                   router.push('?', { scroll: false })
                 }}
-                className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                className="px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer"
               >
                 Clear All Filters
               </button>

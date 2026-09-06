@@ -26,6 +26,7 @@ export interface ImageInfo {
     description: string
     alt: string
     caption: string
+    tags?: string[]
 }
 
 interface Product {
@@ -98,10 +99,9 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                // If on admin panel, fetch all products. Otherwise, fetch just a limited set or none,
-                // because storefront uses server components for its product lists.
-                const isAdmin = pathname?.startsWith('/admin')
-                const endpoint = isAdmin ? '/api/product/allproducts?limit=0&fullData=true' : '/api/product/allproducts?limit=20'
+                // If on admin panel or video-collection page, fetch all products. Otherwise, fetch limited set for preview.
+                const needsAllProducts = pathname?.startsWith('/admin') || pathname?.startsWith('/video-collection')
+                const endpoint = needsAllProducts ? '/api/product/allproducts?limit=0&fullData=true' : '/api/product/allproducts?limit=20'
                 
                 const data = await apiGet(endpoint)
                 if (data.products) {

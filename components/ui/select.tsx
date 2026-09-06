@@ -7,10 +7,7 @@ import { motion, AnimatePresence } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
-const Select = ({ modal = false, ...props }: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => (
-    <SelectPrimitive.Root modal={modal} {...props} />
-)
-Select.displayName = SelectPrimitive.Root.displayName
+const Select = SelectPrimitive.Root
 
 const SelectGroup = SelectPrimitive.Group
 

@@ -7,6 +7,7 @@ import { useCart } from "@/context/cart-context"
 import { useWishlist } from "@/context/wishlist-context"
 import { useProducts } from "@/context/product-context"
 import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 import Link from "next/link"
 import { resolveMediaUrl } from "@/lib/media"
 import { useInView } from "react-intersection-observer"
@@ -19,9 +20,11 @@ interface VideoCardProps {
   productId: string
   category: string
   slug: string
+  image?: string
+  product?: any
 }
 
-function VideoCard({ title, price, originalPrice, videoSrc, productId, category, slug }: VideoCardProps) {
+function VideoCard({ title, price, originalPrice, videoSrc, productId, category, slug, image, product }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const { addToCart } = useCart()
@@ -62,9 +65,22 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category,
     }
   }, [inView])
 
-  const product = mappedProducts.find(p => p.id === productId) || mappedProducts[0] || ({} as any)
-  const discount = Math.round(((originalPrice - price) / originalPrice) * 100)
-  const isWishlisted = isInWishlist(product.id)
+  const targetProduct = product || mappedProducts.find(p => p.id === productId) || {
+    id: productId,
+    name: title,
+    price,
+    originalPrice,
+    slug,
+    category,
+    image: image || "",
+    images: image ? [image] : [],
+    videos: [videoSrc]
+  }
+
+  const discount = originalPrice > price && originalPrice > 0 
+    ? Math.round(((originalPrice - price) / originalPrice) * 100) 
+    : 0
+  const isWishlisted = isInWishlist(targetProduct.id)
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -79,11 +95,19 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category,
 
   const handleWishlistClick = () => {
     if (isWishlisted) {
-      removeFromWishlist(product.id)
+      removeFromWishlist(targetProduct.id)
     } else {
-      addToWishlist(product)
+      addToWishlist(targetProduct)
     }
   }
+
+  const posterImage = image 
+    ? resolveMediaUrl(image) 
+    : targetProduct?.image 
+      ? resolveMediaUrl(targetProduct.image) 
+      : targetProduct?.images?.[0] 
+        ? resolveMediaUrl(targetProduct.images[0]) 
+        : undefined
 
   return (
     <Link href={`/product/${slug}`} className="group relative w-full block cursor-pointer">
@@ -93,7 +117,7 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category,
             <video
               ref={videoRef}
               src={resolveMediaUrl(videoSrc)}
-              poster={product.image ? resolveMediaUrl(product.image) : (product.images?.[0] ? resolveMediaUrl(product.images[0]) : undefined)}
+              poster={posterImage}
               loop
               muted
               playsInline
@@ -110,9 +134,11 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category,
 
           {/* Badges */}
           <div className="absolute top-1 left-1 md:top-2 md:left-2 flex flex-col gap-1 z-10 max-w-[calc(100%-2rem)] md:max-w-[calc(100%-3rem)]">
-            <span className="bg-primary text-primary-foreground text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1 font-medium rounded-sm whitespace-nowrap inline-block">
-              {discount}% OFF
-            </span>
+            {discount > 0 && (
+              <span className="bg-primary text-primary-foreground text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1 font-medium rounded-sm whitespace-nowrap inline-block">
+                {discount}% OFF
+              </span>
+            )}
           </div>
 
           {/* Play/Pause Button */}
@@ -123,6 +149,7 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category,
               togglePlay()
             }}
             className="absolute top-1 right-8 md:top-2 md:right-12 p-1.5 md:p-2 bg-background/90 hover:bg-background rounded-full transition-colors opacity-0 group-hover:opacity-100 z-10"
+            aria-label={isPlaying ? "Pause video" : "Play video"}
           >
             {isPlaying ? (
               <Pause className="w-3 h-3 md:w-4 md:h-4" />
@@ -153,7 +180,7 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category,
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                addToCart(product)
+                addToCart(targetProduct)
               }}
               className="w-full bg-background/95 hover:bg-background py-1.5 md:py-2.5 px-2 md:px-4 flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm font-medium transition-colors rounded-sm"
             >
@@ -171,9 +198,11 @@ function VideoCard({ title, price, originalPrice, videoSrc, productId, category,
         </h3>
         <div className="flex items-center gap-1 md:gap-2 flex-wrap">
           <span className="font-semibold text-xs md:text-sm">₹{price.toLocaleString('en-IN')}</span>
-          <span className="text-[10px] md:text-sm text-muted-foreground line-through">
-            ₹{originalPrice.toLocaleString('en-IN')}
-          </span>
+          {originalPrice > price && (
+            <span className="text-[10px] md:text-sm text-muted-foreground line-through">
+              ₹{originalPrice.toLocaleString('en-IN')}
+            </span>
+          )}
         </div>
       </div>
     </Link>
@@ -191,11 +220,13 @@ function VideoCollectionContent() {
     .map(p => ({
       title: p.name,
       price: p.price,
-      originalPrice: p.originalPrice,
+      originalPrice: p.originalPrice || p.price,
       videoSrc: p.videos![0],
       productId: p.id,
       category: p.category || "Other",
-      slug: p.slug
+      slug: p.slug,
+      image: p.image || (p.images && p.images[0]) || "",
+      product: p
     }))
     
   // Extract unique categories dynamically
@@ -222,17 +253,20 @@ function VideoCollectionContent() {
 
   // Navigation functions
   const goToPrevious = () => {
+    if (heroVideos.length === 0) return
     setCurrentHeroVideo((prev) => prev === 0 ? heroVideos.length - 1 : prev - 1)
   }
 
   const goToNext = () => {
+    if (heroVideos.length === 0) return
     setCurrentHeroVideo((prev) => (prev + 1) % heroVideos.length)
   }
 
   // Auto-rotate hero videos every 5 seconds using a mixed selection
   useEffect(() => {
+    if (heroVideos.length <= 1) return
     const interval = setInterval(() => {
-      setCurrentHeroVideo((prev) => (prev + 1) % (heroVideos.length || 1))
+      setCurrentHeroVideo((prev) => (prev + 1) % heroVideos.length)
     }, 5000)
     return () => clearInterval(interval)
   }, [heroVideos.length])
@@ -246,7 +280,7 @@ function VideoCollectionContent() {
           {heroVideos.map((video, index) => (
             index === currentHeroVideo && (
               <div
-                key={index}
+                key={video.productId || index}
                 className="absolute inset-0 animate-in fade-in duration-1000"
               >
                 <video
@@ -267,18 +301,18 @@ function VideoCollectionContent() {
           <div className="absolute inset-0 bg-black/40" />
 
           {/* Navigation Arrows */}
-          {heroVideos.length > 0 && (
+          {heroVideos.length > 1 && (
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 p-1.5 md:p-3 bg-white/10 md:bg-white/20 hover:bg-white/20 md:hover:bg-white/30 backdrop-blur-sm transition-colors text-white/70 md:text-white group rounded-full md:rounded-none"
+                className="absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 p-1.5 md:p-3 bg-white/10 md:bg-white/20 hover:bg-white/20 md:hover:bg-white/30 backdrop-blur-sm transition-colors text-white/70 md:text-white group rounded-full md:rounded-none cursor-pointer"
                 aria-label="Previous video"
               >
                 <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 group-hover:-translate-x-0.5 transition-transform" />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 p-1.5 md:p-3 bg-white/10 md:bg-white/20 hover:bg-white/20 md:hover:bg-white/30 backdrop-blur-sm transition-colors text-white/70 md:text-white group rounded-full md:rounded-none"
+                className="absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 p-1.5 md:p-3 bg-white/10 md:bg-white/20 hover:bg-white/20 md:hover:bg-white/30 backdrop-blur-sm transition-colors text-white/70 md:text-white group rounded-full md:rounded-none cursor-pointer"
                 aria-label="Next video"
               >
                 <ChevronRight className="w-4 h-4 md:w-6 md:h-6 group-hover:translate-x-0.5 transition-transform" />
@@ -354,6 +388,8 @@ function VideoCollectionContent() {
                   productId={card.productId}
                   category={card.category}
                   slug={card.slug}
+                  image={card.image}
+                  product={card.product}
                 />
               ))}
             </div>
@@ -394,13 +430,14 @@ function VideoCollectionContent() {
           </div>
         </section>
       </div>
+      <Footer />
     </>
   )
 }
 
 export default function VideoCollectionPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>}>
       <VideoCollectionContent />
     </Suspense>
   )

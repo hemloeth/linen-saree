@@ -81,6 +81,7 @@ export function CollectionsClient() {
             </button>
           </div>
         )}
+        </div>
       </div>
     </section>
   )

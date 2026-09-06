@@ -65,3 +65,15 @@ export function formatReviewDate(dateString: string): string {
   if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`
   return `${Math.floor(diffInDays / 365)} years ago`
 }
+
+export function getReviewsByProduct(productId: string): any[] {
+  return []
+}
+
+export function getAverageRating(productId: string): number {
+  return 5.0
+}
+
+export function getTotalReviews(productId: string): number {
+  return 0
+}

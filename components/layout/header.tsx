@@ -331,7 +331,7 @@ export function Header() {
             {/* Icons */}
             <div className="flex items-center gap-0.5 sm:gap-2">
               <button
-                className="flex p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors group relative"
+                className="p-1.5 sm:p-2 hover:bg-muted rounded-full transition-colors group relative cursor-pointer"
                 aria-label="Search (Ctrl+K)"
                 onClick={() => setIsSearchOpen(true)}
                 title="Search (Ctrl+K)"

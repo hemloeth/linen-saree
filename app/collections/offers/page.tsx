@@ -1,12 +1,20 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { PageHeroSlider } from "@/components/sections/page-hero-slider"
-import { fetchProductsFromDB } from "@/lib/products"
-import { ProductCard } from "@/components/products/product-card"
+import { CategoryProductsClient } from "../../categories/[slug]/category-products-client"
+import { fetchPaginatedProducts, fetchProductsFromDB } from "@/lib/products"
+import { apiServerGet } from "@/lib/api"
+import Link from "next/link"
+import { Suspense } from "react"
+import { Metadata } from "next"
 
-export const metadata = {
-  title: "Special Offers | Linen Sarees",
-  description: "Discover amazing deals and special offers on premium linen sarees. Limited time only!"
+export const metadata: Metadata = {
+  title: "Special Offers & Sale - Linen Sarees | Exclusive Deals",
+  description: "Discover amazing deals and special offers on premium linen and silk sarees. Limited time only!",
+}
+
+interface OffersPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 const offerSlides = [
@@ -14,94 +22,98 @@ const offerSlides = [
     id: "offers-main",
     image: "/images/designer-saree.jpg",
     title: "Special Offers",
-    subtitle: "Up to 50% off on selected premium linen sarees"
+    subtitle: "Up to 50% off on selected handcrafted sarees"
   },
   {
     id: "offers-handloom",
     image: "/images/handloom-saree.jpg",
     title: "Handloom Sale",
-    subtitle: "Traditional craftsmanship at unbeatable prices"
+    subtitle: "Traditional craftsmanship at exceptional promotional value"
   },
   {
-    id: "offers-casual",
-    image: "/images/casual-saree.jpg",
-    title: "Everyday Elegance",
-    subtitle: "Casual sarees for daily wear - now on sale"
+    id: "offers-celebrity",
+    image: "/images/celebrity-look.jpg",
+    title: "Designer Deals",
+    subtitle: "Luxury drapes and vibrant colors for every occasion"
   }
 ]
 
-export default async function OffersCollectionPage() {
-  const allProducts = await fetchProductsFromDB()
+const breadcrumbs = [
+  { label: "Home", href: "/" },
+  { label: "Collections", href: "/collections" },
+  { label: "Offers & Sale" }
+]
 
-  // Filter products for offers - all products with enhanced discount display
-  const offerProducts = allProducts.map(product => {
-    const discountPercentage = Math.floor(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    return {
-      ...product,
-      discount: discountPercentage,
-      isOnSale: true
-    }
-  }).filter(product => product.discount > 0) // Only show products with actual discounts
+export default async function OffersCollectionPage({ searchParams }: OffersPageProps) {
+  const resolvedSearchParams = await searchParams
+
+  const { products: paginatedProducts, pagination } = await fetchPaginatedProducts({
+    ...resolvedSearchParams,
+    isOnSale: true,
+    limit: 20
+  })
+
+  let displayProducts = paginatedProducts
+  if (!displayProducts || displayProducts.length === 0) {
+    const allProducts = await fetchProductsFromDB()
+    displayProducts = allProducts.filter(p => p.isOnSale || (p.originalPrice && p.originalPrice > p.price))
+  }
+
+  const colRes = await apiServerGet('/api/marketing-collections', { cache: 'no-store' }).catch(() => ({ success: false, data: [] }))
+  const marketingCols = colRes.success && colRes.data ? colRes.data.filter((c: any) => c.key !== 'none') : []
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-background">
       <Header />
 
       {/* Hero Banner */}
       <div className="mt-[96px] lg:mt-[104px]">
-        <PageHeroSlider slides={offerSlides} height="50vh" />
+        <PageHeroSlider slides={offerSlides} height="40vh" breadcrumbs={breadcrumbs} />
       </div>
 
-      {/* Offer Banner */}
-      <section className="py-8 px-2 bg-red-50">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
-          <div className="inline-flex items-center gap-4 bg-red-600 text-white px-8 py-4 rounded-lg">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-lg font-medium">Limited Time Offer - Up to 50% Off!</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Collection Description */}
-      <section className="py-12 px-2 bg-secondary">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
-          <h2 className="text-3xl lg:text-4xl font-light mb-6">Special Offers</h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            Don't miss out on these incredible deals! Our special offers collection features
-            premium linen sarees at unbeatable prices. From everyday elegance to special
-            occasion wear, find your perfect saree while stocks last.
-          </p>
-        </div>
-      </section>
-
-      {/* Products Grid */}
-      <section className="py-12 px-2">
+      {/* Collections Sub-nav */}
+      <section className="bg-secondary border-b border-border py-8">
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {offerProducts.map((product) => (
-              <div key={product.id} className="relative">
-                {/* Discount Badge */}
-
-                <ProductCard product={product} />
-                {/* Price Display with Original Price */}
-                <div className="mt-2 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-lg font-medium">₹{product.price.toLocaleString('en-IN')}</span>
-                    <span className="text-sm text-muted-foreground line-through">
-                      ₹{product.originalPrice.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                  <div className="text-sm text-green-600 font-medium">
-                    Save ₹{(product.originalPrice - product.price).toLocaleString('en-IN')}
-                  </div>
-                </div>
-              </div>
+          <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 lg:gap-4">
+            <Link
+              href="/collections"
+              className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
+            >
+              All Collections
+            </Link>
+            <Link
+              href="/collections/offers"
+              className="px-2 sm:px-6 py-2 bg-foreground text-background shadow-md text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center font-medium"
+            >
+              Offers & Sale
+            </Link>
+            <Link
+              href="/collections/new-arrivals"
+              className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
+            >
+              New Arrivals
+            </Link>
+            {marketingCols.map((col: any) => (
+              <Link
+                key={col.key}
+                href={`/collections/${col.key}`}
+                className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
+              >
+                {col.name}
+              </Link>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Products Section with Sidebar Filters & Sorting */}
+      <Suspense fallback={<div className="py-20 text-center text-muted-foreground">Loading special offers...</div>}>
+        <CategoryProductsClient 
+          initialProducts={displayProducts} 
+          pagination={pagination}
+          pageTitle="Special Offers & Sale" 
+        />
+      </Suspense>
 
       <Footer />
     </main>

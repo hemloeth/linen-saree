@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Mail, ArrowRight, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { apiPost } from "@/lib/api"
+import { apiPost, apiGet } from "@/lib/api"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 

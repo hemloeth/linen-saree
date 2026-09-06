@@ -164,14 +164,14 @@ export function Hero() {
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-background/20 hover:bg-background/40 backdrop-blur-sm rounded-full transition-colors text-foreground group"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-background/20 hover:bg-background/40 backdrop-blur-sm rounded-full transition-colors text-foreground group cursor-pointer"
             aria-label="Previous slide"
           >
             <ChevronLeft className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-background/20 hover:bg-background/40 backdrop-blur-sm rounded-full transition-colors text-foreground group"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 bg-background/20 hover:bg-background/40 backdrop-blur-sm rounded-full transition-colors text-foreground group cursor-pointer"
             aria-label="Next slide"
           >
             <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
@@ -183,7 +183,7 @@ export function Hero() {
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
                   index === currentSlide
                     ? "bg-foreground scale-125"
                     : "bg-foreground/30 hover:bg-foreground/50"

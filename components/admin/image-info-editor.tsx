@@ -41,15 +41,17 @@ export function ImageInfoEditor({ imageInfo, imageIndex, onChange, onClose }: Im
         if (e.key === "Enter") {
             e.preventDefault()
             const tag = tagInput.trim()
-            if (tag && !imageInfo.tags.includes(tag)) {
-                onChange({ ...imageInfo, tags: [...imageInfo.tags, tag] })
+            const existingTags = imageInfo.tags || []
+            if (tag && !existingTags.includes(tag)) {
+                onChange({ ...imageInfo, tags: [...existingTags, tag] })
             }
             setTagInput("")
         }
     }
 
     const handleRemoveTag = (tagToRemove: string) => {
-        onChange({ ...imageInfo, tags: imageInfo.tags.filter(t => t !== tagToRemove) })
+        const existingTags = imageInfo.tags || []
+        onChange({ ...imageInfo, tags: existingTags.filter(t => t !== tagToRemove) })
     }
 
     return (
@@ -161,9 +163,9 @@ export function ImageInfoEditor({ imageInfo, imageIndex, onChange, onClose }: Im
                     placeholder="Type a tag and press Enter"
                     className="h-8 text-xs"
                 />
-                {imageInfo.tags.length > 0 && (
+                {(imageInfo.tags && imageInfo.tags.length > 0) && (
                     <div className="flex flex-wrap gap-1.5 mt-1">
-                        {imageInfo.tags.map((tag, i) => (
+                        {imageInfo.tags.map((tag: string, i: number) => (
                             <Badge
                                 key={i}
                                 variant="secondary"

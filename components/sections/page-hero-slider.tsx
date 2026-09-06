@@ -61,9 +61,19 @@ export function PageHeroSlider({
     goToSlide(newIndex)
   }
 
-  if (slides.length === 0) return null
+  // Reset slide index if slides length changes
+  useEffect(() => {
+    if (currentSlide >= slides.length) {
+      setCurrentSlide(0)
+    }
+  }, [slides.length, currentSlide])
 
-  const currentSlideData = slides[currentSlide]
+  if (!slides || slides.length === 0) return null
+
+  const activeSlideIndex = currentSlide < slides.length ? currentSlide : 0
+  const currentSlideData = slides[activeSlideIndex] || slides[0]
+
+  if (!currentSlideData) return null
 
   return (
     <section className="relative overflow-hidden" style={{ height, minHeight: "300px" }}>
@@ -71,18 +81,20 @@ export function PageHeroSlider({
       <div className="absolute inset-0">
         {slides.map((slide, index) => (
           <div
-            key={slide.id}
+            key={slide?.id || index}
             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
+              index === activeSlideIndex ? "opacity-100" : "opacity-0"
             }`}
           >
-            <Image
-              src={slide.image}
-              alt={slide.title}
-              fill
-              className="object-cover object-top"
-              priority={index === 0}
-            />
+            {slide?.image && (
+              <Image
+                src={slide.image}
+                alt={slide?.title || "Hero banner"}
+                fill
+                className="object-cover object-top"
+                priority={index === 0}
+              />
+            )}
           </div>
         ))}
         {/* Overlay */}
@@ -97,12 +109,12 @@ export function PageHeroSlider({
             <nav className="text-sm text-white/80 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
               {breadcrumbs.map((crumb, index) => (
                 <span key={index}>
-                  {crumb.href ? (
+                  {crumb?.href ? (
                     <Link href={crumb.href} className="hover:text-white transition-colors">
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span>{crumb.label}</span>
+                    <span>{crumb?.label}</span>
                   )}
                   {index < breadcrumbs.length - 1 && <span className="mx-2">/</span>}
                 </span>
@@ -110,10 +122,12 @@ export function PageHeroSlider({
             </nav>
           )}
           
-          <h1 className="font-serif text-4xl md:text-6xl mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {currentSlideData.title}
-          </h1>
-          {currentSlideData.subtitle && (
+          {currentSlideData?.title && (
+            <h1 className="font-serif text-4xl md:text-6xl mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              {currentSlideData.title}
+            </h1>
+          )}
+          {currentSlideData?.subtitle && (
             <p className="text-lg text-white/90 max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
               {currentSlideData.subtitle}
             </p>
@@ -126,14 +140,14 @@ export function PageHeroSlider({
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-colors text-white group"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-colors text-white group cursor-pointer"
             aria-label="Previous slide"
           >
             <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-colors text-white group"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full transition-colors text-white group cursor-pointer"
             aria-label="Next slide"
           >
             <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
@@ -145,8 +159,8 @@ export function PageHeroSlider({
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentSlide
+                className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  index === activeSlideIndex
                     ? "bg-white scale-125"
                     : "bg-white/50 hover:bg-white/70"
                 }`}

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Mail, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react"
+import { Mail, ArrowRight, ShieldCheck, CheckCircle2, Sparkles } from "lucide-react"
+import { apiGet } from "@/lib/api"
 
 // Custom SVG Icons for Social Media
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -32,6 +33,22 @@ const YouTubeIcon = ({ className }: { className?: string }) => (
 export function Footer() {
   const [email, setEmail] = useState("")
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const [marketingCollections, setMarketingCollections] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const response = await apiGet('/api/marketing-collections')
+        if (response.success && response.data) {
+          const filtered = response.data.filter((col: any) => col.key !== 'none')
+          setMarketingCollections(filtered)
+        }
+      } catch (error) {
+        // Fallback gracefully
+      }
+    }
+    fetchCollections()
+  }, [])
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,26 +59,26 @@ export function Footer() {
   }
 
   return (
-    <footer className="bg-[#121212] text-stone-200 border-t border-stone-800">
-      {/* Main Footer Content */}
+    <footer className="bg-[#111111] text-stone-200 border-t border-stone-800">
+      {/* Main Footer Grid */}
       <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 pt-16 pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
           
-          {/* Column 1: Brand & Contact (4 cols) */}
+          {/* Column 1: Brand, Mission & Social Links */}
           <div className="lg:col-span-4 space-y-6">
             <div>
               <Link href="/" className="inline-block group">
-                <span className="font-serif text-2xl md:text-3xl font-semibold tracking-wide text-white group-hover:text-amber-200/90 transition-colors">
+                <span className="font-serif text-2xl md:text-3xl font-semibold tracking-wide text-white group-hover:text-primary transition-colors">
                   The Handloomer
                 </span>
               </Link>
               <p className="font-sans text-sm text-stone-400 leading-relaxed mt-3 max-w-sm">
-                Authentic handwoven pure linen sarees directly from master artisans. 
-                Crafted for timeless grace, effortless comfort, and enduring heritage.
+                Authentic handcrafted pure linen sarees directly from master artisans. 
+                Crafted for timeless grace, breathable comfort, and enduring Indian heritage.
               </p>
             </div>
 
-            {/* Quick Support Contact */}
+            {/* Support Contact */}
             <div className="space-y-2.5 pt-1">
               <a 
                 href="https://wa.me/919264151111" 
@@ -69,7 +86,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 text-sm text-stone-300 hover:text-white transition-colors group"
               >
-                <div className="w-8 h-8 rounded-full bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                <div className="w-8 h-8 rounded-full bg-emerald-950/70 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
                   <WhatsAppIcon className="w-4 h-4" />
                 </div>
                 <span>WhatsApp: <strong className="text-white font-medium">+91 92641 51111</strong></span>
@@ -79,14 +96,14 @@ export function Footer() {
                 href="mailto:support@handloomer.com" 
                 className="flex items-center gap-3 text-sm text-stone-300 hover:text-white transition-colors group"
               >
-                <div className="w-8 h-8 rounded-full bg-stone-800 border border-stone-700 flex items-center justify-center text-stone-300 group-hover:bg-stone-700 group-hover:text-white transition-all">
+                <div className="w-8 h-8 rounded-full bg-stone-800/80 border border-stone-700/80 flex items-center justify-center text-stone-300 group-hover:bg-stone-700 group-hover:text-white transition-all">
                   <Mail className="w-4 h-4" />
                 </div>
                 <span>support@handloomer.com</span>
               </a>
             </div>
 
-            {/* Social Links */}
+            {/* Social Icons */}
             <div className="flex items-center gap-3 pt-2">
               <a
                 href="https://www.instagram.com/_linensaree/"
@@ -127,26 +144,21 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Shop Links (2.5 cols) */}
+          {/* Column 2: Real Collections & Catalog */}
           <div className="lg:col-span-2 md:pl-2">
-            <h3 className="font-serif text-base tracking-wider uppercase text-white font-medium mb-5">
+            <h3 className="font-serif text-sm tracking-widest uppercase text-white font-semibold mb-5">
               Collections
             </h3>
             <ul className="space-y-3 font-sans text-sm">
               <li>
-                <Link href="/all-collections" className="text-stone-400 hover:text-white transition-colors">
-                  All Sarees
+                <Link href="/collections" className="text-stone-400 hover:text-white transition-colors">
+                  All Collections
                 </Link>
               </li>
               <li>
-                <Link href="/categories" className="text-stone-400 hover:text-white transition-colors">
-                  Shop by Category
-                </Link>
-              </li>
-              <li>
-                <Link href="/all-collections?filter=new" className="text-stone-400 hover:text-white transition-colors flex items-center gap-1.5">
+                <Link href="/collections/new-arrivals" className="text-stone-400 hover:text-white transition-colors flex items-center gap-1.5">
                   <span>New Arrivals</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-medium uppercase tracking-wider">New</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold uppercase tracking-wider">New</span>
                 </Link>
               </li>
               <li>
@@ -155,22 +167,29 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/categories" className="text-stone-400 hover:text-white transition-colors">
+                  Shop by Category
+                </Link>
+              </li>
+              {marketingCollections.map((col) => (
+                <li key={col.key}>
+                  <Link href={`/collections/${col.key}`} className="text-stone-400 hover:text-white transition-colors">
+                    {col.name}
+                  </Link>
+                </li>
+              ))}
+              <li>
                 <Link href="/video-collection" className="text-stone-400 hover:text-white transition-colors flex items-center gap-1.5">
                   <span>Live Video Shopping</span>
                   <span className="text-xs">🎥</span>
                 </Link>
               </li>
-              <li>
-                <Link href="/all-collections?filter=sale" className="text-rose-400 hover:text-rose-300 transition-colors font-medium">
-                  Special Offers & Sale
-                </Link>
-              </li>
             </ul>
           </div>
 
-          {/* Column 3: Customer Care (2.5 cols) */}
+          {/* Column 3: Customer Care & Services */}
           <div className="lg:col-span-2">
-            <h3 className="font-serif text-base tracking-wider uppercase text-white font-medium mb-5">
+            <h3 className="font-serif text-sm tracking-widest uppercase text-white font-semibold mb-5">
               Customer Care
             </h3>
             <ul className="space-y-3 font-sans text-sm">
@@ -207,25 +226,28 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 4: VIP Club & Newsletter (3.5 cols) */}
-          <div className="lg:col-span-4 bg-stone-900/60 border border-stone-800/80 rounded-xl p-6 space-y-4">
+          {/* Column 4: The Linen Club Newsletter */}
+          <div className="lg:col-span-4 bg-stone-900/60 border border-stone-800/80 rounded-2xl p-6 space-y-4">
             <div>
-              <span className="text-xs uppercase tracking-widest text-amber-400/90 font-medium">Exclusive Privileges</span>
-              <h3 className="font-serif text-lg text-white font-semibold mt-1">
+              <div className="flex items-center gap-1.5 text-xs uppercase tracking-widest text-primary font-bold">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Exclusive Privileges</span>
+              </div>
+              <h3 className="font-serif text-xl text-white font-semibold mt-1">
                 Join The Linen Club
               </h3>
               <p className="font-sans text-xs text-stone-400 leading-relaxed mt-1.5">
-                Subscribe for early access to limited edition artisan drops, styling guides, and private VIP offers.
+                Subscribe for early access to limited artisan drops, drape styling guides, and private VIP promotional offers.
               </p>
             </div>
 
             {isSubscribed ? (
-              <div className="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-950/50 border border-emerald-600/40 text-emerald-300 text-xs">
+              <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-emerald-950/50 border border-emerald-600/40 text-emerald-300 text-xs">
                 <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
-                <span>You're in! Thank you for joining our VIP circle.</span>
+                <span>You're in! Welcome to our VIP circle.</span>
               </div>
             ) : (
-              <form onSubmit={handleSubscribe} className="space-y-2">
+              <form onSubmit={handleSubscribe} className="space-y-2.5">
                 <div className="relative flex items-center">
                   <input
                     type="email"
@@ -233,18 +255,18 @@ export function Footer() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email address"
                     required
-                    className="w-full bg-stone-950 border border-stone-700/80 rounded-lg px-3.5 py-2.5 text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-amber-400 transition-colors pr-10"
+                    className="w-full bg-stone-950/90 border border-stone-700/80 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-primary transition-colors pr-10"
                   />
                   <button
                     type="submit"
-                    className="absolute right-1.5 p-1.5 bg-stone-800 hover:bg-stone-700 text-white rounded-md transition-colors"
+                    className="absolute right-1.5 p-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors cursor-pointer"
                     aria-label="Subscribe"
                   >
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-[11px] text-stone-500 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-stone-400" />
+                <p className="text-[11px] text-stone-400 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-primary" />
                   100% Handcrafted Linen • Direct from Weavers
                 </p>
               </form>
@@ -275,7 +297,7 @@ export function Footer() {
           </div>
 
           {/* Secure Payment Options */}
-          <div className="flex items-center gap-3 text-stone-400 text-xs font-medium bg-stone-900/80 border border-stone-800 px-3.5 py-1.5 rounded-full">
+          <div className="flex items-center gap-3 text-stone-400 text-xs font-medium bg-stone-900/80 border border-stone-800 px-4 py-2 rounded-full">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span className="text-stone-300">100% Secure Checkout</span>
             <span className="text-stone-600">|</span>
@@ -286,4 +308,3 @@ export function Footer() {
     </footer>
   )
 }
-

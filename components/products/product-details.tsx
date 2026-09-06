@@ -207,14 +207,14 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <>
                     <button
                       onClick={goToPrevious}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10 lg:hidden"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10 lg:hidden cursor-pointer"
                       aria-label="Previous image"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                       onClick={goToNext}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10 lg:hidden"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10 lg:hidden cursor-pointer"
                       aria-label="Next image"
                     >
                       <ChevronRight className="w-5 h-5" />
@@ -229,7 +229,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                       <button
                         key={index}
                         onClick={() => setSelectedMedia(index)}
-                        className={`w-2 h-2 rounded-full transition-colors ${selectedMedia === index ? "bg-white" : "bg-white/50"
+                        className={`w-2 h-2 rounded-full transition-colors cursor-pointer ${selectedMedia === index ? "bg-white" : "bg-white/50"
                           }`}
                         aria-label={`Go to image ${index + 1}`}
                       />
