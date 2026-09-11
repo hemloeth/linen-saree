@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Linen Sarees",
+  title: "Privacy Policy - Handloomer",
   description: "Learn how we collect, use, and protect your personal information. Your privacy is important to us.",
 }
 

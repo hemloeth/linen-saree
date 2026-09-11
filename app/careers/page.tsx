@@ -2,7 +2,7 @@ import { Briefcase, Heart, Users, Globe, Award, ArrowRight } from "lucide-react"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Careers - Linen Sarees",
+  title: "Careers - Handloomer",
   description: "Join our team and help preserve traditional craftsmanship while building a sustainable fashion future. View open positions.",
 }
 
@@ -90,7 +90,7 @@ export default function CareersPage() {
               </div>
               <div className="space-y-6 font-sans text-muted-foreground leading-relaxed">
                 <p>
-                  At Linen Sarees, we're not just building a business – we're preserving a heritage, supporting communities, and creating a more sustainable future for fashion.
+                  At Handloomer, we're not just building a business – we're preserving a heritage, supporting communities, and creating a more sustainable future for fashion.
                 </p>
                 <p>
                   Every team member plays a crucial role in our mission to bring authentic, handcrafted sarees to the world while empowering the artisans who create them.

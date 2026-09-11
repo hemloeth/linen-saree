@@ -51,7 +51,7 @@ export default function GiftCardsPage() {
           <div className="bg-primary rounded-2xl p-8 text-primary-foreground shadow-2xl">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h3 className="text-2xl font-bold mb-2">Linen Saree Gift Card</h3>
+                <h3 className="text-2xl font-bold mb-2">Handloomer Gift Card</h3>
                 <p className="text-primary-foreground/80">Perfect for any occasion</p>
               </div>
               <Gift className="w-8 h-8" />

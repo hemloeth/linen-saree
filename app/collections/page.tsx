@@ -10,7 +10,7 @@ import { apiServerGet } from "@/lib/api"
 import { Suspense } from "react"
 
 export const metadata = {
-  title: "Our Collections | Linen Sarees",
+  title: "Our Collections | Handloomer",
   description: "Browse our curated themes and special marketing collections."
 }
 

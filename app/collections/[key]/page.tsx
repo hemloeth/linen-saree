@@ -40,7 +40,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
                     const colResponse = await apiGet(`/api/marketing-collections/${key}`)
                     if (colResponse.success) {
                         setCollection(colResponse.data)
-                        document.title = `${colResponse.data.name} | Linen Sarees`
+                        document.title = `${colResponse.data.name} | Handloomer`
                     }
                 } catch (colErr) {
                     const fallbacks: Record<string, any> = {
@@ -52,7 +52,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
                     }
                     if (fallbacks[key]) {
                         setCollection(fallbacks[key])
-                        document.title = `${fallbacks[key].name} | Linen Sarees`
+                        document.title = `${fallbacks[key].name} | Handloomer`
                     } else {
                         throw colErr;
                     }

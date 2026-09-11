@@ -2,15 +2,15 @@ import { Newspaper, Calendar, Download, ExternalLink } from "lucide-react"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Press & Media - Linen Sarees",
-  description: "Latest news, press releases, and media resources from Linen Sarees. Contact our press team for media inquiries.",
+  title: "Press & Media - Handloomer",
+  description: "Latest news, press releases, and media resources from Handloomer. Contact our press team for media inquiries.",
 }
 
 export default function PressPage() {
   const pressReleases = [
     {
       date: "January 15, 2026",
-      title: "Linen Sarees Launches New Sustainable Collection",
+      title: "Handloomer Launches New Sustainable Collection",
       excerpt: "Our latest collection features 100% organic materials and supports over 200 artisan families across India.",
       category: "Product Launch"
     },
@@ -22,7 +22,7 @@ export default function PressPage() {
     },
     {
       date: "November 20, 2025",
-      title: "Linen Sarees Wins Sustainable Fashion Award",
+      title: "Handloomer Wins Sustainable Fashion Award",
       excerpt: "Recognized for our commitment to ethical production and environmental responsibility in the textile industry.",
       category: "Award"
     },
@@ -67,7 +67,7 @@ export default function PressPage() {
               Press & Media
             </h1>
             <p className="font-sans text-lg lg:text-xl text-muted-foreground leading-relaxed">
-              Latest news, press releases, and media resources from Linen Sarees
+              Latest news, press releases, and media resources from Handloomer
             </p>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { Scale, FileText, Shield, AlertTriangle, Clock, Users } from "lucide-rea
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Terms of Service - Linen Sarees",
+  title: "Terms of Service - Handloomer",
   description: "Read our terms of service and understand the conditions for using our website and purchasing our handcrafted sarees.",
 }
 
@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
           </div>
           <div className="bg-muted/30 rounded-2xl p-8">
             <p className="font-sans text-muted-foreground leading-relaxed mb-4">
-              Welcome to Linen Sarees. These Terms of Service ("Terms") govern your use of our website located at linensaree.com and our services.
+              Welcome to Handloomer. These Terms of Service ("Terms") govern your use of our website located at linensaree.com and our services.
             </p>
             <p className="font-sans text-muted-foreground leading-relaxed">
               By accessing or using our service, you agree to be bound by these Terms. If you disagree with any part of these terms, then you may not access the service.
@@ -163,7 +163,7 @@ export default function TermsOfServicePage() {
           </div>
           <div className="bg-muted/30 rounded-2xl p-8">
             <p className="font-sans text-muted-foreground leading-relaxed">
-              In no case shall Linen Sarees, our directors, officers, employees, affiliates, agents, contractors, interns, suppliers, service providers, or licensors be liable for any injury, loss, claim, or any direct, indirect, incidental, punitive, special, or consequential damages of any kind.
+              In no case shall Handloomer, our directors, officers, employees, affiliates, agents, contractors, interns, suppliers, service providers, or licensors be liable for any injury, loss, claim, or any direct, indirect, incidental, punitive, special, or consequential damages of any kind.
             </p>
           </div>
         </section>

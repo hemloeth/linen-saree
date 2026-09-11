@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 
 export const metadata: Metadata = {
-  title: "About Us - Linen Sarees",
+  title: "About Us - Handloomer",
   description: "Learn about our mission to support weavers and bring you the finest handcrafted sarees from across India.",
 }
 
@@ -17,7 +17,7 @@ export default function AboutPage() {
         <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 py-20 lg:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif text-4xl lg:text-6xl font-light mb-6">
-              About Linen Sarees
+              About Handloomer
             </h1>
             <p className="font-sans text-lg lg:text-xl text-muted-foreground leading-relaxed">
               Bringing that wow moment to every individual associated with our brand
@@ -36,7 +36,7 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-6 font-sans text-muted-foreground leading-relaxed">
               <p>
-                At linensaree.com, we aim to give that <strong>wow!</strong> moment to each and every individual associated with our brand. Our mission goes beyond just selling beautiful sarees – we're committed to empowering the artisans who create them.
+                At Handloomer, we aim to give that <strong>wow!</strong> moment to each and every individual associated with our brand. Our mission goes beyond just selling beautiful sarees – we're committed to empowering the artisans who create them.
               </p>
               <p>
                 We work directly with weavers across the country who don't have access to the retail market. By collecting their exquisite products and bringing them to you, we create a bridge between traditional craftsmanship and modern consumers.
@@ -115,7 +115,7 @@ export default function AboutPage() {
           </h2>
           <div className="max-w-4xl mx-auto space-y-6 font-sans text-muted-foreground leading-relaxed">
             <p className="text-lg">
-              When you shop at linensaree.com, you're not just buying a saree – you're supporting traditional artisans and getting the finest Indian wear for women at very reasonable prices.
+              When you shop with Handloomer, you're not just buying a saree – you're supporting traditional artisans and getting the finest Indian wear for women at very reasonable prices.
             </p>
             <p>
               We believe in making authentic, high-quality sarees accessible to every woman who appreciates the timeless elegance of this beautiful garment.
@@ -124,7 +124,7 @@ export default function AboutPage() {
           <div className="mt-12">
             <p className="font-serif text-xl font-medium">
               Best Regards,<br />
-              <span className="text-primary">The Linen Saree Team</span>
+              <span className="text-primary">The Handloomer Team</span>
             </p>
           </div>
         </div>

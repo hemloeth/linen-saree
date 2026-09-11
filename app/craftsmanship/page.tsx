@@ -2,7 +2,7 @@ import { Scissors, Heart, Users, Award, Clock, MapPin } from "lucide-react"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Our Craftsmanship - Linen Sarees",
+  title: "Our Craftsmanship - Handloomer",
   description: "Discover the heritage and artistry behind our handcrafted sarees. Learn about traditional weaving techniques and skilled artisans.",
 }
 
@@ -194,7 +194,7 @@ export default function CraftsmanshipPage() {
             </h2>
             <div className="max-w-4xl mx-auto space-y-6 font-sans text-muted-foreground leading-relaxed">
               <p className="text-lg">
-                Every saree that bears the Linen Sarees name is a testament to our unwavering commitment to quality, authenticity, and the preservation of traditional craftsmanship.
+                Every saree that bears the Handloomer name is a testament to our unwavering commitment to quality, authenticity, and the preservation of traditional craftsmanship.
               </p>
               <p>
                 We work directly with artisan communities, ensuring fair compensation and supporting the continuation of these precious skills for future generations.

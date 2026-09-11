@@ -2,7 +2,7 @@ import { Ruler, User, Info, HelpCircle } from "lucide-react"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Size Guide - Linen Sarees",
+  title: "Size Guide - Handloomer",
   description: "Find your perfect fit with our comprehensive sizing guide for sarees, blouses, and ethnic wear.",
 }
 

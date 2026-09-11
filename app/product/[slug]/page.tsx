@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!product) {
     return {
-      title: "Product Not Found | Linen Sarees"
+      title: "Product Not Found | Handloomer"
     }
   }
 
@@ -54,13 +54,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ogImageUrl = getOpenGraphImageUrl(finalImages[0]);
 
   return {
-    title: `${product.name} | Linen Sarees`,
+    title: `${product.name} | Handloomer`,
     description: product.description,
     openGraph: {
-      title: `${product.name} | Linen Sarees`,
+      title: `${product.name} | Handloomer`,
       description: product.description,
       url: `/product/${slug}`,
-      siteName: 'Linen Sarees',
+      siteName: 'Handloomer',
       images: [
         {
           url: ogImageUrl,
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${product.name} | Linen Sarees`,
+      title: `${product.name} | Handloomer`,
       description: product.description,
       images: [ogImageUrl],
     },
@@ -105,7 +105,7 @@ export default async function ProductPage({ params }: Props) {
     "sku": product.id,
     "brand": {
       "@type": "Brand",
-      "name": "Linen Saree"
+      "name": "Handloomer"
     },
     "offers": {
       "@type": "Offer",

@@ -103,8 +103,8 @@ export default function WhyChooseUsPage() {
   return (
     <>
       <Head>
-        <title>Why Choose Linen Saree | Premium Quality & Authentic Craftsmanship</title>
-        <meta name="description" content="Discover why 10,000+ women across India trust Linen Saree for premium quality, handloom craftsmanship, and authentic pricing. Made in India with love." />
+        <title>Why Choose Handloomer | Premium Quality & Authentic Craftsmanship</title>
+        <meta name="description" content="Discover why 10,000+ women across India trust Handloomer for premium quality, handloom craftsmanship, and authentic pricing. Made in India with love." />
       </Head>
       
       <div className="min-h-screen bg-background">
@@ -130,14 +130,14 @@ export default function WhyChooseUsPage() {
             <div className={`mx-auto max-w-4xl text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               <div className="inline-flex items-center gap-2 bg-card/80 backdrop-blur-sm px-6 py-3 rounded-full mb-8 shadow-lg border border-border">
                 <Star className="w-5 h-5 text-primary fill-current" />
-                <span className="text-sm font-medium text-foreground">India's Most Trusted Linen Saree Brand</span>
+                <span className="text-sm font-medium text-foreground">India's Most Trusted Handloom Brand</span>
                 <Star className="w-5 h-5 text-primary fill-current" />
               </div>
               
               <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-8">
                 <span className="block">🌟 Why Choose</span>
                 <span className="block text-primary">
-                  Linen Saree?
+                  Handloomer?
                 </span>
               </h1>
               
@@ -320,7 +320,7 @@ export default function WhyChooseUsPage() {
               </h2>
               
               <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed mb-12 max-w-4xl mx-auto">
-                Join thousands of satisfied customers who have made Linen Saree their go-to choice for 
+                Join thousands of satisfied customers who have made Handloomer their go-to choice for 
                 <span className="font-semibold text-primary"> premium quality</span>, 
                 <span className="font-semibold text-accent"> authentic craftsmanship</span>, and 
                 <span className="font-semibold text-primary/80"> unmatched comfort</span>.
@@ -397,7 +397,7 @@ export default function WhyChooseUsPage() {
             </div>
             
             <h2 className="text-4xl md:text-6xl font-bold text-background mb-6">
-              Experience the <span className="text-primary">Linen Saree</span> Difference
+              Experience the <span className="text-primary">Handloomer</span> Difference
             </h2>
             
             <p className="text-xl md:text-2xl text-background/80 mb-12 max-w-4xl mx-auto leading-relaxed">

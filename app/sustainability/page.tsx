@@ -2,7 +2,7 @@ import { Leaf, Recycle, Users, Heart, Globe, Droplets } from "lucide-react"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Sustainability - Linen Sarees",
+  title: "Sustainability - Handloomer",
   description: "Learn about our commitment to sustainable fashion, ethical production, and supporting artisan communities across India.",
 }
 
@@ -36,7 +36,7 @@ export default function SustainabilityPage() {
               </div>
               <div className="space-y-6 font-sans text-muted-foreground leading-relaxed">
                 <p>
-                  At Linen Sarees, sustainability isn't just a buzzword – it's woven into the very fabric of our business. We believe that beautiful fashion should never come at the cost of our planet or the people who create it.
+                  At Handloomer, sustainability isn't just a buzzword – it's woven into the very fabric of our business. We believe that beautiful fashion should never come at the cost of our planet or the people who create it.
                 </p>
                 <p>
                   Our commitment extends from the selection of eco-friendly materials to supporting traditional artisans who use time-honored, sustainable techniques passed down through generations.

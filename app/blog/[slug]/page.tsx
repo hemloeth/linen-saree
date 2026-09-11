@@ -38,7 +38,7 @@ export default function BlogPostPage() {
               title: b.title,
               excerpt: b.description ? b.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : '',
               content: b.description,
-              author: "Linen Saree Team",
+              author: "Handloomer Team",
               date: b.createdAt || new Date().toISOString(),
               category: "Fashion",
               image: b.image || "/images/placeholder.jpg",

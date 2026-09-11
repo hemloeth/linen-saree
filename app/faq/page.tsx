@@ -15,7 +15,7 @@ const faqData: FAQItem[] = [
   // Contact & Account
   {
     category: "Contact & Account",
-    question: "How do I contact linensaree.com?",
+    question: "How do I contact Handloomer?",
     answer: "You may call/WhatsApp us at +91 92641-51111 from Monday to Saturday [10:00 am to 6:30 pm]. Or drop us an email at linensaree001@gmail.com, our team will be happy to assist you. You may also subscribe to our newsletters through our website www.linensaree.com and follow us on Facebook, Instagram, and more, to know about our Launches, New Arrivals, Offers & much more…"
   },
   {
@@ -32,12 +32,12 @@ const faqData: FAQItem[] = [
   // Products & Orders
   {
     category: "Products & Orders",
-    question: "What all products are available on linensaree.com?",
-    answer: "linensaree.com is your luxury destination for the most Exclusive and Curated collection of Handloom/Handcrafted/Handwoven Sarees, Dupattas, Customized Designer Blouses, Premium Stoles, Ethnic Wear, and Kurtis."
+    question: "What all products are available on Handloomer?",
+    answer: "Handloomer is your luxury destination for the most Exclusive and Curated collection of Handloom/Handcrafted/Handwoven Sarees, Dupattas, Customized Designer Blouses, Premium Stoles, Ethnic Wear, and Kurtis."
   },
   {
     category: "Products & Orders",
-    question: "How do I place an order with linensaree.com?",
+    question: "How do I place an order with Handloomer?",
     answer: "Select the products you would like to order placing them in the cart through the 'add to cart' option. Once all are added, click on 'proceed to checkout'. Fill in your shipping details, and payment details and complete the order."
   },
   {
@@ -83,7 +83,7 @@ const faqData: FAQItem[] = [
   {
     category: "Products & Orders",
     question: "I am facing an issue placing the order/Can I place an order through the phone?",
-    answer: "You may call/WhatsApp us at +91 92641-51111 and our dedicated team will assist you with the various options for placing the order with linensaree.com"
+    answer: "You may call/WhatsApp us at +91 92641-51111 and our dedicated team will assist you with the various options for placing the order with Handloomer"
   },
 
   // Shipping
@@ -163,18 +163,18 @@ const faqData: FAQItem[] = [
   },
   {
     category: "General",
-    question: "Does Linen Saree take bulk orders?",
+    question: "Does Handloomer take bulk orders?",
     answer: "Yes, we do. Kindly email us the details of your requirements at support@handloomer.com or connect with us at +91 92641-51111"
   },
   {
     category: "General",
-    question: "How do I send linensaree.com products as a gift to dear ones?",
+    question: "How do I send Handloomer products as a gift to dear ones?",
     answer: "You may contact us at +91 92641-51111 and give us details. We shall send the product with customized details as provided by you."
   },
   {
     category: "General",
     question: "What if I still have queries?",
-    answer: "You may certainly read our policies on the website or reach out to us through… Call or WhatsApp: +91 92641-51111, Email id: support@handloomer.com, Facebook Messenger: https://www.facebook.com/Linensareecom-260110851539434, Instagram: https://www.instagram.com/_linensaree/. Our team will be happy to assist. Happy shopping with www.linensaree.com"
+    answer: "You may certainly read our policies on the website or reach out to us through… Call or WhatsApp: +91 92641-51111, Email id: support@handloomer.com, Facebook Messenger: https://www.facebook.com/Linensareecom-260110851539434, Instagram: https://www.instagram.com/_linensaree/. Our team will be happy to assist. Happy shopping with Handloomer!"
   }
 ]
 

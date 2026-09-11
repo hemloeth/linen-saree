@@ -46,7 +46,7 @@ export default function BlogPage() {
             // Strip HTML for excerpt
             excerpt: b.description ? b.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...' : 'Read our latest blog post...',
             content: b.description,
-            author: "Linen Saree Team",
+            author: "Handloomer Team",
             date: b.createdAt || new Date().toISOString(),
             category: "Fashion", // Default category since it's not in the backend schema
             image: b.image || "/images/placeholder.jpg",

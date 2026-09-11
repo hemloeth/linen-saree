@@ -1,5 +1,5 @@
 /**
- * Centralized API Client for Linen Saree E-Commerce
+ * Centralized API Client for Handloomer E-Commerce
  * 
  * Production-level API client with:
  * - Single source of truth for API base URL

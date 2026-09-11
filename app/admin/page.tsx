@@ -204,7 +204,7 @@ export default function AdminAuthPage() {
                     <div className="text-center space-y-3 mb-8">
                         <div className="space-y-1">
                             <h1 className="text-[11px] uppercase tracking-[0.35em] font-medium text-[#8F8C84]">
-                                Linen Saree
+                                Handloomer
                             </h1>
                             <h2 className="text-2xl font-serif font-light text-[#1A1A1A] tracking-normal">
                                 Administrative Gate

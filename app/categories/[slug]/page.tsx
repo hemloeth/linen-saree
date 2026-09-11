@@ -430,12 +430,12 @@ export async function generateMetadata({ params }: CategoryPageProps) {
 
   if (!category) {
     return {
-      title: "Collection Not Found | Linen Sarees"
+      title: "Collection Not Found | Handloomer"
     }
   }
 
   return {
-    title: `${category.name} Sarees | Linen Sarees`,
+    title: `${category.name} Sarees | Handloomer`,
     description: category.description
   }
 }

@@ -9,7 +9,7 @@ import { Suspense } from "react"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Special Offers & Sale - Linen Sarees | Exclusive Deals",
+  title: "Special Offers & Sale - Handloomer | Exclusive Deals",
   description: "Discover amazing deals and special offers on premium linen and silk sarees. Limited time only!",
 }
 

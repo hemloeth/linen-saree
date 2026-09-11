@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 
 export const metadata: Metadata = {
-  title: "Returns & Exchanges - Linen Sarees",
+  title: "Returns & Exchanges - Handloomer",
   description: "Comprehensive returns and exchanges policy. Learn about our return process, exchange options, eligibility, and refund information.",
 }
 
@@ -117,7 +117,7 @@ export default function ReturnsPage() {
                   Our refund and returns policy lasts 7 days from your purchase date. If 7 days have passed since your purchase, we cannot offer you a full refund or exchange.
                 </p>
                 <p>
-                  If you are not satisfied with your www.linensaree.com online purchase, you may return the goods within 7 working days of the original purchase date.
+                  If you are not satisfied with your Handloomer online purchase, you may return the goods within 7 working days of the original purchase date.
                 </p>
               </div>
             </div>
