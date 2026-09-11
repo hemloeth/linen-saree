@@ -44,11 +44,11 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
                     }
                 } catch (colErr) {
                     const fallbacks: Record<string, any> = {
-                        'new-arrivals': { key: 'new-arrivals', name: 'New Arrivals', title1: 'Just', title2: 'Dropped', description: 'Explore our latest additions.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] },
-                        'festive': { key: 'festive', name: 'Festive Collection', title1: 'Festive', title2: 'Special', description: 'Perfect sarees for your celebrations.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] },
-                        'big-sale': { key: 'big-sale', name: 'Big Sale', title1: 'Clearance', title2: 'Sale', description: 'Incredible discounts on premium sarees.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] },
-                        'celebrity': { key: 'celebrity', name: 'Celebrity Looks', title1: 'Celebrity', title2: 'Style', description: 'Sarees inspired by the stars.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] },
-                        'sale': { key: 'sale', name: 'Sale', title1: 'On', title2: 'Sale', description: 'Discounted items.', image: 'https://res.cloudinary.com/dsvy1hd8m/image/upload/v1784523145/images/zkn6uhgxtafdcnmwt3ea.webp', stats: [] }
+                        'new-arrivals': { key: 'new-arrivals', name: 'New Arrivals', title1: 'Just', title2: 'Dropped', description: 'Explore our latest additions.', image: '/images/celebrity-look.jpg', stats: [] },
+                        'festive': { key: 'festive', name: 'Festive Collection', title1: 'Festive', title2: 'Special', description: 'Perfect sarees for your celebrations.', image: '/images/bridal-saree.jpg', stats: [] },
+                        'big-sale': { key: 'big-sale', name: 'Big Sale', title1: 'Clearance', title2: 'Sale', description: 'Incredible discounts on premium sarees.', image: '/images/designer-saree.jpg', stats: [] },
+                        'celebrity': { key: 'celebrity', name: 'Celebrity Looks', title1: 'Celebrity', title2: 'Style', description: 'Sarees inspired by the stars.', image: '/images/celebrity-collection.png', stats: [] },
+                        'sale': { key: 'sale', name: 'Sale', title1: 'On', title2: 'Sale', description: 'Discounted items.', image: '/images/designer-saree.jpg', stats: [] }
                     }
                     if (fallbacks[key]) {
                         setCollection(fallbacks[key])
@@ -66,8 +66,8 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
                     if (key !== 'new-arrivals') {
                         filtered = filtered.filter((p: any) =>
                             p.productCollection === key ||
-                            (key === 'festive' && p.isFestive) ||
-                            (key === 'big-sale' && p.isOnSale)
+                            (key === 'festive' && (p.isFestive || p.productCollection === 'festive')) ||
+                            ((key === 'big-sale' || key === 'sale') && (p.isOnSale || p.productCollection === 'big-sale' || p.productCollection === 'sale' || (p.regularPrice && p.regularPrice > p.price)))
                         )
                     }
                     

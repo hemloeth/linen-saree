@@ -203,8 +203,8 @@ export function VideoSection() {
   // Filter products that have videos
   const videoProducts = mappedProducts.filter(p => p.videos && p.videos.length > 0)
 
-  // Use fallback if no real videos found
-  const productsToShow = videoProducts.length > 0 ? videoProducts : []
+  // Show 12 curated videos (3 rows of 4) on the frontend
+  const productsToShow = videoProducts.slice(0, 12)
 
   if (productsToShow.length === 0) {
     return null // Gracefully hide the section if no videos exist
@@ -228,8 +228,8 @@ export function VideoSection() {
           </p>
         </div>
 
-        {/* Video Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+        {/* Video Grid - 4 columns on desktop for exactly 3 rows of 4 videos */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {productsToShow.map((product) => (
             <VideoCard
               key={product.id}

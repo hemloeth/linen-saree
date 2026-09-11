@@ -262,14 +262,14 @@ function VideoCollectionContent() {
     setCurrentHeroVideo((prev) => (prev + 1) % heroVideos.length)
   }
 
-  // Auto-rotate hero videos every 5 seconds using a mixed selection
+  // Auto-rotate disabled to prevent site lag; manual navigation remains active
+
+  const [visibleCount, setVisibleCount] = useState(12)
+
+  // Reset visible count when filter changes
   useEffect(() => {
-    if (heroVideos.length <= 1) return
-    const interval = setInterval(() => {
-      setCurrentHeroVideo((prev) => (prev + 1) % heroVideos.length)
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [heroVideos.length])
+    setVisibleCount(12)
+  }, [selectedCategory])
 
   return (
     <>
@@ -378,7 +378,7 @@ function VideoCollectionContent() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
-              {filteredVideos.map((card, index) => (
+              {filteredVideos.slice(0, visibleCount).map((card, index) => (
                 <VideoCard
                   key={`${card.productId}-${index}`}
                   title={card.title}
@@ -393,6 +393,17 @@ function VideoCollectionContent() {
                 />
               ))}
             </div>
+
+            {filteredVideos.length > visibleCount && (
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + 12)}
+                  className="px-8 py-3 bg-primary text-primary-foreground font-medium rounded-none hover:bg-primary/90 transition-colors cursor-pointer shadow-md"
+                >
+                  Load More Videos ({filteredVideos.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
 
             {filteredVideos.length === 0 && (
               <div className="text-center py-16">

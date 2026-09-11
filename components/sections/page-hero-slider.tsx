@@ -31,24 +31,13 @@ export function PageHeroSlider({
   breadcrumbs
 }: PageHeroSliderProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [fallbackImages, setFallbackImages] = useState<Record<string, string>>({})
 
-  // Auto-scroll functionality
-  useEffect(() => {
-    if (!isAutoPlaying || slides.length <= 1) return
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, autoPlayInterval)
-
-    return () => clearInterval(interval)
-  }, [isAutoPlaying, slides.length, autoPlayInterval])
+  // Auto-scroll disabled to prevent website lagging as requested
+  // Manual navigation via buttons/indicators remains fully active
 
   const goToSlide = (index: number) => {
     setCurrentSlide(index)
-    setIsAutoPlaying(false)
-    // Resume auto-play after 8 seconds of manual interaction
-    setTimeout(() => setIsAutoPlaying(true), 8000)
   }
 
   const goToPrevious = () => {
@@ -79,24 +68,35 @@ export function PageHeroSlider({
     <section className="relative overflow-hidden" style={{ height, minHeight: "300px" }}>
       {/* Background Images with Smooth Transition */}
       <div className="absolute inset-0">
-        {slides.map((slide, index) => (
-          <div
-            key={slide?.id || index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === activeSlideIndex ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            {slide?.image && (
-              <Image
-                src={slide.image}
-                alt={slide?.title || "Hero banner"}
-                fill
-                className="object-cover object-top"
-                priority={index === 0}
-              />
-            )}
-          </div>
-        ))}
+        {slides.map((slide, index) => {
+          const slideKey = slide?.id || String(index);
+          const imgSrc = fallbackImages[slideKey] || slide?.image || "/images/celebrity-look.jpg";
+
+          return (
+            <div
+              key={slideKey}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                index === activeSlideIndex ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {imgSrc && (
+                <Image
+                  src={imgSrc}
+                  alt={slide?.title || "Hero banner"}
+                  fill
+                  className="object-cover object-top"
+                  priority={index === 0}
+                  onError={() => {
+                    setFallbackImages(prev => ({
+                      ...prev,
+                      [slideKey]: "/images/celebrity-look.jpg"
+                    }))
+                  }}
+                />
+              )}
+            </div>
+          )
+        })}
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/40" />
       </div>

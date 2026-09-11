@@ -21,7 +21,6 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel"
-import Autoplay from "embla-carousel-autoplay"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 interface ProductCardProps {
   product: Product
@@ -38,12 +37,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    if (!api) return
-      // Stop autoplay initially so it only runs on hover
-      ; (api.plugins() as any).autoplay.stop()
-  }, [api])
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
   const isWishlisted = mounted ? isInWishlist(product.id) : false
@@ -80,18 +73,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   return (
     <div className={cn("group relative w-full max-w-[280px] mx-auto", className)}>
       <div className="relative w-full mb-4">
-        <div
-          className="relative overflow-hidden rounded-sm"
-          onMouseEnter={() => {
-            if (!api) return
-              ; (api.plugins() as any).autoplay.play()
-          }}
-          onMouseLeave={() => {
-            if (!api) return
-              ; (api.plugins() as any).autoplay.stop()
-            api.scrollTo(0)
-          }}
-        >
+        <div className="relative overflow-hidden rounded-sm">
           {isPending && (
             <div className="absolute inset-0 z-[100] flex items-center justify-center bg-background/50 backdrop-blur-sm">
               <LoadingSpinner size="md" />
@@ -101,9 +83,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
             <Carousel
               className="w-full h-full group/carousel"
               setApi={setApi}
-              plugins={[
-                Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: false }) as any
-              ]}
               opts={{ loop: true }}
             >
               <CarouselContent className="-ml-0 h-full">

@@ -38,21 +38,9 @@ export function Hero() {
     fetchHero()
   }, [])
 
-  // Auto-scroll functionality
-  useEffect(() => {
-    if (!isAutoPlaying || slides.length <= 1) return
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length)
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [isAutoPlaying, slides.length])
-
+  // Auto-scroll disabled to eliminate lag; manual arrow/dot controls active
   const goToSlide = (index: number) => {
     setCurrentSlide(index)
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 8000)
   }
 
   const goToPrevious = () => {

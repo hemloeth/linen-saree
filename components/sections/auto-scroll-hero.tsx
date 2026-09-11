@@ -5,7 +5,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, ChevronLeft, ChevronRight, MoveDown } from "lucide-react"
 import useEmblaCarousel from "embla-carousel-react"
-import Autoplay from "embla-carousel-autoplay"
 
 interface SareeSlide {
   _id?: string
@@ -46,9 +45,8 @@ const fallbackSlides: SareeSlide[] = [
 export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
   const slides = initialSlides.length > 0 ? initialSlides : fallbackSlides;
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 }, [
-    Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true }) as any
-  ])
+  // Auto-play disabled to eliminate lag; manual swipe and arrows remain functional
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 })
 
   const [selectedIndex, setSelectedIndex] = useState(0)
 
