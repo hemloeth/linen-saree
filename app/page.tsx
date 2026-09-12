@@ -21,13 +21,23 @@ export default async function Home() {
     console.error("Failed to fetch hero slides on server:", error);
   }
 
+  let categories = [];
+  try {
+    const catData = await apiServerGet('/api/category/allcategory', { revalidate: 60 });
+    if (catData && catData.categories) {
+      categories = catData.categories;
+    }
+  } catch (error) {
+    console.error("Failed to fetch categories on server:", error);
+  }
+
   return (
     <main className="min-h-screen">
       <Header />
       <AutoScrollHero initialSlides={heroSlides} />
       <div>
         <NewCollections />
-        <CategoryGrid />
+        <CategoryGrid initialCategories={categories} />
         <CollectionBanners />
         <VideoSection />
         <FeaturedBanner />

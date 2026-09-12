@@ -5,6 +5,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Sparkles } from "lucide-react"
 
+import { apiGet } from "@/lib/api"
+
 interface BackendCategory {
   _id: string
   name: string
@@ -19,14 +21,29 @@ interface Category {
   image: string
 }
 
-export function CategoryGrid() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+interface CategoryGridProps {
+  initialCategories?: BackendCategory[]
+}
+
+export function CategoryGrid({ initialCategories }: CategoryGridProps) {
+  const [categories, setCategories] = useState<Category[]>(() => {
+    if (initialCategories && initialCategories.length > 0) {
+      return initialCategories.map((c: BackendCategory) => ({
+        slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+        name: c.name,
+        description: c.sortDesc,
+        image: c.image,
+      }))
+    }
+    return []
+  })
+  const [loading, setLoading] = useState(!initialCategories || initialCategories.length === 0)
 
   useEffect(() => {
+    if (categories.length > 0) return
+
     const fetchCategories = async () => {
       try {
-        const { apiGet } = await import("@/lib/api")
         const data = await apiGet('/api/category/allcategory')
         if (data.categories) {
           const mapped = data.categories.map((c: BackendCategory) => ({
@@ -45,7 +62,7 @@ export function CategoryGrid() {
     }
 
     fetchCategories()
-  }, [])
+  }, [categories.length])
 
   return (
     <section className="pt-16 sm:pt-20 pb-8 sm:pb-10 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
@@ -83,6 +100,8 @@ export function CategoryGrid() {
                     src={category.image || "/placeholder.svg"}
                     alt={category.name}
                     fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 350px"
+                    priority
                     className="object-cover object-top transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
                   />
 

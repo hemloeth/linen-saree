@@ -97,6 +97,8 @@ export default function AllCategoriesPage() {
                                                 src={resolveMediaUrl(category.image)}
                                                 alt={category.name}
                                                 fill
+                                                sizes="(max-width: 768px) 100vw, 33vw"
+                                                priority={index < 3}
                                                 className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
                                             />
                                             {/* Overlay */}
