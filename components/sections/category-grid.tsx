@@ -48,7 +48,7 @@ export function CategoryGrid() {
   }, [])
 
   return (
-    <section className="py-24 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
+    <section className="pt-16 sm:pt-20 pb-8 sm:pb-10 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
       <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
@@ -122,7 +122,7 @@ export function CategoryGrid() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-12 sm:mt-16">
+        <div className="text-center mt-8 sm:mt-10">
           <Link
             href="/categories"
             className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 rounded-none font-medium tracking-wide text-sm sm:text-base"

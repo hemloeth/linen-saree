@@ -202,7 +202,7 @@ export default function FestiveSalePage() {
                                         src={previewImage}
                                         alt="Banner Preview"
                                         fill
-                                        className="object-cover"
+                                        className="object-cover object-top"
                                     />
                                 ) : (
                                     <div className="flex h-full flex-col items-center justify-center space-y-2 text-muted-foreground">

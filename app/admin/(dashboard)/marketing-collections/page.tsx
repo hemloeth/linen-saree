@@ -199,7 +199,7 @@ function CollectionEditor({ collection, onSave, isLoading }: { collection: any, 
                     <CardContent className="space-y-4">
                         <div className="relative aspect-video w-full overflow-hidden rounded-lg border-2 border-dashed">
                             {previewImage ? (
-                                <Image src={previewImage} alt="Preview" fill className="object-cover" />
+                                <Image src={previewImage} alt="Preview" fill className="object-cover object-top" />
                             ) : (
                                 <div className="flex h-full items-center justify-center text-muted-foreground">No image</div>
                             )}

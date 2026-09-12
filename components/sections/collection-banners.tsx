@@ -47,7 +47,7 @@ export function CollectionBanners() {
   }, [])
 
   return (
-    <div className="space-y-12 md:space-y-20 py-16 bg-background">
+    <div className="space-y-12 md:space-y-20 pt-0 pb-16 md:pb-20 bg-background">
       {/* 1. Festival Collection Banner (Floating Minimalist) */}
       <div className="space-y-10">
         <section className="relative overflow-hidden group mx-0 lg:mx-0">
@@ -61,7 +61,7 @@ export function CollectionBanners() {
                 src={festiveData?.image || "/images/bridal-saree.jpg"}
                 alt="Festival Collection"
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-[6000ms] ease-out"
+                className="object-cover object-top origin-top group-hover:scale-105 transition-transform duration-[6000ms] ease-out"
                 priority
               />
             </div>
@@ -158,7 +158,7 @@ export function CollectionBanners() {
                 src={saleData?.image || "/images/designer-saree.jpg"}
                 alt="Special Offers"
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-[6000ms] ease-out"
+                className="object-cover object-top origin-top group-hover:scale-105 transition-transform duration-[6000ms] ease-out"
               />
             </div>
 
