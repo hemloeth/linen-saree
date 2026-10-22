@@ -9,26 +9,21 @@ import { useCart } from "@/context/cart-context"
 import { Button } from "@/components/ui/button"
 import { TrustBadgesCompact } from "@/components/common/trust-badges"
 import { cn } from "@/lib/utils"
-import { useLenis } from "@/components/common/smooth-scroll"
 
 export function CartSidebar() {
   const { items, removeFromCart, updateQuantity, totalPrice, isCartOpen, setIsCartOpen, isHydrated } = useCart()
-  const lenis = useLenis()
 
-  // Lock body scroll & stop Lenis smooth scroll when cart is open
+  // Lock body scroll when cart is open
   useEffect(() => {
     if (isCartOpen) {
       document.body.style.overflow = 'hidden'
-      lenis.stop()
     } else {
       document.body.style.overflow = ''
-      lenis.start()
     }
     return () => {
       document.body.style.overflow = ''
-      lenis.start()
     }
-  }, [isCartOpen, lenis])
+  }, [isCartOpen])
 
   // Don't render anything until hydrated to prevent hydration mismatch
   if (!isHydrated) {

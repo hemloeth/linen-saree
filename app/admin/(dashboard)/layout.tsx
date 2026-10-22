@@ -113,13 +113,17 @@ export default function AdminLayout({
         <CategoryProvider>
             <ProductProvider>
                 <BlogProvider>
-                    <div className="flex min-h-screen bg-muted/40" data-lenis-prevent>
+                    <div className="min-h-screen bg-muted/40" data-lenis-prevent>
                         <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                        <div className="flex flex-1 flex-col min-w-0 lg:pl-52">
-                            <div className="sticky top-0 z-30 w-full">
-                                <AdminHeader onMenuClick={() => setIsSidebarOpen(true)} />
-                            </div>
-                            <main className="flex-1 p-4 md:p-6 w-full">
+                        {/* Full-width top bar, fixed to the viewport top from left to right above the rail */}
+                        <div className="fixed top-0 inset-x-0 z-50 h-16 bg-background shadow-[0_1px_0_0_rgba(0,0,0,0.06)]">
+                            <AdminHeader onMenuClick={() => setIsSidebarOpen(true)} />
+                        </div>
+                        {/* Spacer keeping the fixed bar's 64px height reserved in flow so content starts below it */}
+                        <div className="h-16 w-full pointer-events-none" aria-hidden="true" />
+                        {/* Content reserves ONLY the collapsed rail width (56px); the expanded panel overlays it */}
+                        <div className="flex flex-col min-w-0 lg:pl-14">
+                            <main className="flex-1 px-3 py-4 md:px-4 w-full">
                                 <PageTransition>
                                     {children}
                                 </PageTransition>

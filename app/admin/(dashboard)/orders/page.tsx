@@ -235,7 +235,7 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      <div className="rounded-md border bg-card">
+      <div className="w-full">
         <Table>
           <TableHeader>
             <TableRow>
@@ -260,7 +260,7 @@ export default function AdminOrdersPage() {
             ) : (
               filteredOrders.map((order) => (
                 <TableRow key={order._id}>
-                  <TableCell className="font-medium font-mono text-xs">{order.orderId}</TableCell>
+                  <TableCell className="font-medium font-mono text-xs whitespace-nowrap">{order.orderId}</TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium">{getCustomerName(order)}</div>

@@ -9,7 +9,6 @@ import { CartSidebar } from "@/components/cart/cart-sidebar"
 import { CartToast } from "@/components/cart/cart-toast"
 import WhatsAppFloat from "@/components/common/whatsapp-float"
 import { ClientOnly } from "@/components/common/client-only"
-import SmoothScroll from "@/components/common/smooth-scroll"
 import { ProductProvider } from "@/context/product-context"
 import { fetchProductsFromDB } from "@/lib/products"
 import { Toaster } from "sonner"
@@ -61,22 +60,20 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://pub-f54fad280ec34c659747cdd738e55b2d.r2.dev" />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <SmoothScroll>
-          <AuthProvider>
-            <ProductProvider initialProducts={initialProducts}>
-              <CartProvider>
-                <WishlistProvider>
-                  {children}
-                  <ClientOnly>
-                    <CartToast />
-                    <CartSidebar />
-                    <WhatsAppFloat />
-                  </ClientOnly>
-                </WishlistProvider>
-              </CartProvider>
-            </ProductProvider>
-          </AuthProvider>
-        </SmoothScroll>
+        <AuthProvider>
+          <ProductProvider initialProducts={initialProducts}>
+            <CartProvider>
+              <WishlistProvider>
+                {children}
+                <ClientOnly>
+                  <CartToast />
+                  <CartSidebar />
+                  <WhatsAppFloat />
+                </ClientOnly>
+              </WishlistProvider>
+            </CartProvider>
+          </ProductProvider>
+        </AuthProvider>
         <Analytics />
         <Toaster position="top-center" richColors />
       </body>
