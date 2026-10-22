@@ -202,26 +202,26 @@ export function Header() {
               <Image
                 src="/logo.jpg"
                 alt="The Handloomer"
-                width={80}
-                height={40}
-                className="h-8 lg:h-10 w-auto object-contain mix-blend-multiply"
+                width={160}
+                height={80}
+                className="h-11 lg:h-14 w-auto object-contain invert mix-blend-multiply"
                 priority
               />
             </Link>
 
             {/* Desktop Navigation Left */}
-            <nav className="hidden lg:flex items-center gap-4 xl:gap-6 ml-8">
+            <nav className="hidden lg:flex flex-nowrap items-center gap-4 xl:gap-6 ml-4 2xl:ml-8">
               {navLinks.slice(0, 4).map((link) => (
                 <div
                   key={link.name}
-                  className="relative group"
+                  className="relative group shrink-0"
                   onMouseEnter={() => ((link.submenu?.length ?? 0) > 0 || link.name === "Collections" || link.name === "Categories") && setActiveSubmenu(link.name)}
                   onMouseLeave={() => setActiveSubmenu(null)}
                 >
                   <Link
                     href={link.href}
                     className={cn(
-                      "text-sm font-sans tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1",
+                      "text-xs font-sans tracking-wide uppercase whitespace-nowrap text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1",
                       link.name === "Best Sellers" && "text-primary hover:text-primary/80 font-medium"
                     )}
                   >
@@ -313,13 +313,13 @@ export function Header() {
           {/* Right Side - Navigation and Icons */}
           <div className="flex items-center gap-1 sm:gap-4 relative z-20">
             {/* Desktop Navigation Right */}
-            <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
+            <nav className="hidden lg:flex flex-nowrap items-center gap-4 xl:gap-6">
               {navLinks.slice(4).map((link) => (
                 <Link
                   key={link.name}
                   href={link.href}
                   className={cn(
-                    "text-sm font-sans tracking-wide uppercase text-foreground/80 hover:text-foreground transition-colors",
+                    "text-xs font-sans tracking-wide uppercase whitespace-nowrap text-foreground/80 hover:text-foreground transition-colors",
                     link.name === "Sale" && "text-destructive hover:text-destructive/80"
                   )}
                 >

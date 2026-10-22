@@ -27,13 +27,24 @@ import { apiGet } from "@/lib/api"
 interface AdminOrder {
   _id: string
   orderId: string
-  user?: { name: string; email: string }
+  user?: { name: string; email: string; phone?: string }
+  shippingAddress?: {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    address: string
+    landmark?: string
+    city: string
+    state: string
+    pincode: string
+  }
   createdAt: string
-  pricing: { total: number }
+  pricing: { subtotal?: number; shipping?: number; discount?: number; couponCode?: string; total: number }
   status: string
   items: { name: string; quantity: number; sku?: string; price: number; image?: string }[]
-  shiprocket?: { courierName?: string; awbCode?: string }
-  payment?: { method: string; status: string }
+  shiprocket?: { courierName?: string; awbCode?: string; trackingUrl?: string }
+  payment?: { method: string; status: string; razorpayPaymentId?: string }
 }
 
 export default function AdminOrdersPage() {
@@ -42,6 +53,36 @@ export default function AdminOrdersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
   const [previewItem, setPreviewItem] = useState<{ name: string; quantity: number; sku?: string; price: number; image?: string } | null>(null)
+  const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null)
+
+  // Resolve the real customer name from the shipping address (falls back to account user)
+  const getCustomerName = (order: AdminOrder) => {
+    const sa = order.shippingAddress
+    if (sa) {
+      const full = `${sa.firstName || ""} ${sa.lastName || ""}`.trim()
+      if (full) return full
+    }
+    return order.user?.name || "—"
+  }
+
+  // Payment label derived from BOTH method and status (fixes "fake prepaid")
+  const getPaymentLabel = (order: AdminOrder) => {
+    const method = order.payment?.method
+    const status = order.payment?.status
+    if (method === "cod") {
+      return { main: "COD", sub: status === "paid" ? "Collected" : "To collect", color: "text-foreground" }
+    }
+    if (status === "paid") {
+      return { main: "Prepaid", sub: `${method ? method.toUpperCase() : ""} · Paid`, color: "text-green-600" }
+    }
+    if (status === "failed") {
+      return { main: "Payment Failed", sub: method ? `(${method})` : "", color: "text-destructive" }
+    }
+    if (status === "refunded") {
+      return { main: "Refunded", sub: method ? `(${method})` : "", color: "text-muted-foreground" }
+    }
+    return { main: "Payment Pending", sub: method ? `(${method})` : "", color: "text-amber-600" }
+  }
 
   // SKU Search States
   const [skuQuery, setSkuQuery] = useState("")
@@ -222,8 +263,18 @@ export default function AdminOrdersPage() {
                   <TableCell className="font-medium font-mono text-xs">{order.orderId}</TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{order.user?.name || "—"}</div>
-                      <div className="text-xs text-muted-foreground">{order.user?.email || ""}</div>
+                      <div className="font-medium">{getCustomerName(order)}</div>
+                      {order.shippingAddress?.phone && (
+                        <div className="text-xs text-muted-foreground">{order.shippingAddress.phone}</div>
+                      )}
+                      <div className="text-xs text-muted-foreground">
+                        {order.shippingAddress?.email || order.user?.email || ""}
+                      </div>
+                      {order.shippingAddress && (
+                        <div className="text-[11px] text-muted-foreground/80 truncate max-w-[180px]" title={`${order.shippingAddress.address}${order.shippingAddress.city ? ", " + order.shippingAddress.city : ""}`}>
+                          {[order.shippingAddress.address, order.shippingAddress.city].filter(Boolean).join(", ")}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>{new Date(order.createdAt).toLocaleDateString('en-IN')}</TableCell>
@@ -254,16 +305,17 @@ export default function AdminOrdersPage() {
                   </TableCell>
                   <TableCell>₹{order.pricing.total.toLocaleString('en-IN')}</TableCell>
                   <TableCell>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">
-                        {order.payment?.method === "cod" ? "COD" : "Prepaid"}
-                      </span>
-                      {order.payment?.method && order.payment.method !== "cod" && (
-                        <span className="text-xs text-muted-foreground capitalize">
-                          ({order.payment.method})
-                        </span>
-                      )}
-                    </div>
+                    {(() => {
+                      const label = getPaymentLabel(order)
+                      return (
+                        <div className="flex flex-col">
+                          <span className={`text-sm font-medium ${label.color}`}>{label.main}</span>
+                          {label.sub && (
+                            <span className="text-xs text-muted-foreground">{label.sub}</span>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </TableCell>
                   <TableCell className="text-xs">{order.shiprocket?.courierName || "—"}</TableCell>
                   <TableCell>
@@ -280,6 +332,9 @@ export default function AdminOrdersPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setViewOrder(order)}>
+                          View Details
+                        </DropdownMenuItem>
                         <DropdownMenuLabel>Update Status</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => updateStatus(order._id, "confirmed")}>
                           Mark Confirmed
@@ -325,6 +380,156 @@ export default function AdminOrdersPage() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Order Detail Modal */}
+      {viewOrder && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setViewOrder(null)}
+        >
+          <div
+            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card rounded-lg shadow-2xl border border-border"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-3 right-3 bg-black/50 text-white rounded-full p-2 hover:bg-black/80 transition-colors z-10 cursor-pointer"
+              onClick={() => setViewOrder(null)}
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="p-6 md:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-2xl font-serif font-bold text-primary">{viewOrder.orderId}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(viewOrder.createdAt).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <Badge variant={getStatusColor(viewOrder.status) as "default" | "secondary" | "destructive" | "outline"}>
+                  {formatStatus(viewOrder.status)}
+                </Badge>
+              </div>
+
+              {/* Customer + Shipping */}
+              <div className="grid md:grid-cols-2 gap-6 border-y py-5">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Customer</h3>
+                  <div className="text-sm font-medium">{getCustomerName(viewOrder)}</div>
+                  {viewOrder.shippingAddress?.phone && (
+                    <div className="text-sm">{viewOrder.shippingAddress.phone}</div>
+                  )}
+                  <div className="text-sm text-muted-foreground">
+                    {viewOrder.shippingAddress?.email || viewOrder.user?.email || ""}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Shipping Address</h3>
+                  {viewOrder.shippingAddress ? (
+                    <address className="not-italic text-sm text-foreground leading-relaxed">
+                      {[viewOrder.shippingAddress.address, viewOrder.shippingAddress.landmark]
+                        .filter(Boolean).join(", ") && (
+                        <>{[viewOrder.shippingAddress.address, viewOrder.shippingAddress.landmark].filter(Boolean).join(", ")}<br /></>
+                      )}
+                      {[viewOrder.shippingAddress.city, viewOrder.shippingAddress.state]
+                        .filter(Boolean).join(", ")} {viewOrder.shippingAddress.pincode}
+                    </address>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No address on file</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Payment + Courier */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Payment</h3>
+                  {(() => {
+                    const label = getPaymentLabel(viewOrder)
+                    return (
+                      <div className="text-sm">
+                        <span className={`font-medium ${label.color}`}>{label.main}</span>
+                        {label.sub && <span className="text-muted-foreground"> · {label.sub}</span>}
+                        {viewOrder.payment?.razorpayPaymentId && (
+                          <div className="text-xs text-muted-foreground mt-1 font-mono break-all">
+                            Pay ID: {viewOrder.payment.razorpayPaymentId}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Courier</h3>
+                  <div className="text-sm">
+                    {viewOrder.shiprocket?.courierName || "—"}
+                    {viewOrder.shiprocket?.awbCode && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        AWB: {viewOrder.shiprocket.awbCode}
+                        {viewOrder.shiprocket.trackingUrl && (
+                          <>
+                            {" "}
+                            <a href={viewOrder.shiprocket.trackingUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-0.5">
+                              Track <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Items */}
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Items</h3>
+                <div className="space-y-2">
+                  {viewOrder.items.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 border-b border-border/50 pb-2 last:border-0">
+                      {item.image && (
+                        <div className="w-12 h-12 flex-shrink-0 rounded bg-muted overflow-hidden">
+                          <img src={resolveMediaUrl(item.image)} alt={item.name} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{item.quantity}x {item.name}</div>
+                        {item.sku && <div className="text-[11px] text-muted-foreground">SKU: {item.sku}</div>}
+                      </div>
+                      <div className="text-sm">₹{(item.price * item.quantity).toLocaleString('en-IN')}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pricing */}
+              <div className="border-t pt-4 space-y-1.5 text-sm">
+                {typeof viewOrder.pricing.subtotal === "number" && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span>₹{viewOrder.pricing.subtotal.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                {typeof viewOrder.pricing.shipping === "number" && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping</span>
+                    <span>{viewOrder.pricing.shipping === 0 ? "Free" : `₹${viewOrder.pricing.shipping.toLocaleString('en-IN')}`}</span>
+                  </div>
+                )}
+                {typeof viewOrder.pricing.discount === "number" && viewOrder.pricing.discount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Discount {viewOrder.pricing.couponCode ? `(${viewOrder.pricing.couponCode})` : ""}</span>
+                    <span className="text-primary">-₹{viewOrder.pricing.discount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-semibold text-base pt-1.5 border-t">
+                  <span>Total</span>
+                  <span>₹{viewOrder.pricing.total.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
