@@ -90,11 +90,14 @@ function mapProductFromDB(dbProduct: any): Product {
   };
 }
 
-// Fetch all products from the backend and map them
+// Fetch the FULL catalog from the backend and map it.
+// No `limit` is sent, so the backend returns every product (its `limit=undefined`
+// path disables pagination). This is the single source of truth that seeds the
+// client context for SEO-safe rendering on all public pages.
 export async function fetchProductsFromDB(): Promise<Product[]> {
   try {
     const { apiServerGet } = await import("@/lib/api");
-    const data = await apiServerGet('/api/product/allproducts?limit=100&fullData=true', { revalidate: 60 });
+    const data = await apiServerGet('/api/product/allproducts?fullData=true', { revalidate: 60 });
 
     if (data.success && data.products) {
       return data.products.map(mapProductFromDB);

@@ -94,16 +94,23 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const pathname = usePathname()
+    const isAdminArea = pathname?.startsWith("/admin") ?? false
 
-    // Fetch all products on mount only for admin panel
+    // Data strategy (standard):
+    //  - Public pages already have the FULL catalog from the server (initialProducts),
+    //    fetched once in the root layout with ISR. We do NOT re-fetch or overwrite it,
+    //    so filtering/search/section rendering always see every product (no 20-item cap)
+    //    and there is no refetch on every navigation.
+    //  - The admin panel needs the raw DB shape with live freshness (CRUD), so it fetches once.
+    //  - Fallback: if the server catalog came back empty (e.g. SSR hiccup), fetch client-side
+    //    once so the storefront is never blank.
     useEffect(() => {
+        if (!isAdminArea && ssrProducts.length > 0) return
+
         const fetchProducts = async () => {
             try {
-                // If on admin panel or video-collection page, fetch all products. Otherwise, fetch limited set for preview.
-                const needsAllProducts = pathname?.startsWith('/admin') || pathname?.startsWith('/video-collection')
-                const endpoint = needsAllProducts ? '/api/product/allproducts?limit=0&fullData=true' : '/api/product/allproducts?limit=20'
-                
-                const data = await apiGet(endpoint)
+                // limit=0 disables pagination on the backend -> complete catalog
+                const data = await apiGet('/api/product/allproducts?limit=0&fullData=true')
                 if (data.products) {
                     setProducts(data.products)
                 }
@@ -113,7 +120,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
             }
         }
         fetchProducts()
-    }, [pathname])
+    }, [isAdminArea, ssrProducts.length])
 
     const addProduct = async (formData: FormData): Promise<Product | null> => {
         setLoading(true)
