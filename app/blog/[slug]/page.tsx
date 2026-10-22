@@ -9,6 +9,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useParams } from "next/navigation"
 import { resolveMediaUrl } from "@/lib/media"
+import { API_BASE_URL } from "@/lib/api"
 
 export default function BlogPostPage() {
   const params = useParams()
@@ -21,7 +22,7 @@ export default function BlogPostPage() {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : 'http://127.0.0.1:5000')
+        const apiUrl = API_BASE_URL
         const id = params.slug
 
         // Fetch all blogs since the /:id endpoint might not be deployed yet

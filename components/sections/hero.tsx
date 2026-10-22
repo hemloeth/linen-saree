@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
+import { API_BASE_URL } from "@/lib/api"
 
 interface HeroSlide {
   _id?: string
@@ -101,7 +102,7 @@ export function Hero() {
             }`}
           >
             <Image
-              src={slide.image.startsWith('http') ? slide.image : `http://localhost:5000/${slide.image.replace(/\\/g, '/')}`}
+              src={slide.image.startsWith('http') ? slide.image : `${API_BASE_URL}/${slide.image.replace(/\\/g, '/')}`}
               alt={slide.title}
               fill
               className="object-cover object-top"

@@ -24,6 +24,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { resolveMediaUrl } from "@/lib/media"
+import { API_BASE_URL } from "@/lib/api"
 
 // No hardcoded categories
 
@@ -76,7 +77,7 @@ export default function AddProductPage() {
     useEffect(() => {
         const fetchCollections = async () => {
             try {
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : 'http://127.0.0.1:5000')}/api/marketing-collections`)
+                const res = await fetch(`${API_BASE_URL}/api/marketing-collections`)
                 const data = await res.json().catch(() => null)
                 if (data && data.success) {
                     setDbCollections(data.data)

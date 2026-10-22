@@ -10,7 +10,10 @@
  * - Consistent error handling
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000` : 'http://127.0.0.1:5000'));
+// Dev fallback: the backend runs plain HTTP on :5000, so always use http:// (never
+// window.location.protocol, which can be https:// on tunneled/preview dev servers).
+const DEV_API_PORT = process.env.NEXT_PUBLIC_API_PORT || '5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : (typeof window !== 'undefined' ? `http://${window.location.hostname}:${DEV_API_PORT}` : 'http://127.0.0.1:5000'));
 
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;

@@ -8,6 +8,7 @@ import { Calendar, User, ArrowRight, Search } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { resolveMediaUrl } from "@/lib/media"
+import { API_BASE_URL } from "@/lib/api"
 
 interface BlogPost {
   id: string;
@@ -33,7 +34,7 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'production' ? 'https://sareeghar.com' : 'http://127.0.0.1:5000')
+        const apiUrl = API_BASE_URL
         const response = await fetch(`${apiUrl}/api/blog/allblogs`)
         const data = await response.json()
 
