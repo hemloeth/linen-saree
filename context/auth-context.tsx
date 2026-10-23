@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { apiPost } from "@/lib/api"
+import { apiPost, apiPut } from "@/lib/api"
 
 interface User {
     _id?: string
@@ -18,7 +18,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
     signup: (name: string, email: string, phone: string, password: string) => Promise<{ success: boolean; error?: string }>
     logout: () => void
-    updateProfile: (data: Partial<User>) => void
+    updateProfile: (data: Partial<User>) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -86,8 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("auth_user")
     }
 
-    const updateProfile = (data: Partial<User>) => {
+    const updateProfile = async (data: Partial<User>) => {
         if (!user) return
+
+        // Persist to the server FIRST; only mirror into local state on success.
+        // Throws on failure so the caller can surface the error and keep the
+        // previous values intact.
+        await apiPut('/api/user/profile', data)
 
         const updatedUser = { ...user, ...data }
         setUser(updatedUser)

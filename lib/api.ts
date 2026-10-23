@@ -34,7 +34,11 @@ export class ApiError extends Error {
 
 // Build headers
 function buildHeaders(customHeaders?: Record<string, string>, isFormData = false): Record<string, string> {
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+        // Custom header that a plain cross-origin HTML <form> cannot set. The
+        // backend CSRF guard requires it on every state-changing request.
+        'X-Requested-With': 'XMLHttpRequest',
+    };
 
     if (!isFormData) {
         headers['Content-Type'] = 'application/json';

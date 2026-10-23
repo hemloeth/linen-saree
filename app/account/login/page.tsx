@@ -106,7 +106,7 @@ export default function LoginPage() {
         else if (!/^[6-9]/.test(signupPhone)) errors.phone = "Phone must start with 6, 7, 8, or 9"
 
         if (!signupPassword) errors.password = "Password is required"
-        else if (signupPassword.length < 6) errors.password = "Password must be at least 6 characters"
+        else if (signupPassword.length < 8) errors.password = "Password must be at least 8 characters"
 
         if (signupPassword !== signupConfirmPassword) errors.confirmPassword = "Passwords do not match"
 

@@ -4,9 +4,7 @@ import { useState, useEffect, use } from "react"
 import Link from "next/link"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import { apiGet } from "@/lib/api"
-import { resolveMediaUrl } from "@/lib/media"
 import { ProductCard } from "@/components/products/product-card"
 import Image from "next/image"
 import { motion } from "framer-motion"
@@ -106,35 +104,12 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
         return <div className="min-h-screen flex items-center justify-center">Collection not found.</div>
     }
 
-    const breadcrumbs = [
-        { label: "Home", href: "/" },
-        { label: "Collections", href: "/collections" },
-        { label: collection.name }
-    ]
-
-    const slides = [
-        {
-            id: collection.key,
-            image: resolveMediaUrl(collection.image),
-            title: collection.title1 && collection.title2 
-                ? `${collection.title1} ${collection.title2}`
-                : collection.name,
-            subtitle: collection.description
-        }
-    ]
-
     return (
         <main className="min-h-screen bg-background">
             <Header />
 
-            {/* Premium Collection Hero - Using standard slider for consistency */}
-            <div className="mt-[64px] lg:mt-[80px]">
-                <PageHeroSlider
-                    slides={slides}
-                    height="40vh"
-                    breadcrumbs={breadcrumbs}
-                />
-            </div>
+            {/* Spacer to clear the fixed header using its live measured height */}
+            <div style={{ height: "var(--header-offset, 120px)" }} />
 
             {/* Collections Sub-nav */}
             {key !== 'new-arrivals' && (

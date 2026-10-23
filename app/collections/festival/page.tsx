@@ -1,6 +1,5 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import { CategoryProductsClient } from "../../categories/[slug]/category-products-client"
 import { fetchPaginatedProducts, fetchProductsFromDB } from "@/lib/products"
 import { apiServerGet } from "@/lib/api"
@@ -16,33 +15,6 @@ export const metadata: Metadata = {
 interface FestivalPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
-
-const festivalSlides = [
-  {
-    id: "festival-main",
-    image: "/images/festive-saree.jpg",
-    title: "Festival Collection",
-    subtitle: "Celebrate every moment with our exquisite festive sarees"
-  },
-  {
-    id: "festival-bridal",
-    image: "/images/bridal-saree.jpg",
-    title: "Bridal Elegance",
-    subtitle: "Perfect for weddings and special ceremonies"
-  },
-  {
-    id: "festival-designer",
-    image: "/images/designer-saree.jpg",
-    title: "Designer Festive",
-    subtitle: "Contemporary designs for modern celebrations"
-  }
-]
-
-const breadcrumbs = [
-  { label: "Home", href: "/" },
-  { label: "Collections", href: "/collections" },
-  { label: "Festival Collection" }
-]
 
 export default async function FestivalCollectionPage({ searchParams }: FestivalPageProps) {
   const resolvedSearchParams = await searchParams
@@ -72,10 +44,8 @@ export default async function FestivalCollectionPage({ searchParams }: FestivalP
     <main className="min-h-screen bg-background">
       <Header />
 
-      {/* Hero Banner */}
-      <div className="mt-[96px] lg:mt-[104px]">
-        <PageHeroSlider slides={festivalSlides} height="40vh" breadcrumbs={breadcrumbs} />
-      </div>
+      {/* Spacer to clear the fixed header using its live measured height */}
+      <div style={{ height: "var(--header-offset, 120px)" }} />
 
       {/* Collections Sub-nav */}
       <section className="bg-secondary border-b border-border py-8">

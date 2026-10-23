@@ -1,6 +1,5 @@
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { PageHeroSlider } from "@/components/sections/page-hero-slider"
 import { categories } from "@/lib/products"
 import Link from "next/link"
 import { CategoryProductsClient } from "../categories/[slug]/category-products-client"
@@ -26,23 +25,12 @@ export default async function CollectionsPage({ searchParams }: { searchParams: 
   const colRes = await apiServerGet('/api/marketing-collections')
   const marketingCols = colRes.success ? colRes.data.filter((c: any) => c.key !== 'none') : []
 
-  const heroSlides = [
-    {
-      id: "col-main",
-      image: "/images/celebrity-look.jpg",
-      title: "Our Collections",
-      subtitle: "Discover our curated themes for every special occasion"
-    }
-  ]
-
   return (
     <main className="min-h-screen">
       <Header />
 
-      {/* Hero Banner */}
-      <div className="mt-[96px] lg:mt-[104px]">
-        <PageHeroSlider slides={heroSlides} height="40vh" />
-      </div>
+      {/* Spacer to clear the fixed header using its live measured height */}
+      <div style={{ height: "var(--header-offset, 120px)" }} />
 
       {/* Collections Sub-nav */}
       <section className="bg-secondary border-b border-border py-8">

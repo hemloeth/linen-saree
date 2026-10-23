@@ -17,6 +17,8 @@ export default function AccountPage() {
   const [editName, setEditName] = useState("")
   const [editPhone, setEditPhone] = useState("")
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [saveError, setSaveError] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -47,11 +49,33 @@ export default function AccountPage() {
     )
   }
 
-  const handleSave = () => {
-    updateProfile({ name: editName, phone: editPhone })
-    setIsEditing(false)
-    setSaveSuccess(true)
-    setTimeout(() => setSaveSuccess(false), 3000)
+  const handleSave = async () => {
+    const trimmedName = editName.trim()
+
+    // Client-side guards mirror the server rules (never trust the client alone).
+    if (!trimmedName) {
+      setSaveError("Name cannot be empty")
+      return
+    }
+    if (editPhone && !/^\d{10}$/.test(editPhone)) {
+      setSaveError("Enter a valid 10-digit phone number")
+      return
+    }
+
+    setSaveError("")
+    setIsSaving(true)
+    try {
+      // updateProfile PUTs to the server and only updates local state on success.
+      await updateProfile({ name: trimmedName, phone: editPhone })
+      setEditName(trimmedName)
+      setIsEditing(false)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch (err: any) {
+      setSaveError(err?.message || "Failed to update profile. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleLogout = () => {
@@ -99,6 +123,13 @@ export default function AccountPage() {
                 <Check className="w-4 h-4" />
               </div>
               Profile updated successfully
+            </div>
+          )}
+
+          {/* Error Toast */}
+          {saveError && (
+            <div className="mb-8 p-4 text-sm text-destructive bg-destructive/5 border border-destructive/20 flex items-center gap-3 shadow-sm animate-in fade-in slide-in-from-top-2">
+              {saveError}
             </div>
           )}
 
@@ -159,7 +190,7 @@ export default function AccountPage() {
                   {!isEditing ? (
                     <Button
                       variant="outline"
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => { setIsEditing(true); setSaveError("") }}
                       className="gap-2 px-6"
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -169,16 +200,17 @@ export default function AccountPage() {
                     <div className="flex flex-col sm:flex-row items-center gap-3">
                       <Button
                         variant="ghost"
-                        onClick={() => { setIsEditing(false); setEditName(user.name); setEditPhone(user.phone); }}
+                        onClick={() => { setIsEditing(false); setEditName(user.name); setEditPhone(user.phone); setSaveError(""); }}
                         className="w-full sm:w-auto"
                       >
                         Cancel
                       </Button>
                       <Button
                         onClick={handleSave}
+                        disabled={isSaving}
                         className="gap-2 px-6 w-full sm:w-auto"
                       >
-                        Save
+                        {isSaving ? "Saving..." : "Save"}
                       </Button>
                     </div>
                   )}
