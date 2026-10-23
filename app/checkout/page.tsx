@@ -321,26 +321,23 @@ export default function CheckoutPage() {
         if (formData.paymentMethod !== "cod") {
           if (!data.order.razorpayOrderId) {
             toast.error("Payment ID missing from server. Please check backend keys.");
-            setIsPlacingOrder(false);
-            return;
+            return; // outer finally clears the loading state
           }
           // Online payment flow
           const res = await loadRazorpayScript()
           if (!res) {
             toast.error("Razorpay SDK failed to load. Are you online?")
-            setIsPlacingOrder(false)
-            return
+            return; // outer finally clears the loading state
           }
 
-          const options = {
-            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || data.order.key,
-            amount: data.order.amount,
-            currency: data.order.currency,
-            name: "Handloomer",
-            description: "Order Payment",
-            order_id: data.order.razorpayOrderId,
-            handler: async function (response: any) {
-              setIsPlacingOrder(true) // re-set loading during verification
+          // Await the full modal lifecycle (payment verified OR dismissed/failed).
+          // The outer finally only fires once the modal flow has fully settled, so
+          // the button can never un-block mid-verification.
+          await new Promise<void>((resolve) => {
+            let settled = false
+            const settle = () => { if (!settled) { settled = true; resolve() } }
+
+            const verify = async (response: any): Promise<boolean> => {
               try {
                 const verifyData = await apiPost('/api/order/verify-payment', {
                   razorpay_order_id: response.razorpay_order_id,
@@ -348,43 +345,71 @@ export default function CheckoutPage() {
                   razorpay_signature: response.razorpay_signature,
                   orderId: data.order.orderId
                 })
-
                 if (verifyData.success) {
                   setPlacedOrderId(data.order.orderId)
                   setOrderPlaced(true)
                   clearCart()
-                } else {
-                  toast.error("Payment verification failed.")
+                  return true
                 }
+                toast.error("Payment verification failed.")
+                return false
               } catch (verifyErr: any) {
                 toast.error(verifyErr.message || "Payment verification failed.")
-              } finally {
-                setIsPlacingOrder(false)
-              }
-            },
-            prefill: {
-              name: `${formData.firstName} ${formData.lastName}`,
-              email: formData.email,
-              contact: formData.phone
-            },
-            theme: {
-              color: "#0f172a"
-            },
-            modal: {
-              ondismiss: function() {
-                setIsPlacingOrder(false)
+                return false
               }
             }
-          }
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const paymentObject = new (window as any).Razorpay(options)
-          paymentObject.on('payment.failed', function (response: any) {
-             toast.error(response.error.description || "Payment failed")
-             setIsPlacingOrder(false)
+            const options = {
+              key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || data.order.key,
+              amount: data.order.amount,
+              currency: data.order.currency,
+              name: "Handloomer",
+              description: "Order Payment",
+              order_id: data.order.razorpayOrderId,
+              handler: async function (response: any) {
+                setIsPlacingOrder(true) // re-set loading during verification
+                const ok = await verify(response)
+                if (!ok) {
+                  // Best-effort: let the server record the failed status too
+                  // (idempotent on the backend; safe to call once).
+                  try { await apiPost('/api/order/verify-payment', { orderId: data.order.orderId }) } catch { /* expected 400 */ }
+                }
+                setIsPlacingOrder(false)
+                settle()
+              },
+              prefill: {
+                name: `${formData.firstName} ${formData.lastName}`,
+                email: formData.email,
+                contact: formData.phone
+              },
+              theme: {
+                color: "#0f172a"
+              },
+              modal: {
+                ondismiss: function() {
+                  settle()
+                }
+              }
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const RZP = (window as any).Razorpay
+            if (!RZP) {
+              toast.error("Payment gateway not available. Please refresh and try again.")
+              settle()
+              return
+            }
+            const paymentObject = new RZP(options)
+            paymentObject.on('payment.failed', function (response: any) {
+               toast.error(response.error.description || "Payment failed")
+               // Tell the server so the order isn't left hanging as "pending"
+               // (ignored if the modal's handler already resolved it)
+               apiPost('/api/order/verify-payment', { orderId: data.order.orderId }).catch(() => { /* expected */ })
+               settle()
+            })
+            paymentObject.open()
           })
-          paymentObject.open()
-          return // Keep isPlacingOrder true until modal is dismissed or payment completes
+          return // modal lifecycle fully settled here
         } else {
           // COD flow
           setPlacedOrderId(data.order.orderId)

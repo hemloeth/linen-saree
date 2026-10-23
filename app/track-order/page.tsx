@@ -48,7 +48,13 @@ function TrackOrderContent() {
     } else if (orderParam) {
       setTrackMode('order');
       setOrderId(orderParam);
-      executeTracking({ orderId: orderParam });
+      // Backend requires the billing email with an Order ID now — only auto-run
+      // when both were provided in the URL (e.g. ?orderId=...&email=...).
+      const emailParam = searchParams.get('email');
+      if (emailParam) {
+        setBillingEmail(emailParam);
+        executeTracking({ orderId: orderParam, email: emailParam });
+      }
     }
   }, [searchParams]);
 
@@ -87,9 +93,13 @@ function TrackOrderContent() {
         setError('Please enter your Order ID.');
         return;
       }
+      if (!billingEmail.trim()) {
+        setError('Please enter the billing email used on this order.');
+        return;
+      }
       executeTracking({ 
         orderId: orderId.trim(), 
-        email: billingEmail.trim() || undefined 
+        email: billingEmail.trim()
       });
     }
   };
@@ -262,14 +272,15 @@ function TrackOrderContent() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                    Billing Email (Optional)
+                    Billing Email *
                   </label>
                   <input
                     type="email"
                     value={billingEmail}
                     onChange={(e) => setBillingEmail(e.target.value)}
-                    placeholder="Enter email if available"
+                    placeholder="Email used on this order"
                     className="w-full px-4 py-3.5 bg-background border border-border rounded-xl text-sm font-medium placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-stone-500 transition-all shadow-inner"
+                    required
                   />
                 </div>
               </div>
