@@ -90,18 +90,56 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
         const fetchAll = async () => {
             const res = await apiGet('/api/marketing-collections')
             if (res.success) {
-                setAllCollections(res.data.filter((c: any) => c.key !== 'none'))
+                setAllCollections(res.data.filter((c: any) => c.key !== 'none' && c.key !== 'new-arrivals'))
             }
         }
         fetchAll()
     }, [])
 
     if (isLoading) {
-        return <div className="min-h-screen flex items-center justify-center">Loading collection...</div>
+        return (
+            <main className="min-h-screen bg-background">
+                <Header />
+                <div style={{ height: "var(--header-offset, 120px)" }} />
+
+                {/* Skeleton loading — keeps the header and grid layout stable,
+                    no full-page "Loading" text flash. */}
+                <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 py-10">
+                    <div className="mb-3 h-8 w-52 rounded bg-muted animate-pulse" />
+                    <div className="mb-8 h-4 w-72 rounded bg-muted/70 animate-pulse" />
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <div key={i} className="animate-pulse">
+                                <div className="aspect-[2/3] md:aspect-[4/5] bg-muted rounded-sm" />
+                                <div className="h-4 bg-muted rounded w-3/4 mt-4" />
+                                <div className="h-3 bg-muted rounded w-1/2 mt-2" />
+                                <div className="h-4 bg-muted rounded w-1/3 mt-3" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </main>
+        )
     }
 
     if (!collection) {
-        return <div className="min-h-screen flex items-center justify-center">Collection not found.</div>
+        return (
+            <main className="min-h-screen bg-background">
+                <Header />
+                <div style={{ height: "var(--header-offset, 120px)" }} />
+                <div className="max-w-[1500px] mx-auto px-4 md:px-8 py-24 text-center">
+                    <h1 className="font-serif text-3xl mb-3">Collection not found</h1>
+                    <p className="text-muted-foreground mb-6">We couldn't find the collection you were looking for.</p>
+                    <Link
+                        href="/collections"
+                        className="inline-block px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    >
+                        Browse all collections
+                    </Link>
+                </div>
+                <Footer />
+            </main>
+        )
     }
 
     return (

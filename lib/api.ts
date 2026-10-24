@@ -160,6 +160,62 @@ async function request<T = any>(
 
 // ============= Public API Methods =============
 
+// In-flight GET de-duplication. Product/category/home widgets often fire the
+// same read several times in one render pass (StrictMode, overlapping contexts,
+// fast navigation). Coalescing identical concurrent GETs onto ONE network call
+// cuts redundant requests without changing semantics — the map entry is cleared
+// as soon as the promise settles, so genuinely sequential refetches still hit
+// the server. Mutations are intentionally NOT deduped.
+//
+// Dedup is keyed by REQUEST SEMANTICS, not just the URL: two GETs are only
+// merged when they would return the SAME data. The key therefore includes the
+// current auth scope (so an authenticated read is never served to a different
+// account), the cache policy, and any caller-supplied non-sensitive headers.
+// Requests that carry sensitive headers are never deduped.
+const inflightGets = new Map<string, Promise<any>>();
+
+// Auth scope for dedup isolation. Set by the auth layer on login/logout/account
+// change; changing it drops every in-flight GET so a prior account's response
+// can never satisfy a different account's request. It is a NON-secret label
+// (e.g. the user id or "anon") — never a token.
+let dedupeAuthScope = 'anon';
+
+/** Set the identity scope used to isolate in-flight GET de-duplication. */
+export function setApiDedupeScope(scope: string): void {
+    const next = scope || 'anon';
+    if (next === dedupeAuthScope) return;
+    dedupeAuthScope = next;
+    // Drop all in-flight reads so none crosses the account boundary.
+    inflightGets.clear();
+}
+
+// Header names whose values must never enter a cache/dedup key or be shared.
+const SENSITIVE_HEADER_RE = /^(authorization|x-access-token|cookie|x-api-key|apikey)$/i;
+
+/**
+ * Build a dedup key from request semantics, or null when the request must not
+ * be deduped (sensitive headers present, or cache explicitly dynamic/no-store).
+ */
+function buildDedupeKey(
+    endpoint: string,
+    config?: { timeout?: number; headers?: Record<string, string>; cache?: RequestCache }
+): string | null {
+    const headers = config?.headers;
+    if (headers) {
+        for (const name of Object.keys(headers)) {
+            if (SENSITIVE_HEADER_RE.test(name)) return null; // never share
+        }
+    }
+    // Only dedupe cacheable reads; a fresh/dynamic read expects its own call.
+    const cache = config?.cache;
+    if (cache === 'no-store' || cache === 'reload' || cache === 'no-cache') return null;
+
+    const headerSig = headers
+        ? Object.keys(headers).sort().map((k) => `${k.toLowerCase()}:${headers[k]}`).join(';')
+        : '';
+    return `${dedupeAuthScope}|${endpoint}|${cache ?? 'default'}|${headerSig}|${config?.timeout ?? ''}`;
+}
+
 /**
  * GET request
  */
@@ -167,11 +223,32 @@ export async function apiGet<T = any>(
     endpoint: string,
     config?: { timeout?: number; headers?: Record<string, string>; cache?: RequestCache }
 ): Promise<T> {
-    return request<T>(endpoint, {
+    const key = buildDedupeKey(endpoint, config);
+
+    if (key) {
+        const existing = inflightGets.get(key);
+        if (existing) return existing as Promise<T>;
+    }
+
+    const promise = request<T>(endpoint, {
         method: 'GET',
         headers: buildHeaders(config?.headers),
         cache: config?.cache,
     }, { timeout: config?.timeout });
+
+    if (key) {
+        inflightGets.set(key, promise);
+        // Clear the entry once settled WITHOUT creating an unhandled rejection
+        // child (the old `promise.finally(...)` left a dangling rejected promise
+        // whenever the underlying request failed). Handling both outcomes keeps
+        // the derived promise resolved, and we still return the original.
+        const cleanup = () => {
+            if (inflightGets.get(key) === promise) inflightGets.delete(key);
+        };
+        promise.then(cleanup, cleanup);
+    }
+
+    return promise;
 }
 
 /**

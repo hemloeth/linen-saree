@@ -11,24 +11,26 @@ import { Footer } from "@/components/layout/footer"
 import { apiServerGet } from "@/lib/api"
 
 export default async function Home() {
-  let heroSlides = [];
-  try {
-    const data = await apiServerGet('/api/hero', { revalidate: 60 });
-    if (data && data.slides) {
-      heroSlides = data.slides;
-    }
-  } catch (error) {
-    console.error("Failed to fetch hero slides on server:", error);
+  // Hero slides and categories are INDEPENDENT reads — fetch them in parallel
+  // so the page waits on the slower of the two, not their sum (spec §12). Each
+  // handles its own failure so one bad widget can't blank the whole homepage.
+  const [heroResult, catResult] = await Promise.allSettled([
+    apiServerGet('/api/hero', { revalidate: 60 }),
+    apiServerGet('/api/category/allcategory', { revalidate: 60 }),
+  ])
+
+  let heroSlides: any[] = []
+  if (heroResult.status === "fulfilled" && heroResult.value && heroResult.value.slides) {
+    heroSlides = heroResult.value.slides
+  } else if (heroResult.status === "rejected") {
+    console.error("Failed to fetch hero slides on server:", heroResult.reason)
   }
 
-  let categories = [];
-  try {
-    const catData = await apiServerGet('/api/category/allcategory', { revalidate: 60 });
-    if (catData && catData.categories) {
-      categories = catData.categories;
-    }
-  } catch (error) {
-    console.error("Failed to fetch categories on server:", error);
+  let categories: any[] = []
+  if (catResult.status === "fulfilled" && catResult.value && catResult.value.categories) {
+    categories = catResult.value.categories
+  } else if (catResult.status === "rejected") {
+    console.error("Failed to fetch categories on server:", catResult.reason)
   }
 
   return (

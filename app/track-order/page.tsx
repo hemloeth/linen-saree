@@ -118,6 +118,8 @@ function TrackOrderContent() {
 
     // Handle standard Shiprocket payload variations
     if (raw.tracking_data) return raw.tracking_data;
+    // Order-ID based tracking returns { data: { shipments: [...] } }
+    if (raw.data?.shipments?.length) return raw.data.shipments[0];
     if (raw.data) return raw.data;
     
     // Check if key is the AWB code itself: { "123456": { tracking_data: ... } }
@@ -212,7 +214,7 @@ function TrackOrderContent() {
         <div className="bg-card rounded-2xl p-6 sm:p-8 border border-border shadow-sm mb-10">
           
           {/* Mode Switch Tabs */}
-          <div className="flex p-1 bg-stone-100 dark:bg-stone-900 rounded-xl mb-6 max-w-md mx-auto">
+          <div className="flex p-1 bg-stone-100 dark:bg-stone-900 rounded-xl mb-6 max-w-2xl mx-auto w-full">
             <button
               type="button"
               onClick={() => { setTrackMode('awb'); setError(''); }}

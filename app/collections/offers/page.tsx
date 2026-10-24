@@ -32,7 +32,7 @@ export default async function OffersCollectionPage({ searchParams }: OffersPageP
   }
 
   const colRes = await apiServerGet('/api/marketing-collections', { cache: 'no-store' }).catch(() => ({ success: false, data: [] }))
-  const marketingCols = colRes.success && colRes.data ? colRes.data.filter((c: any) => c.key !== 'none') : []
+  const marketingCols = colRes.success && colRes.data ? colRes.data.filter((c: any) => c.key !== 'none' && c.key !== 'new-arrivals') : []
 
   return (
     <main className="min-h-screen bg-background">
@@ -56,12 +56,6 @@ export default async function OffersCollectionPage({ searchParams }: OffersPageP
               className="px-2 sm:px-6 py-2 bg-foreground text-background shadow-md text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center font-medium"
             >
               Offers & Sale
-            </Link>
-            <Link
-              href="/collections/new-arrivals"
-              className="px-2 sm:px-6 py-2 border border-border hover:bg-foreground hover:text-background text-xs sm:text-sm tracking-wide transition-all text-center flex items-center justify-center"
-            >
-              New Arrivals
             </Link>
             {marketingCols.map((col: any) => (
               <Link

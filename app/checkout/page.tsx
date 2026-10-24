@@ -10,6 +10,17 @@ import { Button } from "@/components/ui/button"
 import { CheckoutProductMedia } from "@/components/common/checkout-product-media"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAuth } from "@/context/auth-context"
+import { apiPost, ApiError } from "@/lib/api"
+import {
+  attemptScope,
+  payloadFingerprint,
+  loadAttempt,
+  saveAttempt,
+  patchAttempt,
+  clearAttempt,
+  resolveAttempt,
+} from "@/lib/checkout-attempt"
 import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X, ChevronDown, Search, Loader2 } from "lucide-react"
 
 const loadRazorpayScript = () => {
@@ -28,7 +39,8 @@ const loadRazorpayScript = () => {
 };
 
 export default function CheckoutPage() {
-  const { items, totalPrice, clearCart, isHydrated } = useCart()
+  const { items, totalPrice, removePurchasedItems, isHydrated } = useCart()
+  const { user, isAuthenticated } = useAuth()
   const [step, setStep] = useState(1)
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false)
   const [stateSearch, setStateSearch] = useState("")
@@ -185,9 +197,10 @@ export default function CheckoutPage() {
     setFormData({ ...formData, [name]: value })
   }
 
-  const [formErrors, setFormErrors] = useState<{ email: string; firstName: string; address: string; city: string; pincode: string; phone: string; state: string }>({
+  const [formErrors, setFormErrors] = useState<{ email: string; firstName: string; lastName: string; address: string; city: string; pincode: string; phone: string; state: string }>({
     email: '',
     firstName: '',
+    lastName: '',
     address: '',
     city: '',
     pincode: '',
@@ -196,7 +209,7 @@ export default function CheckoutPage() {
   })
 
   const validateAndContinue = () => {
-    const errors = { email: '', firstName: '', address: '', city: '', pincode: '', phone: '', state: '' }
+    const errors = { email: '', firstName: '', lastName: '', address: '', city: '', pincode: '', phone: '', state: '' }
     let hasError = false
 
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -282,140 +295,330 @@ export default function CheckoutPage() {
 
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [placedOrderId, setPlacedOrderId] = useState("")
+  const [paymentPending, setPaymentPending] = useState(false)
+  const [pendingOrderId, setPendingOrderId] = useState("")
+
+  // ---- Persisted checkout attempt (spec §5) ------------------------------
+  // The idempotency key, payload fingerprint, server order id and the one-time
+  // guest capability token live in sessionStorage (scoped per account/guest),
+  // NOT React state — so a reload, a dropped response or a dismissed popup can
+  // always recover the SAME attempt instead of creating a second order.
+  const scope = attemptScope(user as any, isAuthenticated)
+  const recoveredRef = useRef(false)
+  const [pendingOrder, setPendingOrder] = useState<{ orderId: string; token?: string; dbId?: string } | null>(null)
+
+  const finalizeSuccess = (orderId: string, purchased?: Array<{ productId: string; quantity: number }>) => {
+    clearAttempt(scope)
+    setPendingOrder(null)
+    if (purchased) removePurchasedItems(purchased)
+    setPlacedOrderId(orderId)
+    setOrderPlaced(true)
+  }
+
+  const showPending = (o: { orderId: string; token?: string; dbId?: string }) => {
+    setPendingOrderId(o.orderId)
+    setPendingOrder(o)
+    setPaymentPending(true)
+  }
+
+  // One-shot reload recovery: settle an attempt whose outcome was interrupted.
+  useEffect(() => {
+    if (recoveredRef.current || !isHydrated) return
+    recoveredRef.current = true
+    const a = loadAttempt(scope)
+    if (!a) return
+    if (a.phase === "confirmed") { clearAttempt(scope); return }
+    if (!a.orderId) return // awaiting payment / failed place — handled on next click
+    const aToken = a.checkoutToken || a.recoverySecret
+    if (a.phase === "pending_recovery") { showPending({ orderId: a.orderId, token: aToken, dbId: a.orderDbId }); return }
+    if ((a.phase === "awaiting_verify" || a.phase === "awaiting_payment") && a.paymentStatus !== "paid") {
+      // Fire-and-forget gateway re-check through the EXISTING verify endpoint.
+      ;(async () => {
+        try {
+          const d = await apiPost("/api/order/verify-payment", { orderId: a.orderId, checkoutToken: aToken })
+          if (d?.status === "paid") { finalizeSuccess(a.orderId!) }
+          else if (d?.status === "failed") { clearAttempt(scope) }
+          else { showPending({ orderId: a.orderId!, token: aToken, dbId: a.orderDbId }) }
+        } catch {
+          showPending({ orderId: a.orderId!, token: aToken, dbId: a.orderDbId })
+        }
+      })()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHydrated, scope])
+
+  // Manual "Re-check payment" from the pending screen (real recovery, not a
+  // page reload that would only show the same state again).
+  const recheckPending = async () => {
+    if (!pendingOrder) return
+    try {
+      const d = await apiPost("/api/order/verify-payment", { orderId: pendingOrder.orderId, checkoutToken: pendingOrder.token })
+      if (d?.status === "paid") {
+        toast.success("Payment confirmed!")
+        finalizeSuccess(pendingOrder.orderId)
+        return
+      }
+      toast.message(d?.message || "Still confirming — if money was deducted it will be reconciled automatically.")
+    } catch (err: any) {
+      if (err instanceof ApiError && (err.status === 404 || err.status === 403)) {
+        clearAttempt(scope)
+        setPaymentPending(false)
+        toast.error("This checkout attempt can no longer be recovered.")
+        return
+      }
+      toast.message("Could not reach the server — please try again in a moment.")
+    }
+  }
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isPlacingOrder) return
     setIsPlacingOrder(true)
 
+    // Capture the exact purchased lines NOW (the reactive `items` may change
+    // while the async flow runs) so success removes only these QUANTITIES.
+    const purchasedLines = items.map((i) => ({ productId: i.product.id, quantity: i.quantity }))
+
     try {
-      const { apiPost } = await import("@/lib/api")
+      const orderItems = items.map(item => ({
+        productId: item.product.id,
+        name: item.product.name,
+        price: item.product.price,
+        quantity: item.quantity,
+        image: item.product.image,
+        sku: item.product.sku || "",
+      }))
+      const shippingAddress = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        landmark: formData.landmark,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+      }
+      const couponCode = appliedCoupon?.code || ""
+
+      // Same scope + same canonical payload ⇒ the SAME persisted key; any
+      // change (address/coupon/method/cart) starts a fresh attempt.
+      const fingerprint = payloadFingerprint({ items: purchasedLines, shippingAddress, paymentMethod: formData.paymentMethod, couponCode })
+      const { attempt } = resolveAttempt(scope, fingerprint)
 
       const orderData = {
-        items: items.map(item => ({
-          productId: item.product.id,
-          name: item.product.name,
-          price: item.product.price,
-          quantity: item.quantity,
-          image: item.product.image,
-          sku: item.product.sku || "",
-        })),
-        shippingAddress: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          address: formData.address,
-          landmark: formData.landmark,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode,
-        },
+        items: orderItems,
+        shippingAddress,
         paymentMethod: formData.paymentMethod,
-        couponCode: appliedCoupon?.code || "",
+        couponCode,
         discount,
+        checkoutKey: attempt.key,
+        checkoutRecoverySecret: attempt.recoverySecret,
       }
 
-      const data = await apiPost('/api/order', orderData)
-
-      if (data.success) {
-        if (formData.paymentMethod !== "cod") {
-          if (!data.order.razorpayOrderId) {
-            toast.error("Payment ID missing from server. Please check backend keys.");
-            return; // outer finally clears the loading state
-          }
-          // Online payment flow
-          const res = await loadRazorpayScript()
-          if (!res) {
-            toast.error("Razorpay SDK failed to load. Are you online?")
-            return; // outer finally clears the loading state
-          }
-
-          // Await the full modal lifecycle (payment verified OR dismissed/failed).
-          // The outer finally only fires once the modal flow has fully settled, so
-          // the button can never un-block mid-verification.
-          await new Promise<void>((resolve) => {
-            let settled = false
-            const settle = () => { if (!settled) { settled = true; resolve() } }
-
-            const verify = async (response: any): Promise<boolean> => {
-              try {
-                const verifyData = await apiPost('/api/order/verify-payment', {
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  orderId: data.order.orderId
-                })
-                if (verifyData.success) {
-                  setPlacedOrderId(data.order.orderId)
-                  setOrderPlaced(true)
-                  clearCart()
-                  return true
-                }
-                toast.error("Payment verification failed.")
-                return false
-              } catch (verifyErr: any) {
-                toast.error(verifyErr.message || "Payment verification failed.")
-                return false
-              }
-            }
-
-            const options = {
-              key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || data.order.key,
-              amount: data.order.amount,
-              currency: data.order.currency,
-              name: "Handloomer",
-              description: "Order Payment",
-              order_id: data.order.razorpayOrderId,
-              handler: async function (response: any) {
-                setIsPlacingOrder(true) // re-set loading during verification
-                const ok = await verify(response)
-                if (!ok) {
-                  // Best-effort: let the server record the failed status too
-                  // (idempotent on the backend; safe to call once).
-                  try { await apiPost('/api/order/verify-payment', { orderId: data.order.orderId }) } catch { /* expected 400 */ }
-                }
-                setIsPlacingOrder(false)
-                settle()
-              },
-              prefill: {
-                name: `${formData.firstName} ${formData.lastName}`,
-                email: formData.email,
-                contact: formData.phone
-              },
-              theme: {
-                color: "#0f172a"
-              },
-              modal: {
-                ondismiss: function() {
-                  settle()
-                }
-              }
-            }
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const RZP = (window as any).Razorpay
-            if (!RZP) {
-              toast.error("Payment gateway not available. Please refresh and try again.")
-              settle()
-              return
-            }
-            const paymentObject = new RZP(options)
-            paymentObject.on('payment.failed', function (response: any) {
-               toast.error(response.error.description || "Payment failed")
-               // Tell the server so the order isn't left hanging as "pending"
-               // (ignored if the modal's handler already resolved it)
-               apiPost('/api/order/verify-payment', { orderId: data.order.orderId }).catch(() => { /* expected */ })
-               settle()
+      let data: any
+      try {
+        data = await apiPost('/api/order', orderData)
+      } catch (placeErr: any) {
+        const code = placeErr instanceof ApiError ? placeErr.data?.code : undefined
+        const status = placeErr instanceof ApiError ? placeErr.status : undefined
+        // DEFINITIVE conflict for THIS key (changed payload / expired attempt):
+        // start a fresh attempt and retry exactly once — never loop on the key.
+        if (code === 'CHECKOUT_CONFLICT' || code === 'CHECKOUT_ATTEMPT_FAILED') {
+          clearAttempt(scope)
+          const retry = resolveAttempt(scope, fingerprint)
+          try {
+            data = await apiPost('/api/order', {
+              ...orderData,
+              checkoutKey: retry.attempt.key,
+              checkoutRecoverySecret: retry.attempt.recoverySecret,
             })
-            paymentObject.open()
-          })
-          return // modal lifecycle fully settled here
+          } catch (retryErr: any) {
+            throw retryErr
+          }
+        } else if (
+          !(placeErr instanceof ApiError) || // raw network failure — outcome unknown
+          status === 408 ||
+          status === 429 ||
+          (typeof status === 'number' && status >= 500)
+        ) {
+          // UNCERTAIN execution: an order MAY already exist server-side. Keep the
+          // SAME key + secret so a retry REPLAYS the attempt instead of making a
+          // duplicate (this is the core lost-response fix).
+          patchAttempt(scope, { phase: attempt.orderId ? 'pending_recovery' : 'placing' })
+          if (attempt.orderId) {
+            showPending({ orderId: attempt.orderId, token: attempt.checkoutToken || attempt.recoverySecret, dbId: attempt.orderDbId })
+            toast.warning('We could not reach the server, but your order may already be placed. Use “Re-check payment” — do not place it again.')
+          } else {
+            toast.warning('We could not confirm your order was received. Please tap “Place Order” again — it will not create a duplicate.')
+          }
+          return
         } else {
-          // COD flow
-          setPlacedOrderId(data.order.orderId)
-          setOrderPlaced(true)
-          clearCart()
+          // DEFINITIVE rejection (validation / auth): no order was created, so it
+          // is safe to clear the key and surface the reason.
+          clearAttempt(scope)
+          throw placeErr
         }
+      }
+
+      if (data.success && data.order) {
+        const o = data.order
+        patchAttempt(scope, {
+          phase: "awaiting_payment",
+          orderId: o.orderId,
+          orderDbId: o._id,
+          checkoutToken: o.checkoutToken, // legacy server-token path only; patchAttempt keeps the saved secret otherwise
+          paymentStatus: o.paymentStatus,
+          outcome: o.outcome,
+        })
+        // The guest verify token is the CLIENT-held recovery secret (works even if
+        // the first response was lost), or the legacy server token if returned.
+        const guestToken = o.checkoutToken || attempt.recoverySecret
+        o.checkoutToken = guestToken
+
+        // EXPLICIT SERVER CONTRACT — branch on `outcome`, never on a missing field.
+        if (o.outcome === 'paid_settled' || o.outcome === 'order_placed_cod' || o.settled) {
+          finalizeSuccess(o.orderId, purchasedLines)
+          return
+        }
+        if (o.outcome === 'held_for_review' || o.outcome === 'rejected_terminal') {
+          // Money may exist but the order must NOT be paid/reopened further from here.
+          patchAttempt(scope, { phase: 'pending_recovery' })
+          showPending({ orderId: o.orderId, token: guestToken, dbId: o._id })
+          toast.warning(
+            o.outcome === 'held_for_review'
+              ? 'Your order is being reviewed by the store — we will follow up shortly.'
+              : 'This order can no longer be paid. Please contact support.'
+          )
+          return
+        }
+        if (o.outcome === 'pending_recovery' || !o.requiresPayment) {
+          // Uncertain/unpaid edge — recoverable pending, NOT the old “Payment ID missing”.
+          patchAttempt(scope, { phase: 'pending_recovery' })
+          showPending({ orderId: o.orderId, token: guestToken, dbId: o._id })
+          return
+        }
+
+        // Online payment flow — the ONLY path that opens the Razorpay popup.
+        const res = await loadRazorpayScript()
+        if (!res) {
+          patchAttempt(scope, { phase: "pending_recovery" })
+          showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
+          toast.warning("Could not load the payment gateway. Your order is safe — re-check payment when you are back online.")
+          return
+        }
+
+        // Await the full modal lifecycle (payment verified OR dismissed/failed).
+        await new Promise<void>((resolve) => {
+          let settledFlow = false
+          const settle = () => { if (!settledFlow) { settledFlow = true; resolve() } }
+
+          // React to the SERVER'S authoritative verdict. "paid" finalizes;
+          // "pending" is a recoverable state (webhook/sweeper will settle it);
+          // anything else is a genuine rejection shown as such.
+          const finalize = (verifyData: any) => {
+            if (verifyData?.status === "paid") {
+              finalizeSuccess(o.orderId)
+              patchAttempt(scope, { phase: "confirmed", paymentStatus: "paid" })
+            } else if (verifyData?.status === "pending") {
+              patchAttempt(scope, { phase: "pending_recovery", paymentStatus: "pending" })
+              showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
+              toast.warning(verifyData.message || "Payment is being confirmed — you can safely re-check in a moment.")
+            } else {
+              patchAttempt(scope, { phase: "awaiting_payment", paymentStatus: verifyData?.status })
+              toast.error(verifyData?.message || "Payment verification failed.")
+            }
+          }
+
+          const verify = async (response: any) => {
+            try {
+              setIsPlacingOrder(true) // re-set loading during verification
+              patchAttempt(scope, { phase: "awaiting_verify" })
+              const body: any = {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: o.orderId,
+              }
+              const tokenNow = o.checkoutToken || loadAttempt(scope)?.checkoutToken
+              if (tokenNow) body.checkoutToken = tokenNow
+              const verifyData = await apiPost('/api/order/verify-payment', body)
+              finalize(verifyData)
+            } catch (verifyErr: any) {
+              if (verifyErr instanceof ApiError && verifyErr.status >= 500) {
+                // Server-side verification trouble is NOT a rejection — the
+                // attempt stays recoverable via the pending screen.
+                patchAttempt(scope, { phase: "pending_recovery" })
+                showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
+                toast.warning("Payment confirmation is delayed — your order is safe and will reconcile automatically.")
+              } else if (!(verifyErr instanceof ApiError) || verifyErr.status === 408 || verifyErr.status >= 500) {
+                // Network/timeout during verify — confirmation pending, keep attempt.
+                patchAttempt(scope, { phase: "pending_recovery" })
+                showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
+                toast.warning("Could not confirm the payment just now — it will be reconciled automatically if money was deducted.")
+              } else {
+                // A genuine 4xx rejection (bad signature / order mismatch /
+                // forbidden). We never convert it into a "mark failed" ping —
+                // that decision belongs to the gateway webhook and sweeper.
+                toast.error(verifyErr.message || "Could not verify payment. If money was deducted it will be confirmed automatically.")
+              }
+            }
+          }
+
+          const options = {
+            // Server-returned key is the single source of truth — swapping the
+            // backend .env from test to live keys automatically flips the
+            // checkout widget too, with nothing to update on the frontend.
+            key: o.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+            amount: o.amount,
+            currency: o.currency,
+            name: "Handloomer",
+            description: "Order Payment",
+            order_id: o.razorpayOrderId,
+            handler: async function (response: any) {
+              await verify(response)
+              setIsPlacingOrder(false)
+              settle()
+            },
+            prefill: {
+              name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              contact: formData.phone
+            },
+            theme: {
+              color: "#0f172a"
+            },
+            modal: {
+              ondismiss: function() {
+                // Abandoned window. We deliberately do NOT ask the server to
+                // fail the order: the reservation stays pending and the
+                // backend sweeper reconciles it against Razorpay before it
+                // would ever release stock/coupon. Cart is preserved locally.
+                toast.warning("Payment window closed. If you completed the payment it will be confirmed automatically — your cart is saved.")
+                settle()
+              }
+            }
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const RZP = (window as any).Razorpay
+          if (!RZP) {
+            patchAttempt(scope, { phase: "pending_recovery" })
+            showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
+            toast.warning("Payment gateway is unavailable — your order is safe. Re-check payment when ready.")
+            settle()
+            return
+          }
+          const paymentObject = new RZP(options)
+          paymentObject.on('payment.failed', function (response: any) {
+             // Browser "failed" is ADVISORY only, never authoritative. Razorpay
+             // can still capture, or the buyer may retry. No server ping.
+             toast.error(response.error?.description || "Payment did not complete. You can retry, or it will be reconciled automatically.")
+             settle()
+          })
+          paymentObject.open()
+        })
+        return // modal lifecycle fully settled here
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to place order. Please try again.")
@@ -439,7 +642,7 @@ export default function CheckoutPage() {
     )
   }
 
-  if (items.length === 0 && !orderPlaced) {
+  if (items.length === 0 && !orderPlaced && !paymentPending) {
     return (
       <main className="min-h-screen">
         <Header />
@@ -490,11 +693,58 @@ export default function CheckoutPage() {
                 </span>
               </div>
             </div>
-            <Link href="/collections">
-              <Button className="bg-primary hover:bg-primary/90 mt-2">
-                Continue Shopping
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href={`/track-order?orderId=${encodeURIComponent(placedOrderId)}&email=${encodeURIComponent(formData.email || "")}`}>
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 w-full sm:w-auto">
+                  Track This Order
+                </Button>
+              </Link>
+              <Link href="/collections">
+                <Button className="bg-primary hover:bg-primary/90 mt-2 w-full sm:w-auto">
+                  Continue Shopping
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </main>
+    )
+  }
+
+  if (paymentPending) {
+    return (
+      <main className="min-h-screen flex flex-col">
+        <Header />
+        <div
+          className="flex-1 flex items-center justify-center px-4 md:px-8 pb-16"
+          style={{ paddingTop: 'calc(var(--header-offset, 120px) + 2rem)' }}
+        >
+          <div className="text-center px-4 max-w-md">
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Loader2 className="w-10 h-10 text-amber-600 animate-spin" />
+            </div>
+            <h1 className="font-serif text-3xl mb-4">Confirming your payment</h1>
+            <p className="text-muted-foreground mb-2">
+              We have received your order but are still waiting for the payment gateway to confirm it.
+              If money was deducted, it will be reconciled automatically — there is nothing you need to do.
+            </p>
+            <div className="bg-muted/50 rounded-lg p-6 mb-8 text-left space-y-3 border border-border">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Order ID</span>
+                <span className="font-medium">#{pendingOrderId || "Processing..."}</span>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href={`/track-order?orderId=${encodeURIComponent(pendingOrderId)}&email=${encodeURIComponent(formData.email || "")}`}>
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 w-full sm:w-auto">
+                  Check Order Status
+                </Button>
+              </Link>
+              <Button className="bg-primary hover:bg-primary/90 mt-2 w-full sm:w-auto" onClick={recheckPending}>
+                Re-check Payment
               </Button>
-            </Link>
+            </div>
           </div>
         </div>
         <Footer />
@@ -541,13 +791,16 @@ export default function CheckoutPage() {
                 <form onSubmit={handlePlaceOrder}>
                   {step === 1 && (
                     <div className="space-y-6">
+                      <p className="text-xs text-muted-foreground">Fields marked with <span className="text-red-500">*</span> are required.</p>
+
                       {/* Contact */}
                       <div>
                         <h2 className="font-medium text-lg mb-4">Contact Information</h2>
+                        <label className="block text-xs font-medium mb-1.5">Email address <span className="text-red-500">*</span></label>
                         <input
                           type="email"
                           name="email"
-                          placeholder="Email address"
+                          placeholder="you@example.com"
                           value={formData.email}
                           onChange={handleInputChange}
                           required
@@ -564,10 +817,11 @@ export default function CheckoutPage() {
                         <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
+                              <label className="block text-xs font-medium mb-1.5">First name <span className="text-red-500">*</span></label>
                               <input
                                 type="text"
                                 name="firstName"
-                                placeholder="First name"
+                                placeholder="e.g. Riya"
                                 value={formData.firstName}
                                 onChange={handleInputChange}
                                 required
@@ -577,21 +831,27 @@ export default function CheckoutPage() {
                                 <p className="text-xs text-red-500 mt-1">{formErrors.firstName}</p>
                               )}
                             </div>
-                            <input
-                              type="text"
-                              name="lastName"
-                              placeholder="Last name"
-                              value={formData.lastName}
-                              onChange={handleInputChange}
-                              required
-                              className="w-full px-4 py-3 border border-border bg-background text-sm"
-                            />
+                            <div>
+                              <label className="block text-xs font-medium mb-1.5">Last name <span className="text-muted-foreground font-normal">(optional)</span></label>
+                              <input
+                                type="text"
+                                name="lastName"
+                                placeholder="e.g. Sharma"
+                                value={formData.lastName}
+                                onChange={handleInputChange}
+                                className={`w-full px-4 py-3 border bg-background text-sm ${formErrors.lastName ? 'border-red-500' : 'border-border'}`}
+                              />
+                              {formErrors.lastName && (
+                                <p className="text-xs text-red-500 mt-1">{formErrors.lastName}</p>
+                              )}
+                            </div>
                           </div>
                           <div>
+                            <label className="block text-xs font-medium mb-1.5">Address <span className="text-red-500">*</span></label>
                             <input
                               type="text"
                               name="address"
-                              placeholder="Address"
+                              placeholder="House no, building, street, area"
                               value={formData.address}
                               onChange={handleInputChange}
                               required
@@ -601,16 +861,20 @@ export default function CheckoutPage() {
                               <p className="text-xs text-red-500 mt-1">{formErrors.address}</p>
                             )}
                           </div>
-                          <input
-                            type="text"
-                            name="landmark"
-                            placeholder="Landmark (optional)"
-                            value={formData.landmark}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-border bg-background text-sm"
-                          />
+                          <div>
+                            <label className="block text-xs font-medium mb-1.5">Landmark <span className="text-muted-foreground font-normal">(optional)</span></label>
+                            <input
+                              type="text"
+                              name="landmark"
+                              placeholder="Nearest landmark"
+                              value={formData.landmark}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border border-border bg-background text-sm"
+                            />
+                          </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
+                              <label className="block text-xs font-medium mb-1.5">City <span className="text-red-500">*</span></label>
                               <input
                                 type="text"
                                 name="city"
@@ -625,6 +889,7 @@ export default function CheckoutPage() {
                               )}
                             </div>
                             <div ref={stateDropdownRef} className="relative">
+                              <label className="block text-xs font-medium mb-1.5">State <span className="text-red-500">*</span></label>
                               <button
                                 type="button"
                                 onClick={() => { setStateDropdownOpen(!stateDropdownOpen); setStateSearch(""); }}
@@ -705,11 +970,12 @@ export default function CheckoutPage() {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
+                              <label className="block text-xs font-medium mb-1.5">PIN Code <span className="text-red-500">*</span></label>
                               <div className="relative">
                                 <input
                                   type="text"
                                   name="pincode"
-                                  placeholder="PIN Code"
+                                  placeholder="6-digit PIN"
                                   inputMode="numeric"
                                   pattern="[0-9]*"
                                   maxLength={6}
@@ -735,10 +1001,11 @@ export default function CheckoutPage() {
                               )}
                             </div>
                             <div>
+                              <label className="block text-xs font-medium mb-1.5">Phone number <span className="text-red-500">*</span></label>
                               <input
                                 type="tel"
                                 name="phone"
-                                placeholder="Phone number"
+                                placeholder="10-digit mobile number"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
                                 maxLength={10}

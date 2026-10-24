@@ -90,14 +90,22 @@ function mapProductFromDB(dbProduct: any): Product {
   };
 }
 
-// Fetch the FULL catalog from the backend and map it.
+// Fetch the storefront catalog from the backend and map it.
 // No `limit` is sent, so the backend returns every product (its `limit=undefined`
-// path disables pagination). This is the single source of truth that seeds the
-// client context for SEO-safe rendering on all public pages.
+// path disables pagination) — this is the single source that seeds the client
+// context for SEO-safe rendering on public pages.
+//
+// It intentionally uses the backend's LIST PROJECTION (no `fullData=true`): the
+// heavy per-product fields (shortDescription/details/sareeSize/blouseSize/
+// washCare/dispatch/disclaimer/internationalNote) are excluded because product
+// CARDS never render them, and this catalog is fetched for EVERY route from the
+// root layout. The full detail payload is loaded per-product on the product page
+// via fetchProductBySku (a single document), so no visible data is lost while the
+// per-route seed payload shrinks substantially.
 export async function fetchProductsFromDB(): Promise<Product[]> {
   try {
     const { apiServerGet } = await import("@/lib/api");
-    const data = await apiServerGet('/api/product/allproducts?fullData=true', { revalidate: 60 });
+    const data = await apiServerGet('/api/product/allproducts', { revalidate: 60 });
 
     if (data.success && data.products) {
       return data.products.map(mapProductFromDB);

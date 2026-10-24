@@ -10,7 +10,7 @@ import { useAuth } from "@/context/auth-context"
 import { SearchModal } from "@/components/search/search-modal"
 import { TrustBadgesCompact } from "@/components/common/trust-badges"
 import { cn } from "@/lib/utils"
-import { apiGet } from "@/lib/api"
+import { getMarketingCollections, getAllCategories } from "@/lib/shared-reads"
 
 type NavLink = {
   name: string
@@ -96,33 +96,21 @@ export function Header() {
   }, [isMenuOpen])
 
   useEffect(() => {
-    const fetchCollections = async () => {
-      try {
-        const response = await apiGet('/api/marketing-collections')
-        if (response.success && response.data) {
-          // Only include the 3 main marketing collections (exclude 'none')
-          const filtered = response.data.filter((col: any) => col.key !== 'none')
-          setMarketingCollections(filtered)
-        }
-      } catch (error: any) {
-        console.warn("Failed to fetch marketing collections, using default fallback. Message:", error.message || error)
-      }
-    }
-    fetchCollections()
+    // Shared cached read — the footer/sections reuse the same in-flight promise
+    // instead of each re-fetching this public list on mount (spec §12).
+    let cancelled = false
+    getMarketingCollections()
+      .then((filtered) => { if (!cancelled) setMarketingCollections(filtered) })
+      .catch(() => { /* keep default fallback */ })
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await apiGet('/api/category/allcategory')
-        if (response.categories) {
-          setHeaderCategories(response.categories)
-        }
-      } catch (error) {
-        console.warn("Failed to fetch categories:", error)
-      }
-    }
-    fetchCategories()
+    let cancelled = false
+    getAllCategories()
+      .then((cats) => { if (!cancelled && cats.length) setHeaderCategories(cats) })
+      .catch(() => { /* keep default fallback */ })
+    return () => { cancelled = true }
   }, [])
 
   // Handle keyboard shortcut for search (Ctrl/Cmd + K)

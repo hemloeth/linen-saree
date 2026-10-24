@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Mail, ArrowRight, ShieldCheck, CheckCircle2, Sparkles } from "lucide-react"
-import { apiGet } from "@/lib/api"
+import { getMarketingCollections } from "@/lib/shared-reads"
 
 // Custom SVG Icons for Social Media
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -36,18 +36,13 @@ export function Footer() {
   const [marketingCollections, setMarketingCollections] = useState<any[]>([])
 
   useEffect(() => {
-    const fetchCollections = async () => {
-      try {
-        const response = await apiGet('/api/marketing-collections')
-        if (response.success && response.data) {
-          const filtered = response.data.filter((col: any) => col.key !== 'none')
-          setMarketingCollections(filtered)
-        }
-      } catch (error) {
-        // Fallback gracefully
-      }
-    }
-    fetchCollections()
+    // Reuse the header's cached/in-flight marketing-collections read instead of
+    // firing a second identical GET on every mount (spec §12).
+    let cancelled = false
+    getMarketingCollections()
+      .then((filtered) => { if (!cancelled) setMarketingCollections(filtered) })
+      .catch(() => { /* graceful fallback */ })
+    return () => { cancelled = true }
   }, [])
 
   const handleSubscribe = (e: React.FormEvent) => {

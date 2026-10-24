@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { ChevronDown, X, Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -13,6 +13,15 @@ import {
   type FilterCounts,
   type Product
 } from "@/lib/products"
+
+// Curated baseline palette. These are always offered in the filter, and any
+// new color an admin uses is merged in dynamically from the backend — so this
+// list is a floor, never a ceiling.
+const STANDARD_COLORS = [
+  "Black", "Blue", "Brown", "Golden", "Gray", "Green", "Maroon",
+  "Multicolor", "Orange", "Pink", "Purple", "Red", "Silver", "Teal",
+  "White", "Yellow",
+]
 
 interface BackendCategory {
   _id: string
@@ -179,6 +188,34 @@ export function ProductFilters({
     filters.isNew !== undefined
   )
 
+  // Merge dynamic backend colors (authoritative casing → correct filter values)
+  // with the standard palette, dedup case-insensitively, then bubble colors that
+  // actually have products to the top so none are buried under "Show more".
+  const colorOptions = useMemo(() => {
+    const lowerToDisplay = new Map<string, string>()
+    const push = (c?: string) => {
+      const t = (c || "").trim()
+      if (!t) return
+      const k = t.toLowerCase()
+      if (!lowerToDisplay.has(k)) lowerToDisplay.set(k, t)
+    }
+    colors.forEach(push)
+    STANDARD_COLORS.forEach(push)
+
+    const countByLower: Record<string, number> = {}
+    if (counts?.colors) {
+      for (const [k, v] of Object.entries(counts.colors)) countByLower[k.toLowerCase()] = v
+    }
+
+    const arr = [...lowerToDisplay.values()].map((name) => ({
+      name,
+      count: countByLower[name.toLowerCase()] || 0,
+    }))
+
+    arr.sort((a, b) => (b.count - a.count) || a.name.localeCompare(b.name))
+    return arr
+  }, [colors, counts])
+
   return (
     <div className="space-y-6">
       {/* Sort and Filter Toggle */}
@@ -246,28 +283,28 @@ export function ProductFilters({
           <div>
             <h3 className="font-medium mb-3">Colors</h3>
             <div className="space-y-2">
-              {(showAllColors ? colors : colors.slice(0, 7)).map((color, idx) => (
-                <label key={`color-${color}-${idx}`} className="flex items-center gap-2 cursor-pointer">
+              {(showAllColors ? colorOptions : colorOptions.slice(0, 7)).map((option) => (
+                <label key={`color-${option.name}`} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={filters.colors?.includes(color) || false}
-                    onChange={(e) => handleColorChange(color, e.target.checked)}
+                    checked={filters.colors?.includes(option.name) || false}
+                    onChange={(e) => handleColorChange(option.name, e.target.checked)}
                     className="rounded border-border text-primary focus:ring-primary h-4 w-4"
                   />
-                  <span className="text-sm flex-1">{color}</span>
-                  {counts?.colors[color] !== undefined && (
+                  <span className={cn("text-sm flex-1", option.count === 0 && "text-muted-foreground/60")}>{option.name}</span>
+                  {option.count > 0 && (
                     <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                      {counts.colors[color]}
+                      {option.count}
                     </span>
                   )}
                 </label>
               ))}
-              {colors.length > 7 && (
+              {colorOptions.length > 7 && (
                 <button
                   onClick={() => setShowAllColors(!showAllColors)}
                   className="text-sm text-primary hover:underline font-medium pt-1 text-left w-full"
                 >
-                  {showAllColors ? "- Show less" : `+ ${colors.length - 7} more`}
+                  {showAllColors ? "- Show less" : `+ ${colorOptions.length - 7} more`}
                 </button>
               )}
             </div>

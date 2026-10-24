@@ -401,8 +401,12 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
                     <Button
                       size="lg"
-                      className={`w-full sm:flex-1 h-14 sm:h-12 px-2 sm:px-4 text-xs sm:text-sm font-bold btn-premium border-2 border-primary/20 text-primary bg-transparent hover:bg-primary/5 hover:border-primary/40 ${isAdded ? "text-green-600 border-green-600/30 bg-green-50" : ""
-                        }`}
+                      style={{ letterSpacing: "0.05em" }}
+                      className={`w-full sm:flex-1 h-14 sm:h-12 px-2 sm:px-3 text-xs sm:text-sm font-bold btn-premium border transition-all ${
+                        isAdded
+                          ? "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white"
+                          : "bg-background text-foreground border-border hover:bg-secondary"
+                      }`}
                       onClick={handleAddToCart}
                     >
                       {isAdded ? (

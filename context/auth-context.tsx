@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { apiPost, apiPut } from "@/lib/api"
+import { apiPost, apiPut, setApiDedupeScope } from "@/lib/api"
 
 interface User {
     _id?: string
@@ -27,6 +27,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [isHydrated, setIsHydrated] = useState(false)
     const [loginEvent, setLoginEvent] = useState(0)
+
+    // Keep the API de-duplication identity scoped to the CURRENT account, so a
+    // logged-out or different-account in-flight read can never satisfy another
+    // account's request. Uses only the non-secret user id (or "anon").
+    useEffect(() => {
+        setApiDedupeScope(user?._id ? String(user._id) : "anon")
+    }, [user])
 
     // Load user from localStorage on mount
     useEffect(() => {
