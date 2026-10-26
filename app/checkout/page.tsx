@@ -39,7 +39,7 @@ const loadRazorpayScript = () => {
 };
 
 export default function CheckoutPage() {
-  const { items, totalPrice, removePurchasedItems, isHydrated } = useCart()
+  const { items, totalPrice, removePurchasedItems, isHydrated, flushCart, reconcileCart } = useCart()
   const { user, isAuthenticated } = useAuth()
   const [step, setStep] = useState(1)
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false)
@@ -259,6 +259,11 @@ export default function CheckoutPage() {
   const handleApplyCoupon = async () => {
     setCouponError("")
 
+    if (!isAuthenticated) {
+      setCouponError("Coupons are only available for signed-in accounts. Please log in to apply coupons.")
+      return
+    }
+
     if (!couponCode.trim()) {
       setCouponError("Please enter a coupon code")
       return
@@ -299,26 +304,96 @@ export default function CheckoutPage() {
   const [pendingOrderId, setPendingOrderId] = useState("")
 
   // ---- Persisted checkout attempt (spec §5) ------------------------------
-  // The idempotency key, payload fingerprint, server order id and the one-time
-  // guest capability token live in sessionStorage (scoped per account/guest),
-  // NOT React state — so a reload, a dropped response or a dismissed popup can
-  // always recover the SAME attempt instead of creating a second order.
   const scope = attemptScope(user as any, isAuthenticated)
   const recoveredRef = useRef(false)
-  const [pendingOrder, setPendingOrder] = useState<{ orderId: string; token?: string; dbId?: string } | null>(null)
+  const [pendingOrder, setPendingOrder] = useState<{
+    orderId: string
+    token?: string
+    dbId?: string
+    purchasedLines?: Array<{ productId: string; quantity: number }>
+    outcome?: string
+    paymentStatus?: string
+    razorpayOrderId?: string
+    amount?: number
+    currency?: string
+    key?: string
+  } | null>(null)
+  const [isResumingPayment, setIsResumingPayment] = useState(false)
+  const [isCheckingPending, setIsCheckingPending] = useState(false)
 
   const finalizeSuccess = (orderId: string, purchased?: Array<{ productId: string; quantity: number }>) => {
+    const linesToSettle = purchased || pendingOrder?.purchasedLines || loadAttempt(scope)?.purchasedLines
     clearAttempt(scope)
     setPendingOrder(null)
-    if (purchased) removePurchasedItems(purchased)
+    if (linesToSettle) removePurchasedItems(linesToSettle)
     setPlacedOrderId(orderId)
     setOrderPlaced(true)
   }
 
-  const showPending = (o: { orderId: string; token?: string; dbId?: string }) => {
+  const showPending = (o: {
+    orderId: string
+    token?: string
+    dbId?: string
+    purchasedLines?: Array<{ productId: string; quantity: number }>
+    outcome?: string
+    paymentStatus?: string
+    razorpayOrderId?: string
+    amount?: number
+    currency?: string
+    key?: string
+  }) => {
     setPendingOrderId(o.orderId)
     setPendingOrder(o)
     setPaymentPending(true)
+  }
+
+  // Centralized terminal transition: safely exits pending screen, clears attempt when definitive, resets spinners
+  const transitionToTerminal = (message?: string, options?: { clearAttemptData?: boolean }) => {
+    const shouldClear = options?.clearAttemptData !== false
+    if (shouldClear) {
+      clearAttempt(scope)
+    }
+    setPendingOrder(null)
+    setPendingOrderId("")
+    setPaymentPending(false)
+    setIsPlacingOrder(false)
+    setIsResumingPayment(false)
+    setIsCheckingPending(false)
+    if (message) {
+      toast.error(message)
+    }
+  }
+
+  // Centralized held transition: displays holding explanation, keeps recovery state
+  const transitionToHeld = (message?: string, orderDetails?: any) => {
+    setIsPlacingOrder(false)
+    setIsResumingPayment(false)
+    setIsCheckingPending(false)
+    patchAttempt(scope, { phase: "pending_recovery", outcome: "held" })
+    if (orderDetails) {
+      showPending({
+        orderId: orderDetails.orderId,
+        token: orderDetails.token || orderDetails.checkoutToken,
+        dbId: orderDetails.dbId || orderDetails._id,
+        purchasedLines: orderDetails.purchasedLines,
+        outcome: "held",
+        paymentStatus: orderDetails.paymentStatus,
+      })
+    }
+    toast.warning(message || "Your order is currently held for review by the store.")
+  }
+
+  // Centralized verification pending transition: keeps attempt, shows status
+  const transitionToVerificationPending = (message?: string) => {
+    setIsPlacingOrder(false)
+    setIsResumingPayment(false)
+    setIsCheckingPending(false)
+    patchAttempt(scope, { phase: "awaiting_verify" })
+    toast.info(message || "Payment confirmation is in flight. Please re-check in a moment.")
+  }
+
+  const handleStartNewCheckout = () => {
+    transitionToTerminal("Previous attempt reset. You can now adjust your cart or details and place a fresh order.")
   }
 
   // One-shot reload recovery: settle an attempt whose outcome was interrupted.
@@ -328,45 +403,402 @@ export default function CheckoutPage() {
     const a = loadAttempt(scope)
     if (!a) return
     if (a.phase === "confirmed") { clearAttempt(scope); return }
-    if (!a.orderId) return // awaiting payment / failed place — handled on next click
+    if (!a.orderId) return
     const aToken = a.checkoutToken || a.recoverySecret
-    if (a.phase === "pending_recovery") { showPending({ orderId: a.orderId, token: aToken, dbId: a.orderDbId }); return }
-    if ((a.phase === "awaiting_verify" || a.phase === "awaiting_payment") && a.paymentStatus !== "paid") {
-      // Fire-and-forget gateway re-check through the EXISTING verify endpoint.
+    if (a.phase === "pending_recovery") {
+      showPending({
+        orderId: a.orderId,
+        token: aToken,
+        dbId: a.orderDbId,
+        purchasedLines: a.purchasedLines,
+        outcome: a.outcome || "pending_recovery",
+        paymentStatus: a.paymentStatus,
+        razorpayOrderId: a.razorpayOrderId,
+        amount: a.amount,
+        currency: a.currency,
+        key: a.keyId,
+      })
+      return
+    }
+    if (a.phase === "awaiting_verify" && a.paymentStatus !== "paid") {
       ;(async () => {
         try {
           const d = await apiPost("/api/order/verify-payment", { orderId: a.orderId, checkoutToken: aToken })
-          if (d?.status === "paid") { finalizeSuccess(a.orderId!) }
-          else if (d?.status === "failed") { clearAttempt(scope) }
-          else { showPending({ orderId: a.orderId!, token: aToken, dbId: a.orderDbId }) }
+          if (d?.outcome === "paid" || d?.status === "paid") {
+            finalizeSuccess(a.orderId!, a.purchasedLines)
+          } else if (d?.outcome === "terminal" || d?.status === "failed") {
+            transitionToTerminal(d?.message || "Your previous order attempt expired or was cancelled.")
+          } else if (d?.outcome === "held") {
+            transitionToHeld(d?.message, { orderId: a.orderId, token: aToken, dbId: a.orderDbId, purchasedLines: a.purchasedLines })
+          } else {
+            showPending({
+              orderId: a.orderId!,
+              token: aToken,
+              dbId: a.orderDbId,
+              purchasedLines: a.purchasedLines,
+              outcome: a.outcome || "pending_recovery",
+              paymentStatus: a.paymentStatus,
+              razorpayOrderId: a.razorpayOrderId,
+              amount: a.amount,
+              currency: a.currency,
+              key: a.keyId,
+            })
+          }
         } catch {
-          showPending({ orderId: a.orderId!, token: aToken, dbId: a.orderDbId })
+          showPending({
+            orderId: a.orderId!,
+            token: aToken,
+            dbId: a.orderDbId,
+            purchasedLines: a.purchasedLines,
+            outcome: a.outcome || "pending_recovery",
+            paymentStatus: a.paymentStatus,
+            razorpayOrderId: a.razorpayOrderId,
+            amount: a.amount,
+            currency: a.currency,
+            key: a.keyId,
+          })
         }
       })()
+      return
+    }
+    // If awaiting_payment (unpaid resumable), surface on pending screen so user can resume payment
+    if (a.phase === "awaiting_payment") {
+      showPending({
+        orderId: a.orderId,
+        token: aToken,
+        dbId: a.orderDbId,
+        purchasedLines: a.purchasedLines,
+        outcome: "awaiting_payment",
+        paymentStatus: a.paymentStatus,
+        razorpayOrderId: a.razorpayOrderId,
+        amount: a.amount,
+        currency: a.currency,
+        key: a.keyId,
+      })
+      return
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHydrated, scope])
 
-  // Manual "Re-check payment" from the pending screen (real recovery, not a
-  // page reload that would only show the same state again).
+  // Open the Razorpay modal for an existing or newly prepared gateway order
+  const openRazorpayCheckout = async (params: {
+    orderId: string
+    dbId?: string
+    token?: string
+    razorpayOrderId: string
+    amount: number
+    currency: string
+    key?: string
+    prefill?: { name?: string; email?: string; contact?: string }
+    purchasedLines?: Array<{ productId: string; quantity: number }>
+  }) => {
+    const res = await loadRazorpayScript()
+    if (!res) {
+      patchAttempt(scope, { phase: "awaiting_payment" })
+      toast.error("Could not load the payment gateway. Tap 'Resume Payment' to retry.")
+      return
+    }
+
+    return new Promise<void>((resolve) => {
+      let settledFlow = false
+      const settle = () => { if (!settledFlow) { settledFlow = true; resolve() } }
+
+      const finalize = (verifyData: any) => {
+        if (verifyData?.status === "paid") {
+          finalizeSuccess(params.orderId, params.purchasedLines)
+          patchAttempt(scope, { phase: "confirmed", paymentStatus: "paid" })
+        } else if (verifyData?.status === "pending") {
+          patchAttempt(scope, { phase: "pending_recovery", paymentStatus: "pending" })
+          showPending({
+            orderId: params.orderId,
+            token: params.token,
+            dbId: params.dbId,
+            purchasedLines: params.purchasedLines,
+            outcome: "pending_recovery",
+            paymentStatus: "pending",
+            razorpayOrderId: params.razorpayOrderId,
+            amount: params.amount,
+            currency: params.currency,
+            key: params.key,
+          })
+          toast.warning(verifyData.message || "Payment is being confirmed — you can safely re-check in a moment.")
+        } else {
+          patchAttempt(scope, { phase: "awaiting_payment", paymentStatus: verifyData?.status })
+          toast.error(verifyData?.message || "Payment verification failed.")
+        }
+      }
+
+      const verify = async (response: any) => {
+        try {
+          setIsPlacingOrder(true)
+          patchAttempt(scope, { phase: "awaiting_verify" })
+          const body: any = {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderId: params.orderId,
+          }
+          const tokenNow = params.token || loadAttempt(scope)?.checkoutToken || loadAttempt(scope)?.recoverySecret
+          if (tokenNow) body.checkoutToken = tokenNow
+          const verifyData = await apiPost('/api/order/verify-payment', body)
+          finalize(verifyData)
+        } catch (verifyErr: any) {
+          if (verifyErr instanceof ApiError && verifyErr.status >= 500) {
+            patchAttempt(scope, { phase: "pending_recovery" })
+            showPending({
+              orderId: params.orderId,
+              token: params.token,
+              dbId: params.dbId,
+              purchasedLines: params.purchasedLines,
+              outcome: "pending_recovery",
+            })
+            toast.warning("Payment confirmation is delayed — your order is safe and will reconcile automatically.")
+          } else if (!(verifyErr instanceof ApiError) || verifyErr.status === 408 || verifyErr.status >= 500) {
+            patchAttempt(scope, { phase: "pending_recovery" })
+            showPending({
+              orderId: params.orderId,
+              token: params.token,
+              dbId: params.dbId,
+              purchasedLines: params.purchasedLines,
+              outcome: "pending_recovery",
+            })
+            toast.warning("Could not confirm the payment just now — it will be reconciled automatically if money was deducted.")
+          } else {
+            toast.error(verifyErr.message || "Could not verify payment. If money was deducted it will be confirmed automatically.")
+          }
+        }
+      }
+
+      const options = {
+        key: params.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+        amount: params.amount,
+        currency: params.currency,
+        name: "Handloomer",
+        description: "Order Payment",
+        order_id: params.razorpayOrderId,
+        handler: async function (response: any) {
+          await verify(response)
+          setIsPlacingOrder(false)
+          setIsResumingPayment(false)
+          settle()
+        },
+        prefill: {
+          name: params.prefill?.name || `${formData.firstName} ${formData.lastName}`.trim(),
+          email: params.prefill?.email || formData.email,
+          contact: params.prefill?.contact || formData.phone,
+        },
+        theme: {
+          color: "#0f172a"
+        },
+        modal: {
+          ondismiss: function() {
+            setIsPlacingOrder(false)
+            setIsResumingPayment(false)
+            patchAttempt(scope, { phase: "awaiting_payment" })
+            toast.info("Payment window closed. Tap 'Resume Payment' whenever you are ready to complete your purchase.")
+            settle()
+          }
+        }
+      }
+
+      const RZP = (window as any).Razorpay
+      if (!RZP) {
+        patchAttempt(scope, { phase: "pending_recovery" })
+        showPending({
+          orderId: params.orderId,
+          token: params.token,
+          dbId: params.dbId,
+          purchasedLines: params.purchasedLines,
+          outcome: "pending_recovery",
+        })
+        toast.warning("Payment gateway is unavailable — your order is safe. Re-check payment when ready.")
+        setIsPlacingOrder(false)
+        setIsResumingPayment(false)
+        settle()
+        return
+      }
+      const paymentObject = new RZP(options)
+      paymentObject.on('payment.failed', function (response: any) {
+        toast.error(response.error?.description || "Payment did not complete. You can retry, or it will be reconciled automatically.")
+        setIsPlacingOrder(false)
+        setIsResumingPayment(false)
+        settle()
+      })
+      paymentObject.open()
+    })
+  }
+
+  // Authoritatively resume payment for an existing unpaid attempt
+  const resumePendingPayment = async () => {
+    if (isResumingPayment || isCheckingPending || isPlacingOrder) return
+    const a = loadAttempt(scope)
+    const orderId = pendingOrder?.orderId || a?.orderId
+    const token = pendingOrder?.token || a?.checkoutToken || a?.recoverySecret
+    if (!orderId && !a?.key) {
+      toast.error("No pending order or checkout attempt found to resume.")
+      return
+    }
+
+    setIsResumingPayment(true)
+    try {
+      // 1. Authoritative check: if an order exists, query backend for authoritative eligibility
+      if (orderId) {
+        const d = await apiPost("/api/order/verify-payment", { orderId, checkoutToken: token })
+        if (d?.outcome === "paid" || d?.status === "paid") {
+          toast.success("Payment already confirmed!")
+          finalizeSuccess(orderId, pendingOrder?.purchasedLines || a?.purchasedLines)
+          return
+        }
+
+        if (d?.outcome === "terminal") {
+          transitionToTerminal(d?.message || "Order has expired or was cancelled.")
+          return
+        }
+
+        if (d?.outcome === "held") {
+          transitionToHeld(d?.message, { orderId, token, purchasedLines: pendingOrder?.purchasedLines || a?.purchasedLines })
+          return
+        }
+
+        if (d?.outcome === "verification_pending") {
+          transitionToVerificationPending(d?.message)
+          return
+        }
+
+        if (d?.outcome === "preparing") {
+          toast.info(d?.message || "Payment gateway is preparing your order. Retrying in a moment...")
+          patchAttempt(scope, { phase: "placing" })
+          setTimeout(() => {
+            resumePendingPayment()
+          }, 2000)
+          return
+        }
+
+        // ONLY when backend explicitly returns outcome === "payable"
+        if (d?.outcome === "payable" && d?.razorpayOrderId && d?.amount) {
+          patchAttempt(scope, {
+            phase: "awaiting_payment",
+            razorpayOrderId: d.razorpayOrderId,
+            amount: d.amount,
+            currency: d.currency || "INR",
+            keyId: d.key,
+          })
+          await openRazorpayCheckout({
+            orderId,
+            dbId: pendingOrder?.dbId || a?.orderDbId,
+            token,
+            razorpayOrderId: d.razorpayOrderId,
+            amount: d.amount,
+            currency: d.currency || "INR",
+            key: d.key,
+            prefill: a?.prefill || {
+              name: `${formData.firstName} ${formData.lastName}`.trim(),
+              email: formData.email,
+              contact: formData.phone,
+            },
+            purchasedLines: pendingOrder?.purchasedLines || a?.purchasedLines,
+          })
+          return
+        }
+      }
+
+      // 2. If no orderId exists yet or gateway initialization needs replaying:
+      // Strictly verify cart synchronization first
+      const flushResult = await flushCart()
+      if (!flushResult.success) {
+        toast.error("Cart synchronization failed: " + (flushResult.error || "Please resolve cart issues before proceeding."))
+        return
+      }
+
+      // 3. Replay with canonical immutable order data
+      const orderData = a?.canonicalOrderData
+      if (!orderData) {
+        transitionToTerminal("Original checkout attempt data is missing. Please start a new checkout.")
+        return
+      }
+
+      const replayRes = await apiPost('/api/order', orderData)
+      if (replayRes?.success && replayRes?.order) {
+        const o = replayRes.order
+        const purchasedLines = a?.purchasedLines || []
+        if (o.outcome === 'paid_settled' || o.paymentStatus === 'paid') {
+          finalizeSuccess(o.orderId, purchasedLines)
+          return
+        }
+        if (o.requiresPayment && o.razorpayOrderId && o.amount) {
+          patchAttempt(scope, {
+            phase: "awaiting_payment",
+            orderId: o.orderId,
+            orderDbId: o._id,
+            checkoutToken: o.checkoutToken || token,
+            razorpayOrderId: o.razorpayOrderId,
+            amount: o.amount,
+            currency: o.currency || "INR",
+            keyId: o.key,
+          })
+          await openRazorpayCheckout({
+            orderId: o.orderId,
+            dbId: o._id,
+            token: o.checkoutToken || token,
+            razorpayOrderId: o.razorpayOrderId,
+            amount: o.amount,
+            currency: o.currency || "INR",
+            key: o.key,
+            purchasedLines,
+          })
+          return
+        }
+      } else {
+        toast.error(replayRes?.message || "Failed to resume order creation.")
+      }
+    } catch (err: any) {
+      if (err instanceof ApiError && (err.status === 404 || err.status === 403 || err.status === 409)) {
+        transitionToTerminal(err.message || "This checkout attempt is no longer valid. Please start a fresh checkout.")
+      } else {
+        toast.error(err.message || "Could not resume payment. Please try again.")
+      }
+    } finally {
+      setIsResumingPayment(false)
+    }
+  }
+
+  // Manual "Re-check payment" from the pending screen
   const recheckPending = async () => {
+    if (isCheckingPending || isResumingPayment) return
     if (!pendingOrder) return
+    setIsCheckingPending(true)
     try {
       const d = await apiPost("/api/order/verify-payment", { orderId: pendingOrder.orderId, checkoutToken: pendingOrder.token })
-      if (d?.status === "paid") {
+      if (d?.outcome === "paid" || d?.status === "paid") {
         toast.success("Payment confirmed!")
-        finalizeSuccess(pendingOrder.orderId)
+        finalizeSuccess(pendingOrder.orderId, pendingOrder.purchasedLines)
+        return
+      }
+      if (d?.outcome === "terminal") {
+        transitionToTerminal(d?.message || "This order has expired or was cancelled.")
+        return
+      }
+      if (d?.outcome === "held") {
+        transitionToHeld(d?.message, pendingOrder)
+        return
+      }
+      if (d?.outcome === "verification_pending") {
+        transitionToVerificationPending(d?.message)
+        return
+      }
+      if (d?.outcome === "preparing") {
+        toast.info(d?.message || "Payment gateway is preparing your order. Please retry in a moment.")
         return
       }
       toast.message(d?.message || "Still confirming — if money was deducted it will be reconciled automatically.")
     } catch (err: any) {
-      if (err instanceof ApiError && (err.status === 404 || err.status === 403)) {
-        clearAttempt(scope)
-        setPaymentPending(false)
-        toast.error("This checkout attempt can no longer be recovered.")
+      if (err instanceof ApiError && (err.status === 404 || err.status === 403 || err.status === 409)) {
+        transitionToTerminal("This checkout attempt can no longer be recovered.")
         return
       }
       toast.message("Could not reach the server — please try again in a moment.")
+    } finally {
+      setIsCheckingPending(false)
     }
   }
 
@@ -375,12 +807,45 @@ export default function CheckoutPage() {
     if (isPlacingOrder) return
     setIsPlacingOrder(true)
 
-    // Capture the exact purchased lines NOW (the reactive `items` may change
-    // while the async flow runs) so success removes only these QUANTITIES.
-    const purchasedLines = items.map((i) => ({ productId: i.product.id, quantity: i.quantity }))
+    // Await mutation queue flush to obtain a consistent snapshot
+    let flushResult = await flushCart()
+    if (!flushResult.success) {
+      const initialItems = [...items]
+      const reconciled = await reconcileCart()
+      if (reconciled) {
+        flushResult = await flushCart()
+        const newItems = flushResult.items || []
+        const changed =
+          newItems.length !== initialItems.length ||
+          newItems.some((ni) => {
+            const oi = initialItems.find((i) => i.product.id === ni.product.id)
+            return !oi || oi.quantity !== ni.quantity
+          })
+        if (changed) {
+          toast.info("Your cart was updated to match the saved server cart. Please review your order before placing it.")
+          setIsPlacingOrder(false)
+          return
+        }
+      }
+    }
+    if (!flushResult.success) {
+      toast.error("Could not sync your cart with the server. Please check your connection and try again.")
+      setIsPlacingOrder(false)
+      return
+    }
+
+    const snapshotItems = flushResult.items
+    if (!snapshotItems || snapshotItems.length === 0) {
+      toast.error("Your cart is empty. Please add items to checkout.")
+      setIsPlacingOrder(false)
+      return
+    }
+
+    // Build BOTH purchasedLines and orderItems from the same accepted snapshot
+    const purchasedLines = snapshotItems.map((i) => ({ productId: i.product.id, quantity: i.quantity }))
 
     try {
-      const orderItems = items.map(item => ({
+      const orderItems = snapshotItems.map(item => ({
         productId: item.product.id,
         name: item.product.name,
         price: item.product.price,
@@ -404,7 +869,7 @@ export default function CheckoutPage() {
       // Same scope + same canonical payload ⇒ the SAME persisted key; any
       // change (address/coupon/method/cart) starts a fresh attempt.
       const fingerprint = payloadFingerprint({ items: purchasedLines, shippingAddress, paymentMethod: formData.paymentMethod, couponCode })
-      const { attempt } = resolveAttempt(scope, fingerprint)
+      let { attempt } = resolveAttempt(scope, fingerprint)
 
       const orderData = {
         items: orderItems,
@@ -415,6 +880,7 @@ export default function CheckoutPage() {
         checkoutKey: attempt.key,
         checkoutRecoverySecret: attempt.recoverySecret,
       }
+      patchAttempt(scope, { canonicalOrderData: orderData, purchasedLines })
 
       let data: any
       try {
@@ -423,16 +889,20 @@ export default function CheckoutPage() {
         const code = placeErr instanceof ApiError ? placeErr.data?.code : undefined
         const status = placeErr instanceof ApiError ? placeErr.status : undefined
         // DEFINITIVE conflict for THIS key (changed payload / expired attempt):
-        // start a fresh attempt and retry exactly once — never loop on the key.
+        // start a fresh attempt and retry exactly once — replace active attempt reference!
         if (code === 'CHECKOUT_CONFLICT' || code === 'CHECKOUT_ATTEMPT_FAILED') {
           clearAttempt(scope)
           const retry = resolveAttempt(scope, fingerprint)
+          attempt = retry.attempt
+          const retryOrderData = {
+            ...orderData,
+            checkoutKey: attempt.key,
+            checkoutRecoverySecret: attempt.recoverySecret,
+          }
+          // TASK 3: Persist canonical payload BEFORE sending the retry request
+          patchAttempt(scope, { canonicalOrderData: retryOrderData, purchasedLines })
           try {
-            data = await apiPost('/api/order', {
-              ...orderData,
-              checkoutKey: retry.attempt.key,
-              checkoutRecoverySecret: retry.attempt.recoverySecret,
-            })
+            data = await apiPost('/api/order', retryOrderData)
           } catch (retryErr: any) {
             throw retryErr
           }
@@ -456,7 +926,7 @@ export default function CheckoutPage() {
         } else {
           // DEFINITIVE rejection (validation / auth): no order was created, so it
           // is safe to clear the key and surface the reason.
-          clearAttempt(scope)
+          transitionToTerminal(placeErr.message || "Failed to place order.")
           throw placeErr
         }
       }
@@ -467,158 +937,76 @@ export default function CheckoutPage() {
           phase: "awaiting_payment",
           orderId: o.orderId,
           orderDbId: o._id,
-          checkoutToken: o.checkoutToken, // legacy server-token path only; patchAttempt keeps the saved secret otherwise
+          checkoutToken: o.checkoutToken,
           paymentStatus: o.paymentStatus,
           outcome: o.outcome,
+          purchasedLines,
         })
-        // The guest verify token is the CLIENT-held recovery secret (works even if
-        // the first response was lost), or the legacy server token if returned.
         const guestToken = o.checkoutToken || attempt.recoverySecret
         o.checkoutToken = guestToken
 
-        // EXPLICIT SERVER CONTRACT — branch on `outcome`, never on a missing field.
-        if (o.outcome === 'paid_settled' || o.outcome === 'order_placed_cod' || o.settled) {
+        if (o.outcome === 'paid_settled' || o.outcome === 'order_placed_cod' || o.settled || o.paymentStatus === 'paid') {
           finalizeSuccess(o.orderId, purchasedLines)
           return
         }
-        if (o.outcome === 'held_for_review' || o.outcome === 'rejected_terminal') {
-          // Money may exist but the order must NOT be paid/reopened further from here.
-          patchAttempt(scope, { phase: 'pending_recovery' })
-          showPending({ orderId: o.orderId, token: guestToken, dbId: o._id })
-          toast.warning(
-            o.outcome === 'held_for_review'
-              ? 'Your order is being reviewed by the store — we will follow up shortly.'
-              : 'This order can no longer be paid. Please contact support.'
-          )
+        if (o.outcome === 'rejected_terminal') {
+          transitionToTerminal("This order can no longer be paid. Please review your cart and try again.")
+          return
+        }
+        if (o.outcome === 'held_for_review') {
+          transitionToHeld('Your order is being reviewed by the store — we will follow up shortly.', {
+            orderId: o.orderId,
+            token: guestToken,
+            dbId: o._id,
+            purchasedLines,
+          })
           return
         }
         if (o.outcome === 'pending_recovery' || !o.requiresPayment) {
-          // Uncertain/unpaid edge — recoverable pending, NOT the old “Payment ID missing”.
-          patchAttempt(scope, { phase: 'pending_recovery' })
-          showPending({ orderId: o.orderId, token: guestToken, dbId: o._id })
-          return
-        }
-
-        // Online payment flow — the ONLY path that opens the Razorpay popup.
-        const res = await loadRazorpayScript()
-        if (!res) {
-          patchAttempt(scope, { phase: "pending_recovery" })
-          showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
-          toast.warning("Could not load the payment gateway. Your order is safe — re-check payment when you are back online.")
-          return
-        }
-
-        // Await the full modal lifecycle (payment verified OR dismissed/failed).
-        await new Promise<void>((resolve) => {
-          let settledFlow = false
-          const settle = () => { if (!settledFlow) { settledFlow = true; resolve() } }
-
-          // React to the SERVER'S authoritative verdict. "paid" finalizes;
-          // "pending" is a recoverable state (webhook/sweeper will settle it);
-          // anything else is a genuine rejection shown as such.
-          const finalize = (verifyData: any) => {
-            if (verifyData?.status === "paid") {
-              finalizeSuccess(o.orderId)
-              patchAttempt(scope, { phase: "confirmed", paymentStatus: "paid" })
-            } else if (verifyData?.status === "pending") {
-              patchAttempt(scope, { phase: "pending_recovery", paymentStatus: "pending" })
-              showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
-              toast.warning(verifyData.message || "Payment is being confirmed — you can safely re-check in a moment.")
-            } else {
-              patchAttempt(scope, { phase: "awaiting_payment", paymentStatus: verifyData?.status })
-              toast.error(verifyData?.message || "Payment verification failed.")
-            }
-          }
-
-          const verify = async (response: any) => {
-            try {
-              setIsPlacingOrder(true) // re-set loading during verification
-              patchAttempt(scope, { phase: "awaiting_verify" })
-              const body: any = {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderId: o.orderId,
-              }
-              const tokenNow = o.checkoutToken || loadAttempt(scope)?.checkoutToken
-              if (tokenNow) body.checkoutToken = tokenNow
-              const verifyData = await apiPost('/api/order/verify-payment', body)
-              finalize(verifyData)
-            } catch (verifyErr: any) {
-              if (verifyErr instanceof ApiError && verifyErr.status >= 500) {
-                // Server-side verification trouble is NOT a rejection — the
-                // attempt stays recoverable via the pending screen.
-                patchAttempt(scope, { phase: "pending_recovery" })
-                showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
-                toast.warning("Payment confirmation is delayed — your order is safe and will reconcile automatically.")
-              } else if (!(verifyErr instanceof ApiError) || verifyErr.status === 408 || verifyErr.status >= 500) {
-                // Network/timeout during verify — confirmation pending, keep attempt.
-                patchAttempt(scope, { phase: "pending_recovery" })
-                showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
-                toast.warning("Could not confirm the payment just now — it will be reconciled automatically if money was deducted.")
-              } else {
-                // A genuine 4xx rejection (bad signature / order mismatch /
-                // forbidden). We never convert it into a "mark failed" ping —
-                // that decision belongs to the gateway webhook and sweeper.
-                toast.error(verifyErr.message || "Could not verify payment. If money was deducted it will be confirmed automatically.")
-              }
-            }
-          }
-
-          const options = {
-            // Server-returned key is the single source of truth — swapping the
-            // backend .env from test to live keys automatically flips the
-            // checkout widget too, with nothing to update on the frontend.
-            key: o.key || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
-            amount: o.amount,
-            currency: o.currency,
-            name: "Handloomer",
-            description: "Order Payment",
-            order_id: o.razorpayOrderId,
-            handler: async function (response: any) {
-              await verify(response)
-              setIsPlacingOrder(false)
-              settle()
-            },
-            prefill: {
-              name: `${formData.firstName} ${formData.lastName}`,
-              email: formData.email,
-              contact: formData.phone
-            },
-            theme: {
-              color: "#0f172a"
-            },
-            modal: {
-              ondismiss: function() {
-                // Abandoned window. We deliberately do NOT ask the server to
-                // fail the order: the reservation stays pending and the
-                // backend sweeper reconciles it against Razorpay before it
-                // would ever release stock/coupon. Cart is preserved locally.
-                toast.warning("Payment window closed. If you completed the payment it will be confirmed automatically — your cart is saved.")
-                settle()
-              }
-            }
-          }
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const RZP = (window as any).Razorpay
-          if (!RZP) {
-            patchAttempt(scope, { phase: "pending_recovery" })
-            showPending({ orderId: o.orderId, token: o.checkoutToken, dbId: o._id })
-            toast.warning("Payment gateway is unavailable — your order is safe. Re-check payment when ready.")
-            settle()
+          if (!o.requiresPayment) {
+            finalizeSuccess(o.orderId, purchasedLines)
             return
           }
-          const paymentObject = new RZP(options)
-          paymentObject.on('payment.failed', function (response: any) {
-             // Browser "failed" is ADVISORY only, never authoritative. Razorpay
-             // can still capture, or the buyer may retry. No server ping.
-             toast.error(response.error?.description || "Payment did not complete. You can retry, or it will be reconciled automatically.")
-             settle()
-          })
-          paymentObject.open()
+          patchAttempt(scope, { phase: 'pending_recovery' })
+          showPending({ orderId: o.orderId, token: guestToken, dbId: o._id, purchasedLines })
+          return
+        }
+
+        patchAttempt(scope, {
+          phase: "awaiting_payment",
+          orderId: o.orderId,
+          orderDbId: o._id,
+          checkoutToken: o.checkoutToken,
+          paymentStatus: o.paymentStatus,
+          outcome: o.outcome,
+          purchasedLines,
+          razorpayOrderId: o.razorpayOrderId,
+          amount: o.amount,
+          currency: o.currency,
+          keyId: o.key,
+          prefill: {
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
+            email: formData.email,
+            contact: formData.phone,
+          },
         })
-        return // modal lifecycle fully settled here
+
+        await openRazorpayCheckout({
+          orderId: o.orderId,
+          dbId: o._id,
+          token: o.checkoutToken,
+          razorpayOrderId: o.razorpayOrderId,
+          amount: o.amount,
+          currency: o.currency || "INR",
+          key: o.key,
+          prefill: {
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
+            email: formData.email,
+            contact: formData.phone,
+          },
+          purchasedLines,
+        })
+        return
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to place order. Please try again.")
@@ -693,14 +1081,14 @@ export default function CheckoutPage() {
                 </span>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href={`/track-order?orderId=${encodeURIComponent(placedOrderId)}&email=${encodeURIComponent(formData.email || "")}`}>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <Link href={`/track-order?orderId=${encodeURIComponent(placedOrderId)}&email=${encodeURIComponent(formData.email || "")}`} className="w-full sm:w-auto">
                 <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 w-full sm:w-auto">
                   Track This Order
                 </Button>
               </Link>
-              <Link href="/collections">
-                <Button className="bg-primary hover:bg-primary/90 mt-2 w-full sm:w-auto">
+              <Link href="/collections" className="w-full sm:w-auto">
+                <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                   Continue Shopping
                 </Button>
               </Link>
@@ -713,6 +1101,10 @@ export default function CheckoutPage() {
   }
 
   if (paymentPending) {
+    const isResumable =
+      pendingOrder?.outcome === "awaiting_payment" ||
+      (Boolean(pendingOrder?.razorpayOrderId) && pendingOrder?.paymentStatus !== "paid")
+
     return (
       <main className="min-h-screen flex flex-col">
         <Header />
@@ -722,27 +1114,85 @@ export default function CheckoutPage() {
         >
           <div className="text-center px-4 max-w-md">
             <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Loader2 className="w-10 h-10 text-amber-600 animate-spin" />
+              {isResumingPayment || isCheckingPending ? (
+                <Loader2 className="w-10 h-10 text-amber-600 animate-spin" />
+              ) : (
+                <CreditCard className="w-10 h-10 text-amber-600" />
+              )}
             </div>
-            <h1 className="font-serif text-3xl mb-4">Confirming your payment</h1>
-            <p className="text-muted-foreground mb-2">
-              We have received your order but are still waiting for the payment gateway to confirm it.
-              If money was deducted, it will be reconciled automatically — there is nothing you need to do.
+            <h1 className="font-serif text-3xl mb-4">
+              {isResumable ? "Complete Your Payment" : "Confirming your payment"}
+            </h1>
+            <p className="text-muted-foreground mb-4">
+              {isResumable
+                ? "Your order has been initiated. Tap 'Resume Payment' to open the secure payment gateway and complete your order."
+                : "We have received your order but are still waiting for the payment gateway to confirm it. If money was deducted, it will be reconciled automatically — there is nothing you need to do."}
             </p>
             <div className="bg-muted/50 rounded-lg p-6 mb-8 text-left space-y-3 border border-border">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Order ID</span>
                 <span className="font-medium">#{pendingOrderId || "Processing..."}</span>
               </div>
+              {pendingOrder?.amount && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-medium">₹{(pendingOrder.amount / 100).toLocaleString("en-IN")}</span>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href={`/track-order?orderId=${encodeURIComponent(pendingOrderId)}&email=${encodeURIComponent(formData.email || "")}`}>
-                <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 w-full sm:w-auto">
-                  Check Order Status
+            <div className="flex flex-col gap-3 justify-center items-center w-full">
+              {isResumable && (
+                <Button
+                  className="bg-primary hover:bg-primary/90 w-full flex items-center justify-center gap-2"
+                  onClick={resumePendingPayment}
+                  disabled={isResumingPayment || isCheckingPending}
+                >
+                  {isResumingPayment ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Opening Gateway...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4" />
+                      Resume Payment
+                    </>
+                  )}
                 </Button>
-              </Link>
-              <Button className="bg-primary hover:bg-primary/90 mt-2 w-full sm:w-auto" onClick={recheckPending}>
-                Re-check Payment
+              )}
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <Button
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary/10 w-full sm:flex-1"
+                  onClick={recheckPending}
+                  disabled={isCheckingPending || isResumingPayment}
+                >
+                  {isCheckingPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Checking...
+                    </>
+                  ) : (
+                    "Re-check Payment"
+                  )}
+                </Button>
+                <Link
+                  href={`/track-order?orderId=${encodeURIComponent(pendingOrderId)}&email=${encodeURIComponent(formData.email || "")}`}
+                  className="w-full sm:flex-1"
+                >
+                  <Button variant="outline" className="w-full" disabled={isCheckingPending || isResumingPayment}>
+                    Check Status
+                  </Button>
+                </Link>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground text-xs mt-2"
+                onClick={handleStartNewCheckout}
+                disabled={isResumingPayment || isCheckingPending}
+              >
+                Cancel and Start Fresh Checkout
               </Button>
             </div>
           </div>

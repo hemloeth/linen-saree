@@ -38,6 +38,13 @@ export interface CheckoutAttempt {
     checkoutToken?: string
     outcome?: string
     paymentStatus?: string
+    purchasedLines?: Array<{ productId: string; quantity: number }>
+    razorpayOrderId?: string
+    amount?: number
+    currency?: string
+    keyId?: string
+    prefill?: { name?: string; email?: string; contact?: string }
+    canonicalOrderData?: Record<string, any>
     updatedAt: number
 }
 
