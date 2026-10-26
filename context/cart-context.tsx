@@ -245,24 +245,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!isAuthRef.current) return
     const activeGen = targetGen !== undefined ? targetGen : accountGen.current
     if (activeGen !== accountGen.current) return
+    const revAtStart = mutationRev.current
 
     try {
       const data = await apiGet('/api/cart')
       if (activeGen !== accountGen.current) return
       if (data?.success && Array.isArray(data.cart)) {
-        const snapshotRev = mutationRev.current
         const mapped = data.cart
           .map(mapServerCartItem)
           .filter((item: CartItem | null): item is CartItem => item !== null)
-        itemsRef.current = mapped
-        setItems(mapped)
-        for (const li of mapped) lastSyncedQty.current.set(li.product.id, li.quantity)
+        if (revAtStart === mutationRev.current) {
+          itemsRef.current = mapped
+          setItems(mapped)
+          for (const li of mapped) lastSyncedQty.current.set(li.product.id, li.quantity)
+        }
         const serverProductIds = mapped.map((i: CartItem) => i.product.id)
         mutationQueue.current?.acceptServerSnapshot(
           serverProductIds,
           storageKeyRef.current,
           activeGen,
-          snapshotRev
+          revAtStart
         )
       }
     } catch (err: any) {
@@ -274,23 +276,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const reconcileCart = useCallback(async (): Promise<boolean> => {
     if (!isAuthRef.current) return true
     const activeGen = accountGen.current
+    const revAtStart = mutationRev.current
     try {
       const data = await apiGet('/api/cart')
       if (activeGen !== accountGen.current) return false
       if (data?.success && Array.isArray(data.cart)) {
-        const snapshotRev = mutationRev.current
         const mapped = data.cart
           .map(mapServerCartItem)
           .filter((item: CartItem | null): item is CartItem => item !== null)
-        itemsRef.current = mapped
-        setItems(mapped)
-        for (const li of mapped) lastSyncedQty.current.set(li.product.id, li.quantity)
+        if (revAtStart === mutationRev.current) {
+          itemsRef.current = mapped
+          setItems(mapped)
+          for (const li of mapped) lastSyncedQty.current.set(li.product.id, li.quantity)
+        }
         const serverProductIds = mapped.map((i: CartItem) => i.product.id)
         mutationQueue.current?.acceptServerSnapshot(
           serverProductIds,
           storageKeyRef.current,
           activeGen,
-          snapshotRev
+          revAtStart
         )
         return true
       }
