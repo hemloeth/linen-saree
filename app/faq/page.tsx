@@ -78,7 +78,7 @@ const faqData: FAQItem[] = [
   {
     category: "Products & Orders",
     question: "How do I cancel my order?",
-    answer: "For cancelling the order, kindly reach out to our customer care number or email us immediately before the dispatch of the order. Once the order is dispatched order cancellation is not possible. And in case of cancellation of prepaid orders, Rs 150.00 INR will be deducted irrespective of the order status."
+    answer: "You can cancel an eligible order directly from your Orders page or by contacting our customer care team before the order is dispatched. Once the order has been dispatched, cancellation is no longer possible. Eligible cancellations carry no cancellation fee. Once cancellation is confirmed, any captured payment will be refunded to the original payment method. Refund processing and bank credit times may vary."
   },
   {
     category: "Products & Orders",

@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Mail, Phone, MapPin, Clock } from "lucide-react"
+import { apiPost } from "@/lib/api"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ export default function ContactPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+  const [errorMessage, setErrorMessage] = useState("")
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -28,14 +30,20 @@ export default function ContactPage() {
     e.preventDefault()
     setIsSubmitting(true)
     setSubmitStatus("idle")
+    setErrorMessage("")
 
-    // Simulate form submission
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setSubmitStatus("success")
-      setFormData({ name: "", phone: "", email: "", message: "" })
-    } catch (error) {
+      const data = await apiPost('/api/contact', formData)
+      if (data && data.success) {
+        setSubmitStatus("success")
+        setFormData({ name: "", phone: "", email: "", message: "" })
+      } else {
+        setSubmitStatus("error")
+        setErrorMessage(data?.message || "Failed to submit message.")
+      }
+    } catch (error: any) {
       setSubmitStatus("error")
+      setErrorMessage(error?.message || "Failed to submit message. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -212,7 +220,7 @@ export default function ContactPage() {
                 {submitStatus === "error" && (
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-red-800 text-sm">
-                      Sorry, there was an error sending your message. Please try again.
+                      {errorMessage || "Sorry, there was an error sending your message. Please try again."}
                     </p>
                   </div>
                 )}

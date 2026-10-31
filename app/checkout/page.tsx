@@ -77,7 +77,6 @@ export default function CheckoutPage() {
   ]
 
   const [orderPlaced, setOrderPlaced] = useState(false)
-
   // Scroll to top automatically when order is successfully placed
   useEffect(() => {
     if (orderPlaced) {
@@ -288,6 +287,26 @@ export default function CheckoutPage() {
 
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [placedOrderId, setPlacedOrderId] = useState("")
+  const [authoritativeOrder, setAuthoritativeOrder] = useState<any>(null)
+
+  // Fetch authoritative server order details upon order completion
+  useEffect(() => {
+    if (orderPlaced && placedOrderId) {
+      let active = true;
+      (async () => {
+        try {
+          const { apiGet } = await import("@/lib/api");
+          const res = await apiGet(`/api/order/track?orderId=${encodeURIComponent(placedOrderId)}`);
+          if (active && res && res.success && res.order) {
+            setAuthoritativeOrder(res.order);
+          }
+        } catch (e) {
+          // Keep form fallback if query fails
+        }
+      })();
+      return () => { active = false; };
+    }
+  }, [orderPlaced, placedOrderId])
   const [paymentPending, setPaymentPending] = useState(false)
   const [pendingOrderId, setPendingOrderId] = useState("")
 
@@ -1053,21 +1072,30 @@ export default function CheckoutPage() {
             <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <Check className="w-10 h-10 text-primary" />
             </div>
-            <h1 className="font-serif text-3xl mb-4">Order Placed Successfully!</h1>
+            <h1 className="font-serif text-3xl mb-4">Order Confirmed!</h1>
             <p className="text-muted-foreground mb-2">
-              Thank you for your order. We{"'"}ve sent a confirmation email to {formData.email || "your email"}.
+              Thank you for your order. We have queued your confirmation email to{" "}
+              <span className="font-medium text-foreground">
+                {authoritativeOrder?.shippingAddress?.email || formData.email || "your email"}
+              </span>.
             </p>
             <div className="bg-muted/50 rounded-lg p-6 mb-8 text-left space-y-3 border border-border">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Order ID</span>
-                <span className="font-medium">#{placedOrderId || "Processing..."}</span>
+                <span className="font-medium">#{authoritativeOrder?.orderId || placedOrderId || "Processing..."}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment Method</span>
                 <span className="font-medium">
-                  {formData.paymentMethod === "cod" ? "Cash on Delivery" : "Paid Online (Razorpay)"}
+                  {(authoritativeOrder?.payment?.method || formData.paymentMethod) === "cod" ? "Cash on Delivery" : "Paid Online (Razorpay)"}
                 </span>
               </div>
+              {authoritativeOrder?.pricing?.total !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Amount</span>
+                  <span className="font-medium">₹{authoritativeOrder.pricing.total}</span>
+                </div>
+              )}
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <Link href={`/track-order?orderId=${encodeURIComponent(placedOrderId)}&email=${encodeURIComponent(formData.email || "")}`} className="w-full sm:w-auto">

@@ -505,9 +505,11 @@ export default function ReturnsPage() {
           <div className="mt-12 bg-muted/30 rounded-2xl p-8">
             <h3 className="font-serif text-xl font-medium mb-4">Order Cancellation Policy</h3>
             <div className="space-y-3 font-sans text-muted-foreground text-sm">
-              <p>• COD orders: Cancelled if no response within 3 days of first confirmation attempt</p>
-              <p>• Prepaid orders: If cancelled after dispatch, ₹150 shipping charges will be deducted from refund</p>
-              <p>• Delayed orders: We'll contact you if delivery is delayed beyond 2 weeks from estimated time</p>
+              <p>• Eligible cancellations carry no cancellation fee. Cancellations must be requested prior to dispatch.</p>
+              <p>• Prepaid orders: Once cancellation is confirmed, any captured payment will be refunded to the original payment method. Refund processing and bank credit times may vary.</p>
+              <p>• Dispatched orders cannot be cancelled directly and must follow our standard return process upon delivery.</p>
+              <p>• COD orders: Cancelled if no response is received within 3 days of the first confirmation attempt.</p>
+              <p>• Delayed orders: We'll contact you if delivery is delayed beyond 2 weeks from estimated time.</p>
             </div>
           </div>
         </section>

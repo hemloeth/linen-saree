@@ -102,10 +102,10 @@ function mapProductFromDB(dbProduct: any): Product {
 // root layout. The full detail payload is loaded per-product on the product page
 // via fetchProductBySku (a single document), so no visible data is lost while the
 // per-route seed payload shrinks substantially.
-export async function fetchProductsFromDB(): Promise<Product[]> {
+export async function fetchProductsFromDB(limit: number = 24): Promise<Product[]> {
   try {
     const { apiServerGet } = await import("@/lib/api");
-    const data = await apiServerGet('/api/product/allproducts', { revalidate: 60 });
+    const data = await apiServerGet(`/api/product/allproducts?limit=${limit}`, { revalidate: 60 });
 
     if (data.success && data.products) {
       return data.products.map(mapProductFromDB);

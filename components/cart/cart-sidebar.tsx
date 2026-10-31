@@ -109,7 +109,9 @@ export function CartSidebar() {
                         <span className="px-3 text-sm">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          className="p-2 hover:bg-muted transition-colors"
+                          disabled={item.quantity >= 10 || (typeof (item.product as any).stock === 'number' && item.quantity >= (item.product as any).stock)}
+                          className="p-2 hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          aria-label="Increase quantity"
                         >
                           <Plus className="w-3 h-3" />
                         </button>

@@ -396,16 +396,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // ======= Cart Operations =======
 
   const addToCart = useCallback((product: Product, quantity = 1) => {
+    const maxQty = typeof (product as any).stock === 'number' ? Math.min(10, (product as any).stock) : 10;
     bumpRev()
     setItems(currentItems => {
       const existingItem = currentItems.find(item => item.product.id === product.id)
       const next = existingItem
         ? currentItems.map(item =>
             item.product.id === product.id
-              ? { ...item, quantity: item.quantity + quantity }
+              ? { ...item, quantity: Math.min(item.quantity + quantity, maxQty) }
               : item
           )
-        : [...currentItems, { product, quantity }]
+        : [...currentItems, { product, quantity: Math.min(quantity, maxQty) }]
       itemsRef.current = next
       return next
     })
@@ -435,16 +436,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeFromCart(productId)
       return
     }
+    const clampedQty = Math.min(quantity, 10);
     bumpRev()
     setItems(currentItems => {
       const next = currentItems.map(item =>
-        item.product.id === productId ? { ...item, quantity } : item
+        item.product.id === productId ? { ...item, quantity: clampedQty } : item
       )
       itemsRef.current = next
       return next
     })
     // SET coalesces to the latest absolute intent; pending adds fold onto it.
-    enqueueSync({ kind: "set", productId, quantity })
+    enqueueSync({ kind: "set", productId, quantity: clampedQty })
   }, [removeFromCart, enqueueSync])
 
   const clearCart = useCallback(() => {

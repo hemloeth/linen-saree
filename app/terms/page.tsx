@@ -87,6 +87,9 @@ export default function TermsOfServicePage() {
             <p className="font-sans text-muted-foreground leading-relaxed">
               • We accept various payment methods as displayed at checkout
             </p>
+            <p className="font-sans text-muted-foreground leading-relaxed">
+              • Eligible cancellations carry no cancellation fee. Once cancellation is confirmed prior to dispatch, any captured payment will be refunded to the original payment method.
+            </p>
           </div>
         </section>
 
