@@ -50,6 +50,7 @@ interface AdminOrder {
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
   const [previewItem, setPreviewItem] = useState<{ name: string; quantity: number; sku?: string; price: number; image?: string } | null>(null)
@@ -126,9 +127,16 @@ export default function AdminOrdersPage() {
       const data = await apiGet(`/api/order/admin/all${query}`)
       if (data.success) {
         setOrders(data.orders)
+        setFetchError(null)
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to fetch admin orders:", err)
+      // Surface API failures instead of masquerading them as "No orders yet".
+      setFetchError(
+        err?.status === 401
+          ? "Admin session was not recognized. Please sign in again from the admin gate."
+          : err?.message || "Failed to load orders. Please try again."
+      )
     } finally {
       setLoading(false)
     }
@@ -252,11 +260,32 @@ export default function AdminOrdersPage() {
           </TableHeader>
           <TableBody>
             {filteredOrders.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                  {searchTerm || statusFilter ? "No matching orders" : "No orders yet"}
-                </TableCell>
-              </TableRow>
+              fetchError && orders.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8">
+                    <div className="flex flex-col items-center gap-3">
+                      <p className="text-sm text-destructive">{fetchError}</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setLoading(true)
+                          setFetchError(null)
+                          fetchOrders()
+                        }}
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    {searchTerm || statusFilter ? "No matching orders" : "No orders yet"}
+                  </TableCell>
+                </TableRow>
+              )
             ) : (
               filteredOrders.map((order) => (
                 <TableRow key={order._id}>

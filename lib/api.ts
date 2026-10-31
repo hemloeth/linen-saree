@@ -72,11 +72,51 @@ function buildHeaders(customHeaders?: Record<string, string>, isFormData = false
     return headers;
 }
 
+// Customer endpoints that must NEVER inherit the admin token
+const CUSTOMER_EXCLUSION_PATTERNS = [
+    /^\/api\/order\/(create|my-orders|[a-f0-9]{24}\/cancel)/,
+    /^\/api\/cart(\/.*)?$/,
+    /^\/api\/user(\/.*)?$/,
+    /^\/api\/checkout(\/.*)?$/,
+];
+
+/**
+ * Determine whether an API endpoint requires administrative authentication.
+ */
+export function isAdminEndpoint(endpoint: string, method = 'GET'): boolean {
+    if (CUSTOMER_EXCLUSION_PATTERNS.some((p) => p.test(endpoint))) {
+        return false;
+    }
+    if (/^\/api\/(admin(-auth)?|order\/admin)\//.test(endpoint)) {
+        return true;
+    }
+    // Admin mutations on product, category, banner, hero, coupon collections
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+        if (/^\/api\/(product|coupon|category|category-banner|celebrity-collection|festive-banner|festive-sale|hero|marketing-collections)(\/.*)?$/.test(endpoint)) {
+            return true;
+        }
+    }
+    // Admin GET endpoints for coupons, category banners, hero, admin product queries
+    if (/^\/api\/(coupon|category-banner\/all|hero|celebrity-collection|festive-banner|festive-sale|marketing-collections)$/.test(endpoint)) {
+        return true;
+    }
+    return false;
+}
+
 // Attach the admin Bearer token to admin-protected API calls only. Scoping by
-// endpoint prevents the admin token from leaking into regular storefront/user
+// endpoint and method prevents the admin token from leaking into regular storefront/user
 // requests, which authenticate via their own cookie session.
-function withAdminAuth(endpoint: string, headers: Record<string, string>): Record<string, string> {
-    if (/^\/api\/admin(-auth)?\//.test(endpoint)) {
+export function withAdminAuth(
+    endpoint: string,
+    headers: Record<string, string>,
+    method = 'GET',
+    forceAdmin = false
+): Record<string, string> {
+    if (CUSTOMER_EXCLUSION_PATTERNS.some((p) => p.test(endpoint))) {
+        return headers;
+    }
+
+    if (forceAdmin || isAdminEndpoint(endpoint, method)) {
         const token = getAdminToken();
         if (token) return { ...headers, Authorization: `Bearer ${token}` };
     }
@@ -158,7 +198,9 @@ async function request<T = any>(
         endpoint,
         options.headers && !(options.headers instanceof Headers)
             ? { ...(options.headers as Record<string, string>) }
-            : {}
+            : {},
+        options.method || 'GET',
+        (config as any)?.isAdmin
     );
     if (Object.keys(adminHeaders).length > 0) {
         options = { ...options, headers: { ...(options.headers as any), ...adminHeaders } };
