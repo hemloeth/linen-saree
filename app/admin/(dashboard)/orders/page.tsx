@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import {
   Table,
   TableBody,
@@ -22,7 +22,8 @@ import { MoreHorizontal, Search, Filter, Loader2, X, Package, ExternalLink } fro
 import { Badge } from "@/components/ui/badge"
 import { resolveMediaUrl } from "@/lib/media"
 import Link from "next/link"
-import { apiGet } from "@/lib/api"
+import { apiGet, apiPost } from "@/lib/api"
+import { toast } from "sonner"
 
 interface AdminOrder {
   _id: string
@@ -44,17 +45,60 @@ interface AdminOrder {
   status: string
   items: { name: string; quantity: number; sku?: string; price: number; image?: string }[]
   shiprocket?: { courierName?: string; awbCode?: string; trackingUrl?: string }
-  payment?: { method: string; status: string; razorpayPaymentId?: string }
+  payment?: { method: string; status: string; razorpayPaymentId?: string; refundedAmount?: number }
+  cancellation?: { status?: string; courierOutcome?: string; reason?: string; requestedAt?: string; resolvedAt?: string }
+  refund?: { status?: string; amountPaise?: number; razorpayRefundId?: string; initiatedAt?: string; verifiedAt?: string; finalized?: boolean }
+  fulfillmentHold?: { active?: boolean; reason?: string }
+  codAccounting?: {
+    amountDuePaise?: number
+    collectedAtDelivery?: boolean
+    collectedAmountPaise?: number
+    collectedAt?: string
+    remittanceStatus?: "none" | "pending" | "remitted" | "discrepancy"
+    remittedAmountPaise?: number
+    remittedAt?: string
+    utr?: string
+    reconciledBy?: string
+    discrepancyReason?: string
+    notes?: string
+  }
+  returnInfo?: {
+    status?: string
+    confirmedAt?: string
+    stockRestored?: boolean
+  }
+  reservation?: {
+    state?: string
+  }
 }
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [fetchErrorStatus, setFetchErrorStatus] = useState<number | null>(null)
+  const [displayedQuery, setDisplayedQuery] = useState<{ status: string; search: string; page: number } | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+  const requestSeqRef = useRef(0)
+  const isMountedRef = useRef(true)
   const [previewItem, setPreviewItem] = useState<{ name: string; quantity: number; sku?: string; price: number; image?: string } | null>(null)
   const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null)
+  const [holdOrder, setHoldOrder] = useState<AdminOrder | null>(null)
+  const [codOrder, setCodOrder] = useState<AdminOrder | null>(null)
+  const [returnOrder, setReturnOrder] = useState<AdminOrder | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [holdNotes, setHoldNotes] = useState("")
+  const [codAction, setCodAction] = useState<"confirm_remittance" | "record_discrepancy">("confirm_remittance")
+  const [codUtr, setCodUtr] = useState("")
+  const [codAmount, setCodAmount] = useState("")
+  const [codDiscrepancyReason, setCodDiscrepancyReason] = useState("")
+  const [returnRestock, setReturnRestock] = useState(true)
+  const [returnCondition, setReturnCondition] = useState<"intact" | "damaged">("intact")
+  const [returnNotes, setReturnNotes] = useState("")
 
   // Resolve the real customer name from the shipping address (falls back to account user)
   const getCustomerName = (order: AdminOrder) => {
@@ -71,7 +115,20 @@ export default function AdminOrdersPage() {
     const method = order.payment?.method
     const status = order.payment?.status
     if (method === "cod") {
-      return { main: "COD", sub: status === "paid" ? "Collected" : "To collect", color: "text-foreground" }
+      const rem = order.codAccounting?.remittanceStatus;
+      let sub = "To collect";
+      let color = "text-foreground";
+      if (rem === "remitted") {
+        sub = `Remitted${order.codAccounting?.utr ? " (" + order.codAccounting.utr + ")" : ""}`;
+        color = "text-green-600";
+      } else if (rem === "discrepancy") {
+        sub = "Remittance Discrepancy";
+        color = "text-destructive";
+      } else if (order.status === "delivered" || order.codAccounting?.collectedAtDelivery) {
+        sub = "Cash Collected · Remittance Pending";
+        color = "text-amber-600";
+      }
+      return { main: "COD", sub, color };
     }
     if (status === "paid") {
       return { main: "Prepaid", sub: `${method ? method.toUpperCase() : ""} · Paid`, color: "text-green-600" }
@@ -117,46 +174,216 @@ export default function AdminOrdersPage() {
   }
 
   useEffect(() => {
-    fetchOrders()
-  }, [statusFilter])
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      requestSeqRef.current += 1;
+    };
+  }, []);
 
-  const fetchOrders = async () => {
+  useEffect(() => {
+    // Invalidate in-flight and pending requests immediately when search/filter intent changes
+    requestSeqRef.current += 1;
+    const currentSeq = requestSeqRef.current;
+
+    // Filter/search changes reset pagination correctly
+    setCurrentPage(1);
+
+    const timer = setTimeout(() => {
+      fetchOrders(1, searchTerm, statusFilter, currentSeq);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      requestSeqRef.current += 1;
+    };
+  }, [searchTerm, statusFilter]);
+
+
+  const handleResolveHoldSubmit = async (action: "clear_hold" | "cancel_order") => {
+    if (!holdOrder) return;
+    setActionLoading(true);
     try {
-      const { apiGet } = await import("@/lib/api")
-      const query = statusFilter ? `?status=${statusFilter}` : ""
-      const data = await apiGet(`/api/order/admin/all${query}`)
-      if (data.success) {
-        setOrders(data.orders)
-        setFetchError(null)
-      }
+      const res: any = await apiPost(`/api/order/admin/${holdOrder._id}/resolve-hold`, {
+        action,
+        notes: holdNotes.trim(),
+      });
+      toast.success(res?.message || "Fulfillment hold resolved");
+      setHoldOrder(null);
+      setHoldNotes("");
+      fetchOrders();
     } catch (err: any) {
-      console.error("Failed to fetch admin orders:", err)
-      // Surface API failures instead of masquerading them as "No orders yet".
-      setFetchError(
-        err?.status === 401
-          ? "Admin session was not recognized. Please sign in again from the admin gate."
-          : err?.message || "Failed to load orders. Please try again."
-      )
+      toast.error(err?.message || "Failed to resolve hold");
     } finally {
-      setLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
+
+  const handleCodReconcileSubmit = async () => {
+    if (!codOrder) return;
+    setActionLoading(true);
+    try {
+      const res: any = await apiPost(`/api/order/admin/${codOrder._id}/cod-reconcile`, {
+        action: codAction,
+        amount: codAmount ? Number(codAmount) : undefined,
+        utr: codUtr.trim(),
+        discrepancyReason: codDiscrepancyReason.trim(),
+      });
+      toast.success(res?.message || "COD remittance reconciled");
+      setCodOrder(null);
+      setCodUtr("");
+      setCodAmount("");
+      setCodDiscrepancyReason("");
+      fetchOrders();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to reconcile COD remittance");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmReturnSubmit = async () => {
+    if (!returnOrder) return;
+    setActionLoading(true);
+    try {
+      const res: any = await apiPost(`/api/order/admin/${returnOrder._id}/confirm-return`, {
+        restock: returnRestock,
+        condition: returnCondition,
+        notes: returnNotes.trim(),
+      });
+      toast.success(res?.message || "Physical return confirmed");
+      setReturnOrder(null);
+      setReturnNotes("");
+      fetchOrders();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to confirm return");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const fetchOrders = async (
+    targetPage = currentPage,
+    search = searchTerm,
+    status = statusFilter,
+    sequenceId?: number
+  ) => {
+    const mySeq = sequenceId !== undefined ? sequenceId : ++requestSeqRef.current;
+
+    try {
+      setLoading(true);
+      const { apiGet } = await import("@/lib/api");
+      const params = new URLSearchParams();
+      if (status && status !== "all") params.append("status", status);
+      if (search.trim()) params.append("search", search.trim());
+      params.append("page", String(targetPage));
+      params.append("limit", "20");
+
+      const data = await apiGet(`/api/order/admin/all?${params.toString()}`);
+
+      // If this request was superseded by a newer request or unmounted, discard it completely
+      if (!isMountedRef.current || mySeq !== requestSeqRef.current) {
+        return;
+      }
+
+      // Treat success:false or malformed orders response as an error, NOT an empty result
+      if (!data || data.success === false || !Array.isArray(data.orders)) {
+        throw new Error(data?.message || "Failed to retrieve valid order listing from server.");
+      }
+
+      setOrders(data.orders);
+      setDisplayedQuery({ status: status || "", search: search.trim(), page: targetPage });
+      if (data.pagination) {
+        setCurrentPage(data.pagination.page || targetPage);
+        setTotalPages(data.pagination.totalPages || 1);
+        setTotalCount(data.pagination.totalCount ?? data.orders.length);
+      }
+      setFetchError(null);
+      setFetchErrorStatus(null);
+    } catch (err: any) {
+      // Obsolete request errors must NEVER be displayed or clear the loading state of a newer request
+      if (!isMountedRef.current || mySeq !== requestSeqRef.current) {
+        return;
+      }
+
+      console.error("Failed to fetch admin orders:", err);
+      const errStatus = err?.status || (err?.response?.status ?? null);
+      setFetchErrorStatus(errStatus);
+
+      const errorMessage =
+        errStatus === 401
+          ? "Admin session was not recognized. Please sign in again from the admin gate."
+          : errStatus === 403
+          ? "Access denied. Administrative privileges are required."
+          : err?.message || "Failed to load orders. Please try again.";
+
+      setFetchError(errorMessage);
+
+      // For 401/403, hide protected rows immediately
+      if (errStatus === 401 || errStatus === 403) {
+        setOrders([]);
+        setDisplayedQuery(null);
+      }
+    } finally {
+      // Ensure an older request cannot stop the latest request's loading indicator
+      if (isMountedRef.current && mySeq === requestSeqRef.current) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handlePageChange = (targetPage: number) => {
+    setCurrentPage(targetPage);
+    requestSeqRef.current += 1;
+    const seq = requestSeqRef.current;
+    fetchOrders(targetPage, searchTerm, statusFilter, seq);
+  };
+
+  const handleRetry = () => {
+    requestSeqRef.current += 1;
+    const seq = requestSeqRef.current;
+    fetchOrders(currentPage, searchTerm, statusFilter, seq);
+  };
 
   const updateStatus = async (orderId: string, status: string) => {
     try {
       const { apiPut } = await import("@/lib/api")
-      await apiPut(`/api/order/admin/${orderId}/status`, { status })
+      const data: any = await apiPut(`/api/order/admin/${orderId}/status`, { status })
+
+      if (status === "cancelled") {
+        if (data.finalized) {
+          const refundNote = data.refund ? ` · Refund: ${data.refund.status || "initiated"}` : ""
+          toast.success(`Order cancelled successfully${refundNote}`)
+        } else if (data.courierCancel === "uncertain") {
+          toast.warning("Cancellation requested: courier confirmation is pending.")
+        } else if (data.courierCancel === "failed") {
+          toast.error("Courier rejected cancellation: parcel is already with courier / in transit.")
+        } else {
+          toast.info(data.message || "Cancellation request recorded.")
+        }
+      } else {
+        toast.success(`Order marked as ${formatStatus(status)}`)
+      }
+
       fetchOrders() // Refresh list
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to update order status:", err)
+      toast.error(err?.message || "Failed to update order status")
     }
   }
 
-  const filteredOrders = orders.filter(order =>
-    order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (order.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (order.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const triggerAdminRefund = async (orderId: string) => {
+    try {
+      const res: any = await apiPost(`/api/order/admin/${orderId}/refund`, { reason: "Refund issued by admin" })
+      toast.success(res?.message || "Refund initiated/reconciled successfully")
+      fetchOrders()
+    } catch (err: any) {
+      console.error("Failed to issue refund:", err)
+      toast.error(err?.message || "Failed to initiate refund")
+    }
+  }
+
+  const filteredOrders = orders
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -176,7 +403,16 @@ export default function AdminOrdersPage() {
   const formatStatus = (status: string) =>
     status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 
-  if (loading) {
+  const isOutdated = Boolean(fetchError && orders.length > 0 && fetchErrorStatus !== 401 && fetchErrorStatus !== 403);
+  const hasQueryMismatch = Boolean(
+    isOutdated &&
+    displayedQuery &&
+    (displayedQuery.status !== (statusFilter || "") ||
+     displayedQuery.search !== searchTerm.trim() ||
+     displayedQuery.page !== currentPage)
+  );
+
+  if (loading && orders.length === 0 && !fetchError) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -188,7 +424,19 @@ export default function AdminOrdersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight font-serif text-primary">Orders</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-3xl font-bold tracking-tight font-serif text-primary">Orders</h2>
+            {loading && orders.length > 0 && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1.5 bg-muted px-2 py-0.5 rounded">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /> Updating...
+              </span>
+            )}
+            {isOutdated && (
+              <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-xs">
+                Outdated Results
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">Manage and track customer orders.</p>
         </div>
         <div className="flex gap-2">
@@ -206,6 +454,8 @@ export default function AdminOrdersPage() {
             <option value="out_for_delivery">Out for Delivery</option>
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
+            <option value="returned">Returned</option>
+            <option value="hold">On Hold</option>
           </select>
         </div>
       </div>
@@ -243,6 +493,47 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {fetchError && (
+        <div
+          role="alert"
+          className={`p-4 rounded-md border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+            fetchErrorStatus === 401 || fetchErrorStatus === 403
+              ? "bg-destructive/10 border-destructive/30 text-destructive"
+              : "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200"
+          }`}
+        >
+          <div className="flex items-start gap-2.5">
+            <div className="text-sm">
+              <p className="font-semibold">{fetchError}</p>
+              {isOutdated && (
+                <p className="text-xs mt-1 opacity-90">
+                  {hasQueryMismatch
+                    ? `Note: The rows below are previous results (Page ${displayedQuery?.page || 1}${displayedQuery?.status ? `, Status: ${displayedQuery.status}` : ""}${displayedQuery?.search ? `, Search: "${displayedQuery.search}"` : ""}) and do not match your current selection.`
+                    : "Previously loaded orders are shown below, but may be outdated due to the refresh failure."}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            {fetchErrorStatus === 401 || fetchErrorStatus === 403 ? (
+              <Link href="/admin/login">
+                <Button size="sm" variant="outline">Sign In</Button>
+              </Link>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={loading}
+                onClick={handleRetry}
+              >
+                {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+                Retry
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="w-full">
         <Table>
           <TableHeader>
@@ -260,22 +551,26 @@ export default function AdminOrdersPage() {
           </TableHeader>
           <TableBody>
             {filteredOrders.length === 0 ? (
-              fetchError && orders.length === 0 ? (
+              fetchError ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-8">
                     <div className="flex flex-col items-center gap-3">
                       <p className="text-sm text-destructive">{fetchError}</p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setLoading(true)
-                          setFetchError(null)
-                          fetchOrders()
-                        }}
-                      >
-                        Retry
-                      </Button>
+                      {fetchErrorStatus === 401 || fetchErrorStatus === 403 ? (
+                        <Link href="/admin/login">
+                          <Button size="sm" variant="outline">Sign In Again</Button>
+                        </Link>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={loading}
+                          onClick={handleRetry}
+                        >
+                          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+                          Retry
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -348,9 +643,26 @@ export default function AdminOrdersPage() {
                   </TableCell>
                   <TableCell className="text-xs">{order.shiprocket?.courierName || "—"}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusColor(order.status) as "default" | "secondary" | "destructive" | "outline"}>
-                      {formatStatus(order.status)}
-                    </Badge>
+                    <div className="flex flex-col gap-1 items-start">
+                      <Badge variant={getStatusColor(order.status) as "default" | "secondary" | "destructive" | "outline"}>
+                        {formatStatus(order.status)}
+                      </Badge>
+                      {order.cancellation?.status === "requested" && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200 font-medium">
+                          Cancel Req ({order.cancellation.courierOutcome || "pending"})
+                        </span>
+                      )}
+                      {order.fulfillmentHold?.active && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-medium" title={order.fulfillmentHold.reason}>
+                          Hold: {order.fulfillmentHold.reason?.slice(0, 25)}...
+                        </span>
+                      )}
+                      {order.refund?.status && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
+                          Refund: {order.refund.status}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -383,6 +695,38 @@ export default function AdminOrdersPage() {
                         >
                           Cancel Order
                         </DropdownMenuItem>
+                        {order.payment?.status === "paid" && (order.status === "cancelled" || order.refund?.status === "failed") && (
+                          <DropdownMenuItem
+                            onClick={() => triggerAdminRefund(order._id)}
+                            className="text-blue-600 font-medium"
+                          >
+                            Reconcile / Retry Refund
+                          </DropdownMenuItem>
+                        )}
+                        {order.fulfillmentHold?.active && (
+                          <DropdownMenuItem
+                            onClick={() => setHoldOrder(order)}
+                            className="text-red-600 font-medium"
+                          >
+                            Resolve Hold
+                          </DropdownMenuItem>
+                        )}
+                        {order.payment?.method === "cod" && (order.status === "delivered" || order.codAccounting?.collectedAtDelivery || order.codAccounting?.remittanceStatus === "pending") && order.codAccounting?.remittanceStatus !== "remitted" && (
+                          <DropdownMenuItem
+                            onClick={() => setCodOrder(order)}
+                            className="text-amber-700 font-medium"
+                          >
+                            Reconcile COD Remittance
+                          </DropdownMenuItem>
+                        )}
+                        {(order.status === "returned" || order.reservation?.state === "return_pending") && !order.returnInfo?.stockRestored && (
+                          <DropdownMenuItem
+                            onClick={() => setReturnOrder(order)}
+                            className="text-purple-600 font-medium"
+                          >
+                            Confirm Return & Restock
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -392,6 +736,32 @@ export default function AdminOrdersPage() {
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between py-4 px-2">
+          <div className="text-sm text-muted-foreground">
+            Showing {orders.length} of {totalCount} orders (Page {currentPage} of {totalPages})
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage <= 1 || loading}
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage >= totalPages || loading}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {previewItem && previewItem.image && (
         <div 
@@ -641,6 +1011,101 @@ export default function AdminOrdersPage() {
               </div>
           </div>
       )}
+
+      {/* Resolve Hold Modal */}
+      {holdOrder && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setHoldOrder(null)}>
+          <div className="relative w-full max-w-md bg-card rounded-lg shadow-2xl border border-border p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-serif font-bold text-foreground">Resolve Fulfillment Hold</h3>
+            <p className="text-xs text-muted-foreground">Order #{holdOrder.orderId}: {holdOrder.fulfillmentHold?.reason || "Active hold"}</p>
+            <textarea
+              className="w-full text-xs p-2 border rounded bg-background"
+              placeholder="Resolution notes (e.g. verified stock allocation / customer consent)..."
+              rows={3}
+              value={holdNotes}
+              onChange={e => setHoldNotes(e.target.value)}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setHoldOrder(null)}>Cancel</Button>
+              <Button variant="destructive" size="sm" disabled={actionLoading} onClick={() => handleResolveHoldSubmit("cancel_order")}>Cancel Order</Button>
+              <Button size="sm" disabled={actionLoading} onClick={() => handleResolveHoldSubmit("clear_hold")}>Clear Hold</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* COD Reconcile Modal */}
+      {codOrder && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setCodOrder(null)}>
+          <div className="relative w-full max-w-md bg-card rounded-lg shadow-2xl border border-border p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-serif font-bold text-foreground">Reconcile COD Remittance</h3>
+            <p className="text-xs text-muted-foreground">Order #{codOrder.orderId} · Amount Due: ₹{codOrder.pricing.total.toLocaleString('en-IN')}</p>
+            <div className="flex gap-4 text-xs">
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" checked={codAction === "confirm_remittance"} onChange={() => setCodAction("confirm_remittance")} />
+                Confirm Remittance
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" checked={codAction === "record_discrepancy"} onChange={() => setCodAction("record_discrepancy")} />
+                Record Discrepancy
+              </label>
+            </div>
+            {codAction === "confirm_remittance" ? (
+              <div className="space-y-2 text-xs">
+                <div>
+                  <label className="block text-muted-foreground mb-1">Bank UTR Reference:</label>
+                  <Input placeholder="e.g. CMS12345678" value={codUtr} onChange={e => setCodUtr(e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-muted-foreground mb-1">Remitted Amount (₹, optional - defaults to full):</label>
+                  <Input placeholder={String(codOrder.pricing.total)} value={codAmount} onChange={e => setCodAmount(e.target.value)} />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Discrepancy Reason:</label>
+                <textarea className="w-full text-xs p-2 border rounded bg-background" rows={3} value={codDiscrepancyReason} onChange={e => setCodDiscrepancyReason(e.target.value)} placeholder="e.g. Short remittance by courier or fake delivery claim" />
+              </div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setCodOrder(null)}>Cancel</Button>
+              <Button size="sm" disabled={actionLoading} onClick={handleCodReconcileSubmit}>Save Reconciliation</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Physical Return Confirmation Modal */}
+      {returnOrder && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setReturnOrder(null)}>
+          <div className="relative w-full max-w-md bg-card rounded-lg shadow-2xl border border-border p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-serif font-bold text-foreground">Confirm Physical Return & Restock</h3>
+            <p className="text-xs text-muted-foreground">Order #{returnOrder.orderId} · Returned Items Verification</p>
+            <div className="space-y-2 text-xs">
+              <div>
+                <label className="block text-muted-foreground mb-1">Parcel Condition:</label>
+                <select className="w-full p-2 border rounded bg-background" value={returnCondition} onChange={(e: any) => { setReturnCondition(e.target.value); if (e.target.value === "damaged") setReturnRestock(false); }}>
+                  <option value="intact">Intact / Resellable (Restock item)</option>
+                  <option value="damaged">Damaged / Non-restockable (Do not restock)</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <input type="checkbox" id="restockCheck" checked={returnRestock} onChange={e => setReturnRestock(e.target.checked)} />
+                <label htmlFor="restockCheck" className="cursor-pointer">Restore product inventory count</label>
+              </div>
+              <div>
+                <label className="block text-muted-foreground mb-1">Inspection Notes:</label>
+                <textarea className="w-full p-2 border rounded bg-background" rows={2} value={returnNotes} onChange={e => setReturnNotes(e.target.value)} placeholder="e.g. Tags intact, inspected by warehouse team" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setReturnOrder(null)}>Cancel</Button>
+              <Button size="sm" disabled={actionLoading} onClick={handleConfirmReturnSubmit}>Confirm Return</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

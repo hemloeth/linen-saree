@@ -84,20 +84,21 @@ const CUSTOMER_EXCLUSION_PATTERNS = [
  * Determine whether an API endpoint requires administrative authentication.
  */
 export function isAdminEndpoint(endpoint: string, method = 'GET'): boolean {
-    if (CUSTOMER_EXCLUSION_PATTERNS.some((p) => p.test(endpoint))) {
+    const pathname = (endpoint || '').split('?')[0].split('#')[0];
+    if (CUSTOMER_EXCLUSION_PATTERNS.some((p) => p.test(pathname))) {
         return false;
     }
-    if (/^\/api\/(admin(-auth)?|order\/admin)\//.test(endpoint)) {
+    if (/^\/api\/(admin(-auth)?|order\/admin)\//.test(pathname)) {
         return true;
     }
     // Admin mutations on product, category, banner, hero, coupon collections
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
-        if (/^\/api\/(product|coupon|category|category-banner|celebrity-collection|festive-banner|festive-sale|hero|marketing-collections)(\/.*)?$/.test(endpoint)) {
+        if (/^\/api\/(product|coupon|category|category-banner|celebrity-collection|festive-banner|festive-sale|hero|marketing-collections)(\/.*)?$/.test(pathname)) {
             return true;
         }
     }
     // Admin GET endpoints for coupons, category banners, hero, admin product queries
-    if (/^\/api\/(coupon|category-banner\/all|hero|celebrity-collection|festive-banner|festive-sale|marketing-collections)$/.test(endpoint)) {
+    if (/^\/api\/(coupon|category-banner\/all|hero|celebrity-collection|festive-banner|festive-sale|marketing-collections)$/.test(pathname)) {
         return true;
     }
     return false;
@@ -282,13 +283,13 @@ const SENSITIVE_HEADER_RE = /^(authorization|x-access-token|cookie|x-api-key|api
  * Build a dedup key from request semantics, or null when the request must not
  * be deduped (sensitive headers present, or cache explicitly dynamic/no-store).
  */
-function buildDedupeKey(
+export function buildDedupeKey(
     endpoint: string,
     config?: { timeout?: number; headers?: Record<string, string>; cache?: RequestCache }
 ): string | null {
     // Admin endpoints are Bearer-authenticated per session; never share their
     // in-flight results with a request that may carry a different (or no) token.
-    if (/^\/api\/admin(-auth)?\//.test(endpoint)) return null;
+    if (isAdminEndpoint(endpoint, 'GET')) return null;
     const headers = config?.headers;
     if (headers) {
         for (const name of Object.keys(headers)) {
@@ -455,4 +456,44 @@ export async function apiServerGet<T = any>(
 }
 
 // Export the base URL for cases that need it directly
+
+/**
+ * Explicit Admin API Helpers
+ */
+export const adminApiGet = <T = any>(
+    endpoint: string,
+    config?: { timeout?: number; headers?: Record<string, string>; cache?: RequestCache }
+): Promise<T> => apiGet<T>(endpoint, { ...config, isAdmin: true } as any);
+
+export const adminApiPost = <T = any>(
+    endpoint: string,
+    body?: any,
+    config?: { timeout?: number; headers?: Record<string, string> }
+): Promise<T> => apiPost<T>(endpoint, body, { ...config, isAdmin: true } as any);
+
+export const adminApiPut = <T = any>(
+    endpoint: string,
+    body?: any,
+    config?: { timeout?: number; headers?: Record<string, string> }
+): Promise<T> => apiPut<T>(endpoint, body, { ...config, isAdmin: true } as any);
+
+export const adminApiPatch = <T = any>(
+    endpoint: string,
+    body?: any,
+    config?: { timeout?: number; headers?: Record<string, string> }
+): Promise<T> => apiPatch<T>(endpoint, body, { ...config, isAdmin: true } as any);
+
+export const adminApiDelete = <T = any>(
+    endpoint: string,
+    body?: any,
+    config?: { timeout?: number; headers?: Record<string, string> }
+): Promise<T> => apiDelete<T>(endpoint, body, { ...config, isAdmin: true } as any);
+
+export const adminApiUpload = <T = any>(
+    endpoint: string,
+    formData: FormData,
+    method: 'POST' | 'PUT' = 'POST',
+    config?: { timeout?: number }
+): Promise<T> => apiUpload<T>(endpoint, formData, method, { ...config, isAdmin: true } as any);
+
 export { API_BASE_URL };
