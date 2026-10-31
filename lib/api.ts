@@ -36,21 +36,116 @@ export class ApiError extends Error {
 // middleware accepts it as `Authorization: Bearer <token>` in addition to the
 // HttpOnly cookie, so admin APIs keep working even if the cross-origin cookie
 // is blocked or dropped by the browser.
-const ADMIN_TOKEN_KEY = 'auth_admin_token';
+export const ADMIN_TOKEN_KEY = 'auth_admin_token';
+
+export type AdminSessionListener = (token: string | null) => void;
+
+function getAdminSessionListeners(): Set<AdminSessionListener> {
+    if (typeof window === 'undefined') {
+        return new Set();
+    }
+    const win = window as any;
+    if (!win.__admin_session_listeners) {
+        win.__admin_session_listeners = new Set<AdminSessionListener>();
+    }
+    return win.__admin_session_listeners;
+}
+
+function ensureStorageListener(): void {
+    if (typeof window === 'undefined') return;
+    const win = window as any;
+    if (win.__admin_storage_listener_initialized) return;
+    win.__admin_storage_listener_initialized = true;
+
+    try {
+        win.__last_known_admin_token = window.localStorage.getItem(ADMIN_TOKEN_KEY);
+    } catch {
+        win.__last_known_admin_token = null;
+    }
+
+    window.addEventListener('storage', (event: StorageEvent) => {
+        // If event.key is null, storage.clear() occurred
+        if (event.key === ADMIN_TOKEN_KEY || event.key === null) {
+            let currentToken: string | null = null;
+            try {
+                currentToken = window.localStorage.getItem(ADMIN_TOKEN_KEY);
+            } catch {
+                currentToken = null;
+            }
+            if (currentToken !== win.__last_known_admin_token) {
+                win.__last_known_admin_token = currentToken;
+                notifyAdminSessionChange(currentToken);
+            }
+        }
+    });
+}
+
+function notifyAdminSessionChange(newToken: string | null): void {
+    const listeners = getAdminSessionListeners();
+    listeners.forEach((listener) => {
+        try {
+            listener(newToken);
+        } catch (e) {
+            console.error('Error in admin session listener:', e);
+        }
+    });
+}
 
 export function getAdminToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return window.localStorage.getItem(ADMIN_TOKEN_KEY);
+    try {
+        return window.localStorage.getItem(ADMIN_TOKEN_KEY);
+    } catch {
+        return null;
+    }
 }
 
 export function setAdminToken(token: string): void {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
+    const win = window as any;
+    let prev: string | null = null;
+    try {
+        prev = window.localStorage.getItem(ADMIN_TOKEN_KEY);
+        window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
+    } catch (e) {
+        console.error('Failed to set admin token in localStorage', e);
+    }
+    if (prev !== token) {
+        win.__last_known_admin_token = token;
+        notifyAdminSessionChange(token);
+    }
 }
 
 export function clearAdminToken(): void {
     if (typeof window === 'undefined') return;
-    window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+    const win = window as any;
+    let prev: string | null = null;
+    try {
+        prev = window.localStorage.getItem(ADMIN_TOKEN_KEY);
+        window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+    } catch (e) {
+        console.error('Failed to remove admin token from localStorage', e);
+    }
+    if (prev !== null) {
+        win.__last_known_admin_token = null;
+        notifyAdminSessionChange(null);
+    }
+}
+
+export function subscribeAdminSession(listener: AdminSessionListener): () => void {
+    if (typeof window === 'undefined') {
+        return () => {};
+    }
+    ensureStorageListener();
+    const listeners = getAdminSessionListeners();
+    listeners.add(listener);
+    return () => {
+        listeners.delete(listener);
+    };
+}
+
+export function getAdminSessionListenerCount(): number {
+    return getAdminSessionListeners().size;
 }
 
 // Build headers
