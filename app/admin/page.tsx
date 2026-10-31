@@ -21,6 +21,7 @@ export default function AdminAuthPage() {
     
     // UI Loading & Cooldown States
     const [isLoading, setIsLoading] = useState(false)
+    const [isAuthenticating, setIsAuthenticating] = useState(false)
     const [resendCooldown, setResendCooldown] = useState(0)
     const [error, setError] = useState<string | null>(null)
     
@@ -113,8 +114,15 @@ export default function AdminAuthPage() {
                 // and not solely via the cross-origin HttpOnly cookie.
                 if (data.token) setAdminToken(data.token)
                 localStorage.setItem("auth_user", JSON.stringify(data.user))
+
+                // Show the authenticating loader IMMEDIATELY (before the
+                // dashboard route chunk finishes loading) and keep the
+                // spinner visible until navigation replaces this page.
+                setError(null)
+                setIsAuthenticating(true)
                 toast.success("Authenticated successfully")
                 router.push("/admin/dashboard")
+                return
             } else {
                 setError(data.message || "Invalid verification code.")
             }
@@ -195,6 +203,37 @@ export default function AdminAuthPage() {
     return (
         <div className="relative flex min-h-screen items-center justify-center bg-[#FAF9F5] px-4 py-12 font-sans text-[#1A1A1A]">
             
+            {/* Instant full-screen loader after OTP verification succeeds —
+                bridges the gap until the dashboard's authorization screen mounts */}
+            {isAuthenticating && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#FAF9F5] text-center overflow-hidden"
+                >
+                    <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#E5DED6] opacity-30 blur-[100px]" />
+                    <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#8B7355] opacity-10 blur-[120px]" />
+
+                    <div className="relative z-10 space-y-6">
+                        <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
+                            <div className="absolute inset-0 rounded-full border-4 border-[#E5DED6]" />
+                            <div className="absolute inset-0 rounded-full border-4 border-t-[#8B7355] border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+                            <Mail className="h-6 w-6 text-[#8B7355]/60 animate-pulse" />
+                        </div>
+
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-serif font-semibold text-[#1A1A1A] tracking-wide">
+                                Authenticating...
+                            </h2>
+                            <p className="text-xs text-[#8F8C84] tracking-wider uppercase font-medium">
+                                Opening Admin Dashboard
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
             <motion.div 
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
