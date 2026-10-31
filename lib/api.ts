@@ -32,6 +32,27 @@ export class ApiError extends Error {
     }
 }
 
+// Admin session token stored after OTP verification. The backend adminProtect
+// middleware accepts it as `Authorization: Bearer <token>` in addition to the
+// HttpOnly cookie, so admin APIs keep working even if the cross-origin cookie
+// is blocked or dropped by the browser.
+const ADMIN_TOKEN_KEY = 'auth_admin_token';
+
+export function getAdminToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return window.localStorage.getItem(ADMIN_TOKEN_KEY);
+}
+
+export function setAdminToken(token: string): void {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(ADMIN_TOKEN_KEY, token);
+}
+
+export function clearAdminToken(): void {
+    if (typeof window === 'undefined') return;
+    window.localStorage.removeItem(ADMIN_TOKEN_KEY);
+}
+
 // Build headers
 function buildHeaders(customHeaders?: Record<string, string>, isFormData = false): Record<string, string> {
     const headers: Record<string, string> = {
@@ -48,6 +69,17 @@ function buildHeaders(customHeaders?: Record<string, string>, isFormData = false
         Object.assign(headers, customHeaders);
     }
 
+    return headers;
+}
+
+// Attach the admin Bearer token to admin-protected API calls only. Scoping by
+// endpoint prevents the admin token from leaking into regular storefront/user
+// requests, which authenticate via their own cookie session.
+function withAdminAuth(endpoint: string, headers: Record<string, string>): Record<string, string> {
+    if (/^\/api\/admin(-auth)?\//.test(endpoint)) {
+        const token = getAdminToken();
+        if (token) return { ...headers, Authorization: `Bearer ${token}` };
+    }
     return headers;
 }
 
@@ -119,6 +151,18 @@ async function request<T = any>(
     const url = `${API_BASE_URL}${endpoint}`;
     const timeout = config.timeout || DEFAULT_TIMEOUT;
     const maxRetries = config.retries ?? (options.method === 'GET' || !options.method ? MAX_RETRIES : 0);
+
+    // Ensure admin endpoints always carry the Bearer token (options.headers may
+    // be a plain Record or a Headers instance from a caller).
+    const adminHeaders = withAdminAuth(
+        endpoint,
+        options.headers && !(options.headers instanceof Headers)
+            ? { ...(options.headers as Record<string, string>) }
+            : {}
+    );
+    if (Object.keys(adminHeaders).length > 0) {
+        options = { ...options, headers: { ...(options.headers as any), ...adminHeaders } };
+    }
 
     let lastError: Error | null = null;
 
@@ -200,6 +244,9 @@ function buildDedupeKey(
     endpoint: string,
     config?: { timeout?: number; headers?: Record<string, string>; cache?: RequestCache }
 ): string | null {
+    // Admin endpoints are Bearer-authenticated per session; never share their
+    // in-flight results with a request that may carry a different (or no) token.
+    if (/^\/api\/admin(-auth)?\//.test(endpoint)) return null;
     const headers = config?.headers;
     if (headers) {
         for (const name of Object.keys(headers)) {

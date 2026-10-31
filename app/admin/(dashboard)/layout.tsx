@@ -8,7 +8,7 @@ import { PageTransition } from "@/components/admin/page-transition"
 import { CategoryProvider } from "@/context/category-context"
 import { ProductProvider } from "@/context/product-context"
 import { BlogProvider } from "@/context/blog-context"
-import { apiGet } from "@/lib/api"
+import { apiGet, clearAdminToken } from "@/lib/api"
 import { Loader2, ShieldAlert } from "lucide-react"
 import { toast } from "sonner"
 
@@ -52,6 +52,7 @@ export default function AdminLayout({
                 
                 // Clear potentially compromised/expired storage
                 localStorage.removeItem("auth_user")
+                clearAdminToken()
                 
                 setAuthError(err.message || "Session expired. Please log in again.")
                 toast.error(err.message || "Administrative session expired. Please log in again.")

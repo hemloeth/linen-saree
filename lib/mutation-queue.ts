@@ -50,6 +50,8 @@ export class CartMutationQueue<T = any> {
   private lastFlushFailed: boolean = false
   private lastError: string | null = null
   private failedMutations: FailedMutationRecord[] = []
+  private requestSeq: number = 0
+  private lastAcceptedRequestId: number = 0
 
   constructor(config: MutationQueueConfig<T>) {
     this.debounceMs = config.debounceMs ?? 300
@@ -65,6 +67,8 @@ export class CartMutationQueue<T = any> {
   public setScope(newScope: string) {
     if (this.currentScope !== newScope) {
       this.currentGeneration += 1
+      this.requestSeq += 1
+      this.lastAcceptedRequestId = this.requestSeq
       for (const { timer } of this.pendingByProduct.values()) {
         clearTimeout(timer)
       }
@@ -90,6 +94,11 @@ export class CartMutationQueue<T = any> {
     return this.revision
   }
 
+  public bumpRevision(): number {
+    this.revision += 1
+    return this.revision
+  }
+
   public getInFlightCount(): number {
     return this.inFlightCount
   }
@@ -105,6 +114,53 @@ export class CartMutationQueue<T = any> {
   }
 
   /**
+   * Start a server fetch ticket capturing sequence, revision, generation, and scope.
+   */
+  public startServerFetch(): {
+    requestId: number
+    revision: number
+    generation: number
+    scope: string
+  } {
+    this.requestSeq += 1
+    return {
+      requestId: this.requestSeq,
+      revision: this.revision,
+      generation: this.currentGeneration,
+      scope: this.currentScope,
+    }
+  }
+
+  /**
+   * Notifies the queue that an authoritative mutation was accepted.
+   * Advances the request sequence barrier so any prior in-flight GETs are rejected.
+   */
+  public notifyMutationAccepted(): void {
+    this.requestSeq += 1
+    this.lastAcceptedRequestId = this.requestSeq
+  }
+
+  /**
+   * Evaluates whether a server snapshot is valid and eligible to be accepted.
+   */
+  public shouldAcceptSnapshot(
+    targetScope: string,
+    targetGen: number,
+    targetRev: number,
+    targetRequestId?: number
+  ): boolean {
+    if (targetScope !== this.currentScope) return false
+    if (targetGen !== this.currentGeneration) return false
+    if (targetRequestId !== undefined) {
+      if (targetRev !== this.revision) return false
+      if (targetRequestId < this.lastAcceptedRequestId) return false
+    } else {
+      if (targetRev > this.revision) return false
+    }
+    return true
+  }
+
+  /**
    * Authoritatively reconcile failed mutations by accepting a verified server cart snapshot.
    * - Absence from the snapshot is meaningful:
    *   - Failed ADD: product is absent from server snapshot -> abandoned and resolved.
@@ -113,16 +169,27 @@ export class CartMutationQueue<T = any> {
    *   - Failed CLEAR: server snapshot state accepted -> resolved.
    * - Only resolves failures for the specified account scope and generation up to `upToRevision`.
    * - Preserves newer edits/failures that occurred after the snapshot was initiated (revision > upToRevision).
+   * - Enforces monotonic request ordering (out-of-order older GETs are rejected).
+   * - Returns false if the snapshot was rejected; returns resolved failure count if accepted.
    */
   public acceptServerSnapshot(
     serverProductIds: string[],
     targetScope?: string,
     targetGen?: number,
-    upToRevision?: number
-  ): number {
+    upToRevision?: number,
+    targetRequestId?: number
+  ): number | false {
     const scope = targetScope ?? this.currentScope
     const gen = targetGen ?? this.currentGeneration
     const maxRev = upToRevision ?? this.revision
+
+    if (!this.shouldAcceptSnapshot(scope, gen, maxRev, targetRequestId)) {
+      return false
+    }
+
+    if (targetRequestId !== undefined) {
+      this.lastAcceptedRequestId = Math.max(this.lastAcceptedRequestId, targetRequestId)
+    }
 
     const initialCount = this.failedMutations.length
     if (initialCount === 0) return 0
@@ -193,7 +260,8 @@ export class CartMutationQueue<T = any> {
     acceptSnapshot: boolean = false
   ): number {
     if (acceptSnapshot || !resolvedProductIds) {
-      return this.acceptServerSnapshot(resolvedProductIds || [], targetScope, targetGen, upToRevision)
+      const res = this.acceptServerSnapshot(resolvedProductIds || [], targetScope, targetGen, upToRevision)
+      return res === false ? 0 : res
     }
 
     const scope = targetScope ?? this.currentScope
@@ -310,8 +378,12 @@ export class CartMutationQueue<T = any> {
    * Enqueue a cart mutation.
    * CLEAR immediately drains all per-line ops and executes as a global barrier.
    */
-  public enqueue(op: MutationOp): void {
-    this.revision += 1
+  public enqueue(op: MutationOp, rev?: number): void {
+    if (rev !== undefined) {
+      this.revision = Math.max(this.revision, rev)
+    } else {
+      this.revision += 1
+    }
     const currentScope = this.currentScope
     const currentGen = this.currentGeneration
     const revAtEnqueue = this.revision

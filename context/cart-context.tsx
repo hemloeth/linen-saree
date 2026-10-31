@@ -156,11 +156,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const accountGen = useRef(0)
   const lastSyncedQty = useRef(new Map<string, number>())
 
-  const bumpRev = () => { mutationRev.current += 1 }
+  const bumpRev = () => {
+    mutationRev.current += 1
+    mutationQueue.current?.bumpRevision()
+    return mutationQueue.current?.getRevision() ?? mutationRev.current
+  }
 
   const runServerOp = useCallback(async (op: MutationOp, revAtRun: number, genAtRun: number) => {
+    const queue = mutationQueue.current
+    const currentGen = queue?.getGeneration() ?? accountGen.current
     // Check account generation before sending request
-    if (genAtRun !== accountGen.current) {
+    if (genAtRun !== currentGen) {
       return true
     }
     try {
@@ -175,12 +181,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
         data = await apiDelete("/api/cart/clear")
       }
       // Check account generation before applying response
-      if (genAtRun !== accountGen.current) {
+      const latestGen = queue?.getGeneration() ?? accountGen.current
+      if (genAtRun !== latestGen) {
         return true
       }
       // AUTHORITATIVE reconciliation — but ONLY when the user has not made a
       // newer local change since this op was enqueued.
-      if (revAtRun === mutationRev.current && data?.success && Array.isArray(data.cart)) {
+      const currentRev = queue?.getRevision() ?? mutationRev.current
+      if (revAtRun === currentRev && data?.success && Array.isArray(data.cart)) {
+        queue?.notifyMutationAccepted()
         const mapped = data.cart.map(mapServerCartItem).filter((i: CartItem | null): i is CartItem => i !== null)
         itemsRef.current = mapped
         setItems(mapped)
@@ -190,7 +199,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       console.error("Cart server sync failed:", err)
       // Check account generation before applying rollback or refetch
-      if (genAtRun !== accountGen.current) {
+      const latestGen = queue?.getGeneration() ?? accountGen.current
+      if (genAtRun !== latestGen) {
         return false
       }
       if (op.kind === "set" || op.kind === "add") {
@@ -221,7 +231,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const enqueueSync = useCallback((op: MutationOp) => {
     if (!isAuthRef.current) return
-    mutationQueue.current?.enqueue(op)
+    const rev = mutationQueue.current?.getRevision()
+    mutationQueue.current?.enqueue(op, rev)
   }, [])
 
   const flushCart = useCallback(async () => {
@@ -240,32 +251,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
   /**
    * Fetch server cart and replace local state. Hoisted so the sync queue's
    * failure path can refetch without caring about declaration order.
+   * Uses monotonic request-ordering ticket to reject out-of-order responses.
    */
   async function fetchServerCart(targetGen?: number) {
     if (!isAuthRef.current) return
-    const activeGen = targetGen !== undefined ? targetGen : accountGen.current
-    if (activeGen !== accountGen.current) return
-    const revAtStart = mutationRev.current
+    const queue = mutationQueue.current
+    if (!queue) return
+    const ticket = queue.startServerFetch()
+    const activeGen = targetGen !== undefined ? targetGen : ticket.generation
+    if (activeGen !== queue.getGeneration()) return
 
     try {
       const data = await apiGet('/api/cart')
-      if (activeGen !== accountGen.current) return
       if (data?.success && Array.isArray(data.cart)) {
         const mapped = data.cart
           .map(mapServerCartItem)
           .filter((item: CartItem | null): item is CartItem => item !== null)
-        if (revAtStart === mutationRev.current) {
+        const serverProductIds = mapped.map((i: CartItem) => i.product.id)
+        const accepted = queue.acceptServerSnapshot(
+          serverProductIds,
+          ticket.scope,
+          activeGen,
+          ticket.revision,
+          ticket.requestId
+        )
+        if (accepted !== false) {
           itemsRef.current = mapped
           setItems(mapped)
           for (const li of mapped) lastSyncedQty.current.set(li.product.id, li.quantity)
         }
-        const serverProductIds = mapped.map((i: CartItem) => i.product.id)
-        mutationQueue.current?.acceptServerSnapshot(
-          serverProductIds,
-          storageKeyRef.current,
-          activeGen,
-          revAtStart
-        )
       }
     } catch (err: any) {
       if (err?.status === 401) return
@@ -275,27 +289,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const reconcileCart = useCallback(async (): Promise<boolean> => {
     if (!isAuthRef.current) return true
-    const activeGen = accountGen.current
-    const revAtStart = mutationRev.current
+    const queue = mutationQueue.current
+    if (!queue) return true
+    const ticket = queue.startServerFetch()
+    const activeGen = ticket.generation
+
     try {
       const data = await apiGet('/api/cart')
-      if (activeGen !== accountGen.current) return false
       if (data?.success && Array.isArray(data.cart)) {
         const mapped = data.cart
           .map(mapServerCartItem)
           .filter((item: CartItem | null): item is CartItem => item !== null)
-        if (revAtStart === mutationRev.current) {
-          itemsRef.current = mapped
-          setItems(mapped)
-          for (const li of mapped) lastSyncedQty.current.set(li.product.id, li.quantity)
-        }
         const serverProductIds = mapped.map((i: CartItem) => i.product.id)
-        mutationQueue.current?.acceptServerSnapshot(
+        const accepted = queue.acceptServerSnapshot(
           serverProductIds,
-          storageKeyRef.current,
+          ticket.scope,
           activeGen,
-          revAtStart
+          ticket.revision,
+          ticket.requestId
         )
+        if (accepted === false) {
+          return false
+        }
+
+        itemsRef.current = mapped
+        setItems(mapped)
+        for (const li of mapped) lastSyncedQty.current.set(li.product.id, li.quantity)
         return true
       }
       return false
@@ -362,7 +381,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     accountGen.current += 1
     mutationQueue.current?.setScope(storageKey)
     lastSyncedQty.current.clear()
-    mutationRev.current += 1
+    mutationRev.current = mutationQueue.current?.getRevision() ?? (mutationRev.current + 1)
   }, [storageKey])
 
   // Flush any debounced syncs when the tab hides

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Mail, ArrowRight, ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { apiPost, apiGet } from "@/lib/api"
+import { apiPost, apiGet, setAdminToken, clearAdminToken } from "@/lib/api"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -43,6 +43,7 @@ export default function AdminAuthPage() {
                     }
                 } catch {
                     localStorage.removeItem("auth_user")
+                    clearAdminToken()
                 }
             }
         }
@@ -108,6 +109,9 @@ export default function AdminAuthPage() {
             }>("/api/admin-auth/verify-otp", { email, otp: otpCode })
 
             if (data.success) {
+                // Persist the JWT so admin requests authenticate via Bearer header
+                // and not solely via the cross-origin HttpOnly cookie.
+                if (data.token) setAdminToken(data.token)
                 localStorage.setItem("auth_user", JSON.stringify(data.user))
                 toast.success("Authenticated successfully")
                 router.push("/admin/dashboard")

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { LayoutDashboard, Package, ShoppingCart, LogOut, Plus, Images, FileText, Users, TicketPercent, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { clearAdminToken } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 
 interface AdminSidebarProps {
@@ -256,6 +257,7 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                     )}
                     onClick={() => {
                         localStorage.removeItem("auth_user")
+                        clearAdminToken()
                         window.location.href = "/admin"
                     }}
                 >
