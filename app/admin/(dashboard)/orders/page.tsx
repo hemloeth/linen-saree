@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
 import {
   Table,
   TableBody,
@@ -22,83 +21,71 @@ import { MoreHorizontal, Search, Filter, Loader2, X, Package, ExternalLink } fro
 import { Badge } from "@/components/ui/badge"
 import { resolveMediaUrl } from "@/lib/media"
 import Link from "next/link"
-import { apiGet, apiPost } from "@/lib/api"
-import { toast } from "sonner"
+import { useAdminOrders, type AdminOrder } from "./use-admin-orders"
 
-interface AdminOrder {
-  _id: string
-  orderId: string
-  user?: { name: string; email: string; phone?: string }
-  shippingAddress?: {
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    address: string
-    landmark?: string
-    city: string
-    state: string
-    pincode: string
-  }
-  createdAt: string
-  pricing: { subtotal?: number; shipping?: number; discount?: number; couponCode?: string; total: number }
-  status: string
-  items: { name: string; quantity: number; sku?: string; price: number; image?: string }[]
-  shiprocket?: { courierName?: string; awbCode?: string; trackingUrl?: string }
-  payment?: { method: string; status: string; razorpayPaymentId?: string; refundedAmount?: number }
-  cancellation?: { status?: string; courierOutcome?: string; reason?: string; requestedAt?: string; resolvedAt?: string }
-  refund?: { status?: string; amountPaise?: number; razorpayRefundId?: string; initiatedAt?: string; verifiedAt?: string; finalized?: boolean }
-  fulfillmentHold?: { active?: boolean; reason?: string }
-  codAccounting?: {
-    amountDuePaise?: number
-    collectedAtDelivery?: boolean
-    collectedAmountPaise?: number
-    collectedAt?: string
-    remittanceStatus?: "none" | "pending" | "remitted" | "discrepancy"
-    remittedAmountPaise?: number
-    remittedAt?: string
-    utr?: string
-    reconciledBy?: string
-    discrepancyReason?: string
-    notes?: string
-  }
-  returnInfo?: {
-    status?: string
-    confirmedAt?: string
-    stockRestored?: boolean
-  }
-  reservation?: {
-    state?: string
-  }
-}
+export default function AdminOrdersPage(props?: { controller?: ReturnType<typeof useAdminOrders> }) {
+  const defaultController = useAdminOrders()
+  const ctrl = props?.controller || defaultController
 
-export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<AdminOrder[]>([])
-  const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState<string | null>(null)
-  const [fetchErrorStatus, setFetchErrorStatus] = useState<number | null>(null)
-  const [displayedQuery, setDisplayedQuery] = useState<{ status: string; search: string; page: number } | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalCount, setTotalCount] = useState(0)
-  const requestSeqRef = useRef(0)
-  const isMountedRef = useRef(true)
-  const [previewItem, setPreviewItem] = useState<{ name: string; quantity: number; sku?: string; price: number; image?: string } | null>(null)
-  const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null)
-  const [holdOrder, setHoldOrder] = useState<AdminOrder | null>(null)
-  const [codOrder, setCodOrder] = useState<AdminOrder | null>(null)
-  const [returnOrder, setReturnOrder] = useState<AdminOrder | null>(null)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [holdNotes, setHoldNotes] = useState("")
-  const [codAction, setCodAction] = useState<"confirm_remittance" | "record_discrepancy">("confirm_remittance")
-  const [codUtr, setCodUtr] = useState("")
-  const [codAmount, setCodAmount] = useState("")
-  const [codDiscrepancyReason, setCodDiscrepancyReason] = useState("")
-  const [returnRestock, setReturnRestock] = useState(true)
-  const [returnCondition, setReturnCondition] = useState<"intact" | "damaged">("intact")
-  const [returnNotes, setReturnNotes] = useState("")
+  const {
+    orders,
+    loading,
+    fetchError,
+    fetchErrorStatus,
+    displayedQuery,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    currentPage,
+    totalPages,
+    totalCount,
+    previewItem,
+    setPreviewItem,
+    viewOrder,
+    setViewOrder,
+    holdOrder,
+    setHoldOrder,
+    codOrder,
+    setCodOrder,
+    returnOrder,
+    setReturnOrder,
+    actionLoading,
+    holdNotes,
+    setHoldNotes,
+    codAction,
+    setCodAction,
+    codUtr,
+    setCodUtr,
+    codAmount,
+    setCodAmount,
+    codDiscrepancyReason,
+    setCodDiscrepancyReason,
+    returnRestock,
+    setReturnRestock,
+    returnCondition,
+    setReturnCondition,
+    returnNotes,
+    setReturnNotes,
+    skuQuery,
+    setSkuQuery,
+    isSearchingSku,
+    searchedProduct,
+    showSkuModal,
+    setShowSkuModal,
+    skuNoResult,
+    setSkuNoResult,
+    handleSkuSearch,
+    handleResolveHoldSubmit,
+    handleCodReconcileSubmit,
+    handleConfirmReturnSubmit,
+    handlePageChange,
+    handleRetry,
+    updateStatus,
+    triggerAdminRefund,
+    isOutdated,
+    hasQueryMismatch,
+  } = ctrl
 
   // Resolve the real customer name from the shipping address (falls back to account user)
   const getCustomerName = (order: AdminOrder) => {
@@ -142,247 +129,6 @@ export default function AdminOrdersPage() {
     return { main: "Payment Pending", sub: method ? `(${method})` : "", color: "text-amber-600" }
   }
 
-  // SKU Search States
-  const [skuQuery, setSkuQuery] = useState("")
-  const [isSearchingSku, setIsSearchingSku] = useState(false)
-  const [searchedProduct, setSearchedProduct] = useState<any>(null)
-  const [showSkuModal, setShowSkuModal] = useState(false)
-  const [skuNoResult, setSkuNoResult] = useState(false)
-
-  const handleSkuSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter' && skuQuery.trim()) {
-          setIsSearchingSku(true)
-          setSkuNoResult(false)
-          try {
-              // Clean the query: gracefully remove "SKU: ", "SKU ", etc. if the user copied the whole thing
-              const cleanQuery = skuQuery.replace(/^sku[:\s]+/i, '').trim();
-
-              const res = await apiGet(`/api/product/by-sku/${encodeURIComponent(cleanQuery)}`)
-              if (res.success && res.product) {
-                  setSearchedProduct(res.product)
-                  setShowSkuModal(true)
-              } else {
-                  setSkuNoResult(true)
-              }
-          } catch (err) {
-              console.error("SKU Search Error:", err)
-              setSkuNoResult(true)
-          } finally {
-              setIsSearchingSku(false)
-          }
-      }
-  }
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      requestSeqRef.current += 1;
-    };
-  }, []);
-
-  useEffect(() => {
-    // Invalidate in-flight and pending requests immediately when search/filter intent changes
-    requestSeqRef.current += 1;
-    const currentSeq = requestSeqRef.current;
-
-    // Filter/search changes reset pagination correctly
-    setCurrentPage(1);
-
-    const timer = setTimeout(() => {
-      fetchOrders(1, searchTerm, statusFilter, currentSeq);
-    }, 300);
-
-    return () => {
-      clearTimeout(timer);
-      requestSeqRef.current += 1;
-    };
-  }, [searchTerm, statusFilter]);
-
-
-  const handleResolveHoldSubmit = async (action: "clear_hold" | "cancel_order") => {
-    if (!holdOrder) return;
-    setActionLoading(true);
-    try {
-      const res: any = await apiPost(`/api/order/admin/${holdOrder._id}/resolve-hold`, {
-        action,
-        notes: holdNotes.trim(),
-      });
-      toast.success(res?.message || "Fulfillment hold resolved");
-      setHoldOrder(null);
-      setHoldNotes("");
-      fetchOrders();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to resolve hold");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleCodReconcileSubmit = async () => {
-    if (!codOrder) return;
-    setActionLoading(true);
-    try {
-      const res: any = await apiPost(`/api/order/admin/${codOrder._id}/cod-reconcile`, {
-        action: codAction,
-        amount: codAmount ? Number(codAmount) : undefined,
-        utr: codUtr.trim(),
-        discrepancyReason: codDiscrepancyReason.trim(),
-      });
-      toast.success(res?.message || "COD remittance reconciled");
-      setCodOrder(null);
-      setCodUtr("");
-      setCodAmount("");
-      setCodDiscrepancyReason("");
-      fetchOrders();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to reconcile COD remittance");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleConfirmReturnSubmit = async () => {
-    if (!returnOrder) return;
-    setActionLoading(true);
-    try {
-      const res: any = await apiPost(`/api/order/admin/${returnOrder._id}/confirm-return`, {
-        restock: returnRestock,
-        condition: returnCondition,
-        notes: returnNotes.trim(),
-      });
-      toast.success(res?.message || "Physical return confirmed");
-      setReturnOrder(null);
-      setReturnNotes("");
-      fetchOrders();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to confirm return");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const fetchOrders = async (
-    targetPage = currentPage,
-    search = searchTerm,
-    status = statusFilter,
-    sequenceId?: number
-  ) => {
-    const mySeq = sequenceId !== undefined ? sequenceId : ++requestSeqRef.current;
-
-    try {
-      setLoading(true);
-      const { apiGet } = await import("@/lib/api");
-      const params = new URLSearchParams();
-      if (status && status !== "all") params.append("status", status);
-      if (search.trim()) params.append("search", search.trim());
-      params.append("page", String(targetPage));
-      params.append("limit", "20");
-
-      const data = await apiGet(`/api/order/admin/all?${params.toString()}`);
-
-      // If this request was superseded by a newer request or unmounted, discard it completely
-      if (!isMountedRef.current || mySeq !== requestSeqRef.current) {
-        return;
-      }
-
-      // Treat success:false or malformed orders response as an error, NOT an empty result
-      if (!data || data.success === false || !Array.isArray(data.orders)) {
-        throw new Error(data?.message || "Failed to retrieve valid order listing from server.");
-      }
-
-      setOrders(data.orders);
-      setDisplayedQuery({ status: status || "", search: search.trim(), page: targetPage });
-      if (data.pagination) {
-        setCurrentPage(data.pagination.page || targetPage);
-        setTotalPages(data.pagination.totalPages || 1);
-        setTotalCount(data.pagination.totalCount ?? data.orders.length);
-      }
-      setFetchError(null);
-      setFetchErrorStatus(null);
-    } catch (err: any) {
-      // Obsolete request errors must NEVER be displayed or clear the loading state of a newer request
-      if (!isMountedRef.current || mySeq !== requestSeqRef.current) {
-        return;
-      }
-
-      console.error("Failed to fetch admin orders:", err);
-      const errStatus = err?.status || (err?.response?.status ?? null);
-      setFetchErrorStatus(errStatus);
-
-      const errorMessage =
-        errStatus === 401
-          ? "Admin session was not recognized. Please sign in again from the admin gate."
-          : errStatus === 403
-          ? "Access denied. Administrative privileges are required."
-          : err?.message || "Failed to load orders. Please try again.";
-
-      setFetchError(errorMessage);
-
-      // For 401/403, hide protected rows immediately
-      if (errStatus === 401 || errStatus === 403) {
-        setOrders([]);
-        setDisplayedQuery(null);
-      }
-    } finally {
-      // Ensure an older request cannot stop the latest request's loading indicator
-      if (isMountedRef.current && mySeq === requestSeqRef.current) {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handlePageChange = (targetPage: number) => {
-    setCurrentPage(targetPage);
-    requestSeqRef.current += 1;
-    const seq = requestSeqRef.current;
-    fetchOrders(targetPage, searchTerm, statusFilter, seq);
-  };
-
-  const handleRetry = () => {
-    requestSeqRef.current += 1;
-    const seq = requestSeqRef.current;
-    fetchOrders(currentPage, searchTerm, statusFilter, seq);
-  };
-
-  const updateStatus = async (orderId: string, status: string) => {
-    try {
-      const { apiPut } = await import("@/lib/api")
-      const data: any = await apiPut(`/api/order/admin/${orderId}/status`, { status })
-
-      if (status === "cancelled") {
-        if (data.finalized) {
-          const refundNote = data.refund ? ` · Refund: ${data.refund.status || "initiated"}` : ""
-          toast.success(`Order cancelled successfully${refundNote}`)
-        } else if (data.courierCancel === "uncertain") {
-          toast.warning("Cancellation requested: courier confirmation is pending.")
-        } else if (data.courierCancel === "failed") {
-          toast.error("Courier rejected cancellation: parcel is already with courier / in transit.")
-        } else {
-          toast.info(data.message || "Cancellation request recorded.")
-        }
-      } else {
-        toast.success(`Order marked as ${formatStatus(status)}`)
-      }
-
-      fetchOrders() // Refresh list
-    } catch (err: any) {
-      console.error("Failed to update order status:", err)
-      toast.error(err?.message || "Failed to update order status")
-    }
-  }
-
-  const triggerAdminRefund = async (orderId: string) => {
-    try {
-      const res: any = await apiPost(`/api/order/admin/${orderId}/refund`, { reason: "Refund issued by admin" })
-      toast.success(res?.message || "Refund initiated/reconciled successfully")
-      fetchOrders()
-    } catch (err: any) {
-      console.error("Failed to issue refund:", err)
-      toast.error(err?.message || "Failed to initiate refund")
-    }
-  }
-
   const filteredOrders = orders
 
   const getStatusColor = (status: string) => {
@@ -402,15 +148,6 @@ export default function AdminOrdersPage() {
 
   const formatStatus = (status: string) =>
     status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-
-  const isOutdated = Boolean(fetchError && orders.length > 0 && fetchErrorStatus !== 401 && fetchErrorStatus !== 403);
-  const hasQueryMismatch = Boolean(
-    isOutdated &&
-    displayedQuery &&
-    (displayedQuery.status !== (statusFilter || "") ||
-     displayedQuery.search !== searchTerm.trim() ||
-     displayedQuery.page !== currentPage)
-  );
 
   if (loading && orders.length === 0 && !fetchError) {
     return (
@@ -516,7 +253,7 @@ export default function AdminOrdersPage() {
           </div>
           <div className="flex items-center gap-2 self-end sm:self-center">
             {fetchErrorStatus === 401 || fetchErrorStatus === 403 ? (
-              <Link href="/admin/login">
+              <Link href="/admin">
                 <Button size="sm" variant="outline">Sign In</Button>
               </Link>
             ) : (
@@ -557,7 +294,7 @@ export default function AdminOrdersPage() {
                     <div className="flex flex-col items-center gap-3">
                       <p className="text-sm text-destructive">{fetchError}</p>
                       {fetchErrorStatus === 401 || fetchErrorStatus === 403 ? (
-                        <Link href="/admin/login">
+                        <Link href="/admin">
                           <Button size="sm" variant="outline">Sign In Again</Button>
                         </Link>
                       ) : (

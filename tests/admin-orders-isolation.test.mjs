@@ -1,12 +1,132 @@
 import { test, describe, before, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import { isAdminEndpoint, buildDedupeKey, withAdminAuth, setAdminToken, clearAdminToken, apiGet } from "../lib/api.ts";
+import fs from "node:fs";
+import path from "node:path";
+import ts from "typescript";
+import React from "react";
+import { isAdminEndpoint, buildDedupeKey, withAdminAuth, setAdminToken, clearAdminToken, apiGet, apiPost, apiPut } from "../lib/api.ts";
 
-describe("Admin Orders Request Isolation & Error States Unit Suite", () => {
+/**
+ * Load the real production useAdminOrders hook from source by resolving its import aliases.
+ */
+async function loadProductionHook() {
+    const hookPath = path.resolve("./app/admin/(dashboard)/orders/use-admin-orders.ts");
+    let code = fs.readFileSync(hookPath, "utf8");
+    code = code.replace(/from\s+["']@\/lib\/api["']/g, 'from "../lib/api.ts"');
+    const transpiled = ts.transpileModule(code, {
+        compilerOptions: {
+            module: ts.ModuleKind.ESNext,
+            target: ts.ScriptTarget.ES2022,
+        }
+    }).outputText;
+    const tempFile = path.resolve("./tests/.test-hook-transpiled.mjs");
+    fs.writeFileSync(tempFile, transpiled, "utf8");
+    try {
+        const fileUrl = new URL(`file:///${tempFile.replace(/\\/g, "/")}`).href;
+        const mod = await import(fileUrl);
+        return mod;
+    } finally {
+        try { fs.unlinkSync(tempFile); } catch {}
+    }
+}
+
+/**
+ * Lightweight Hook Runner that mounts the real React hook, tracks state and effects,
+ * executes debounce timers, and simulates unmounting.
+ */
+function createHookHarness(hookFn, initialOptions = {}) {
+    let hookIndex = 0;
+    const hookCells = [];
+    const effects = [];
+    let result;
+
+    const dispatcher = {
+        useState(initialValue) {
+            const idx = hookIndex++;
+            if (hookCells.length <= idx) {
+                const val = typeof initialValue === "function" ? initialValue() : initialValue;
+                hookCells.push({ type: "state", value: val });
+            }
+            const cell = hookCells[idx];
+            const setState = (nextVal) => {
+                const newVal = typeof nextVal === "function" ? nextVal(cell.value) : nextVal;
+                cell.value = newVal;
+                render();
+            };
+            return [cell.value, setState];
+        },
+        useRef(initialValue) {
+            const idx = hookIndex++;
+            if (hookCells.length <= idx) {
+                hookCells.push({ type: "ref", value: { current: initialValue } });
+            }
+            return hookCells[idx].value;
+        },
+        useEffect(effect, deps) {
+            const idx = hookIndex++;
+            if (hookCells.length <= idx) {
+                hookCells.push({ type: "effect", deps: undefined, cleanup: undefined });
+            }
+            const cell = hookCells[idx];
+            effects.push({ cell, effect, deps });
+        },
+        useCallback(fn, deps) {
+            return fn;
+        },
+        useMemo(fn, deps) {
+            return fn();
+        }
+    };
+
+    function render() {
+        hookIndex = 0;
+        const prevDispatcher = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H;
+        React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H = dispatcher;
+        try {
+            result = hookFn(initialOptions);
+        } finally {
+            React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H = prevDispatcher;
+        }
+
+        // Run effects whose dependencies changed
+        while (effects.length > 0) {
+            const { cell, effect, deps } = effects.shift();
+            let hasChanged = true;
+            if (cell.deps && deps && cell.deps.length === deps.length) {
+                hasChanged = cell.deps.some((d, i) => !Object.is(d, deps[i]));
+            }
+            if (hasChanged) {
+                if (typeof cell.cleanup === "function") {
+                    cell.cleanup();
+                }
+                cell.deps = deps;
+                cell.cleanup = effect();
+            }
+        }
+    }
+
+    render();
+
+    return {
+        get current() { return result; },
+        rerender: () => render(),
+        unmount: () => {
+            for (const cell of hookCells) {
+                if (cell.type === "effect" && typeof cell.cleanup === "function") {
+                    cell.cleanup();
+                    cell.cleanup = undefined;
+                }
+            }
+        }
+    };
+}
+
+describe("Admin Orders Request Isolation & Error States Test Suite", () => {
     let originalFetch;
     let store;
+    let useAdminOrders;
 
-    before(() => {
+    before(async () => {
         store = new Map();
         if (typeof globalThis.window === "undefined") {
             globalThis.window = {
@@ -19,6 +139,8 @@ describe("Admin Orders Request Isolation & Error States Unit Suite", () => {
                 location: { hostname: "localhost" },
             };
         }
+        const hookModule = await loadProductionHook();
+        useAdminOrders = hookModule.useAdminOrders;
     });
 
     beforeEach(() => {
@@ -30,6 +152,10 @@ describe("Admin Orders Request Isolation & Error States Unit Suite", () => {
         globalThis.fetch = originalFetch;
         store.clear();
     });
+
+    // -------------------------------------------------------------
+    // API CLIENT SPECIFICATIONS & DEDUPLICATION (Scenarios 13, 14)
+    // -------------------------------------------------------------
 
     test("1. Orders GET (/api/order/admin/all) carries the admin bearer token", () => {
         setAdminToken("admin_token_alpha");
@@ -52,7 +178,7 @@ describe("Admin Orders Request Isolation & Error States Unit Suite", () => {
         }
     });
 
-    test("3. Admin session changes do not share in-flight results (Task 1 Acceptance)", async () => {
+    test("3. Admin session changes do not share in-flight results (Scenario 13)", async () => {
         const fetchCalls = [];
         let resolveFirstFetch;
         let resolveSecondFetch;
@@ -107,11 +233,11 @@ describe("Admin Orders Request Isolation & Error States Unit Suite", () => {
         assert.equal(resB.tokenUsed, "token_B");
     });
 
-    test("4. Public GET deduplication remains intact for concurrent identical reads", async () => {
+    test("4. Public GET deduplication remains intact for concurrent identical reads (Scenario 14)", async () => {
         let networkCallCount = 0;
         let resolveNetwork;
 
-        globalThis.fetch = async (url) => {
+        globalThis.fetch = async () => {
             networkCallCount++;
             return new Promise((resolve) => {
                 resolveNetwork = () => resolve({
@@ -123,14 +249,12 @@ describe("Admin Orders Request Isolation & Error States Unit Suite", () => {
             });
         };
 
-        // Fire two concurrent identical public GETs
         const p1 = apiGet("/api/product?category=linen&limit=20");
         const p2 = apiGet("/api/product?category=linen&limit=20");
 
         resolveNetwork();
         const [res1, res2] = await Promise.all([p1, p2]);
 
-        // Exactly one network call was made; second caller coalesced onto in-flight promise
         assert.equal(networkCallCount, 1, "Concurrent public reads must be coalesced");
         assert.deepEqual(res1, res2);
     });
@@ -141,357 +265,472 @@ describe("Admin Orders Request Isolation & Error States Unit Suite", () => {
         assert.equal(buildDedupeKey("/api/admin/dashboard"), null);
         assert.equal(buildDedupeKey("/api/coupon?active=true"), null);
 
-        // Public and customer endpoints generate valid non-null dedupe keys
         assert.notEqual(buildDedupeKey("/api/product?limit=20"), null);
         assert.notEqual(buildDedupeKey("/api/order/my-orders"), null);
     });
 
-    // Helper that models the exact sequence guard and state machine in AdminOrdersPage
-    function createAdminOrdersController() {
-        let orders = [];
-        let loading = false;
-        let fetchError = null;
-        let fetchErrorStatus = null;
-        let displayedQuery = null;
-        let currentPage = 1;
-        let totalPages = 1;
-        let totalCount = 0;
-        let requestSeq = 0;
-        let isMounted = true;
+    // -------------------------------------------------------------
+    // SCENARIO 6: TASK 1 — SIGN-IN LINKS IN THE ACTUAL ORDERS PAGE
+    // -------------------------------------------------------------
 
-        async function fetchOrders({
-            targetPage = currentPage,
-            search = "",
-            status = "",
-            sequenceId = undefined,
-            fetcher,
-        }) {
-            const mySeq = sequenceId !== undefined ? sequenceId : ++requestSeq;
-            loading = true;
+    test("6. Both Sign In links in orders page target the actual admin login route (/admin)", () => {
+        const pageSource = fs.readFileSync(path.resolve("./app/admin/(dashboard)/orders/page.tsx"), "utf8");
+        // Verify no obsolete /admin/login link remains
+        assert.equal(pageSource.includes('href="/admin/login"'), false, "Must not contain /admin/login link");
 
-            try {
-                const data = await fetcher({ targetPage, search, status });
+        // Verify both links point to /admin
+        const matches = pageSource.match(/href="\/admin"/g);
+        assert.ok(matches && matches.length >= 2, "Must contain at least 2 links to /admin");
+    });
 
-                if (!isMounted || mySeq !== requestSeq) {
-                    return; // discard obsolete
-                }
+    // -------------------------------------------------------------
+    // SCENARIOS 1 to 5: REAL HOOK LIFECYCLE & ERROR PRESENTATION
+    // -------------------------------------------------------------
 
-                if (!data || data.success === false || !Array.isArray(data.orders)) {
-                    throw new Error(data?.message || "Failed to retrieve valid order listing from server.");
-                }
-
-                orders = data.orders;
-                displayedQuery = { status: status || "", search: search.trim(), page: targetPage };
-                if (data.pagination) {
-                    currentPage = data.pagination.page || targetPage;
-                    totalPages = data.pagination.totalPages || 1;
-                    totalCount = data.pagination.totalCount ?? data.orders.length;
-                }
-                fetchError = null;
-                fetchErrorStatus = null;
-            } catch (err) {
-                if (!isMounted || mySeq !== requestSeq) {
-                    return; // discard obsolete
-                }
-                const errStatus = err?.status || null;
-                fetchErrorStatus = errStatus;
-                fetchError = errStatus === 401
-                    ? "Admin session was not recognized. Please sign in again from the admin gate."
-                    : errStatus === 403
-                    ? "Access denied. Administrative privileges are required."
-                    : err?.message || "Failed to load orders. Please try again.";
-
-                if (errStatus === 401 || errStatus === 403) {
-                    orders = [];
-                    displayedQuery = null;
-                }
-            } finally {
-                if (isMounted && mySeq === requestSeq) {
-                    loading = false;
-                }
-            }
-        }
-
-        return {
-            getState: () => ({
-                orders,
-                loading,
-                fetchError,
-                fetchErrorStatus,
-                displayedQuery,
-                currentPage,
-                totalPages,
-                totalCount,
-                isOutdated: Boolean(fetchError && orders.length > 0 && fetchErrorStatus !== 401 && fetchErrorStatus !== 403),
-                hasQueryMismatch: (status, search, page) => Boolean(
-                    fetchError && orders.length > 0 && displayedQuery && (
-                        displayedQuery.status !== (status || "") ||
-                        displayedQuery.search !== (search || "").trim() ||
-                        displayedQuery.page !== page
-                    )
-                ),
-            }),
-            setOrdersDirectly: (o) => { orders = o; },
-            bumpSequence: () => ++requestSeq,
-            unmount: () => {
-                isMounted = false;
-                requestSeq++;
-            },
-            fetchOrders,
+    test("Scenario 1: Valid admin session loads and renders orders", async () => {
+        setAdminToken("valid_admin_token");
+        globalThis.fetch = async (url) => {
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => ({
+                    success: true,
+                    orders: [
+                        { _id: "ord_1", orderId: "LS-1001", status: "processing", pricing: { total: 2500 }, items: [] }
+                    ],
+                    pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                }),
+            };
         };
-    }
 
-    test("6. Latest search/filter request wins (Task 2: Out-of-order race resolution)", async () => {
-        const ctrl = createAdminOrdersController();
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+        await harness.current.fetchOrders(1, "", "");
 
-        let resolveRequestA;
-        let resolveRequestB;
+        assert.equal(harness.current.orders.length, 1);
+        assert.equal(harness.current.orders[0].orderId, "LS-1001");
+        assert.equal(harness.current.loading, false);
+        assert.equal(harness.current.fetchError, null);
+        assert.equal(harness.current.isOutdated, false);
+    });
 
-        // Intent A triggered (e.g. status "processing")
-        const seqA = ctrl.bumpSequence();
-        const promiseA = ctrl.fetchOrders({
-            status: "processing",
-            sequenceId: seqA,
-            fetcher: () => new Promise((resolve) => {
-                resolveRequestA = () => resolve({
+    test("Scenario 2: Initial load failure displays an error and Retry", async () => {
+        setAdminToken("valid_admin_token");
+        globalThis.fetch = async () => {
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => ({ success: false, message: "Database unreachable" }),
+            };
+        };
+
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+        await harness.current.fetchOrders(1, "", "");
+
+        assert.equal(harness.current.orders.length, 0);
+        assert.equal(harness.current.fetchError, "Database unreachable");
+        assert.equal(harness.current.loading, false);
+        assert.equal(harness.current.isOutdated, false); // initial failure has no rows, so isOutdated is false
+    });
+
+    test("Scenario 3: Refresh failure preserves rows and visibly marks them outdated", async () => {
+        setAdminToken("valid_admin_token");
+        let attempt = 0;
+        globalThis.fetch = async () => {
+            attempt++;
+            if (attempt === 1) {
+                return {
+                    ok: true,
+                    status: 200,
+                    headers: new Headers({ "content-type": "application/json" }),
+                    json: async () => ({
+                        success: true,
+                        orders: [{ _id: "ord_1", orderId: "LS-1001", status: "processing", pricing: { total: 2500 }, items: [] }],
+                        pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                    }),
+                };
+            }
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => ({ success: false, message: "Bad Gateway" }),
+            };
+        };
+
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+        await harness.current.fetchOrders(1, "", "");
+        assert.equal(harness.current.orders.length, 1);
+
+        // Subsequent refresh fails
+        await harness.current.fetchOrders(1, "", "");
+
+        // Rows preserved, error message surfaced, and marked outdated
+        assert.equal(harness.current.orders.length, 1);
+        assert.equal(harness.current.orders[0].orderId, "LS-1001");
+        assert.equal(harness.current.fetchError, "Bad Gateway");
+        assert.equal(harness.current.isOutdated, true);
+    });
+
+    test("Scenario 4: Successful retry clears the error and updates the list", async () => {
+        setAdminToken("valid_admin_token");
+        let shouldFail = true;
+        globalThis.fetch = async () => {
+            if (shouldFail) {
+                return {
+                    ok: true,
+                    status: 200,
+                    headers: new Headers({ "content-type": "application/json" }),
+                    json: async () => ({ success: false, message: "Server temporary failure" }),
+                };
+            }
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => ({
                     success: true,
-                    orders: [{ _id: "ord_A", orderId: "ORD-PROCESSING" }],
-                });
-            }),
-        });
+                    orders: [{ _id: "ord_recovered", orderId: "LS-RECOVERED", status: "delivered", pricing: { total: 3000 }, items: [] }],
+                    pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                }),
+            };
+        };
 
-        // While A is in-flight, Intent B triggered (e.g. status "delivered")
-        const seqB = ctrl.bumpSequence();
-        const promiseB = ctrl.fetchOrders({
-            status: "delivered",
-            sequenceId: seqB,
-            fetcher: () => new Promise((resolve) => {
-                resolveRequestB = () => resolve({
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+        await harness.current.fetchOrders(1, "", "");
+        assert.equal(harness.current.fetchError, "Server temporary failure");
+
+        // Admin triggers retry after service recovers
+        shouldFail = false;
+        await harness.current.handleRetry();
+
+        assert.equal(harness.current.fetchError, null);
+        assert.equal(harness.current.orders.length, 1);
+        assert.equal(harness.current.orders[0].orderId, "LS-RECOVERED");
+        assert.equal(harness.current.isOutdated, false);
+    });
+
+    test("Scenario 5: Successful empty response displays the empty state", async () => {
+        setAdminToken("valid_admin_token");
+        globalThis.fetch = async () => {
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => ({
                     success: true,
-                    orders: [{ _id: "ord_B", orderId: "ORD-DELIVERED" }],
-                });
-            }),
-        });
+                    orders: [],
+                    pagination: { page: 1, totalPages: 0, totalCount: 0 },
+                }),
+            };
+        };
 
-        // Request B resolves FIRST
-        resolveRequestB();
-        await promiseB;
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+        await harness.current.fetchOrders(1, "", "");
 
-        // State now reflects Request B
-        assert.equal(ctrl.getState().orders[0].orderId, "ORD-DELIVERED");
-        assert.equal(ctrl.getState().loading, false);
-
-        // Request A resolves LAST
-        resolveRequestA();
-        await promiseA;
-
-        // Request A must be rejected: Request B remains authoritative!
-        assert.equal(ctrl.getState().orders[0].orderId, "ORD-DELIVERED", "Obsolete Request A must not overwrite newer Request B");
-        assert.equal(ctrl.getState().displayedQuery.status, "delivered");
-        assert.equal(ctrl.getState().fetchError, null);
+        assert.equal(harness.current.orders.length, 0);
+        assert.equal(harness.current.fetchError, null);
+        assert.equal(harness.current.loading, false);
     });
 
-    test("7. Obsolete request failure does not show an error or clear newer loading indicator", async () => {
-        const ctrl = createAdminOrdersController();
+    // -------------------------------------------------------------
+    // SCENARIOS 7, 8, 9: TASK 2 — CLEAR ALL ORDER DETAILS ON 401/403
+    // -------------------------------------------------------------
 
-        let rejectRequestA;
-        let resolveRequestB;
+    test("Scenario 7: Open order details, then return 401 on refresh -> details close, rows disappear, sign-in guidance appears", async () => {
+        setAdminToken("expired_token");
+        let attempt = 0;
+        globalThis.fetch = async () => {
+            attempt++;
+            if (attempt === 1) {
+                return {
+                    ok: true,
+                    status: 200,
+                    headers: new Headers({ "content-type": "application/json" }),
+                    json: async () => ({
+                        success: true,
+                        orders: [{ _id: "ord_secret", orderId: "LS-CONFIDENTIAL", status: "processing", pricing: { total: 9999 }, items: [] }],
+                        pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                    }),
+                };
+            }
+            return {
+                ok: false,
+                status: 401,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => ({ success: false, message: "Token expired or invalid" }),
+            };
+        };
 
-        // Request A starts
-        const seqA = ctrl.bumpSequence();
-        const promiseA = ctrl.fetchOrders({
-            search: "linen",
-            sequenceId: seqA,
-            fetcher: () => new Promise((_, reject) => {
-                rejectRequestA = () => reject(new Error("Network timeout on obsolete query"));
-            }),
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+        await harness.current.fetchOrders(1, "", "");
+
+        // Admin opens order details modal & image preview
+        harness.current.setViewOrder(harness.current.orders[0]);
+        harness.current.setPreviewItem({ name: "Silk Saree", quantity: 1, price: 9999 });
+        assert.ok(harness.current.viewOrder);
+        assert.ok(harness.current.previewItem);
+
+        // Later refresh encounters 401
+        await harness.current.fetchOrders(1, "", "");
+
+        // Protected details modal closed, preview closed, rows cleared, auth error displayed
+        assert.equal(harness.current.viewOrder, null, "viewOrder modal must be closed on 401");
+        assert.equal(harness.current.previewItem, null, "previewItem must be cleared on 401");
+        assert.equal(harness.current.orders.length, 0, "orders must be cleared on 401");
+        assert.equal(harness.current.displayedQuery, null);
+        assert.equal(harness.current.fetchErrorStatus, 401);
+        assert.match(harness.current.fetchError, /Admin session was not recognized/);
+    });
+
+    test("Scenario 8: Open order details, then return 403 on refresh -> details close, rows disappear, access-denied appears", async () => {
+        setAdminToken("restricted_token");
+        let attempt = 0;
+        globalThis.fetch = async () => {
+            attempt++;
+            if (attempt === 1) {
+                return {
+                    ok: true,
+                    status: 200,
+                    headers: new Headers({ "content-type": "application/json" }),
+                    json: async () => ({
+                        success: true,
+                        orders: [{ _id: "ord_secret_2", orderId: "LS-CONFIDENTIAL-2", status: "processing", pricing: { total: 5000 }, items: [] }],
+                        pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                    }),
+                };
+            }
+            return {
+                ok: false,
+                status: 403,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => ({ success: false, message: "Forbidden" }),
+            };
+        };
+
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+        await harness.current.fetchOrders(1, "", "");
+
+        harness.current.setViewOrder(harness.current.orders[0]);
+        assert.ok(harness.current.viewOrder);
+
+        // Refresh encounters 403 Forbidden
+        await harness.current.fetchOrders(1, "", "");
+
+        assert.equal(harness.current.viewOrder, null, "viewOrder modal must be closed on 403");
+        assert.equal(harness.current.orders.length, 0, "orders must be cleared on 403");
+        assert.equal(harness.current.fetchErrorStatus, 403);
+        assert.match(harness.current.fetchError, /Access denied/);
+    });
+
+    test("Scenario 9: For each order-action dialog, return 401/403 from its request -> dialog and protected values clear", async () => {
+        setAdminToken("test_token");
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+
+        // Populate initial orders
+        harness.current.setOrders([
+            { _id: "ord_hold", orderId: "LS-HOLD", status: "processing", pricing: { total: 1000 }, items: [] }
+        ]);
+
+        // 9a: Resolve Hold Dialog with 401 response
+        globalThis.fetch = async () => ({
+            ok: false,
+            status: 401,
+            headers: new Headers({ "content-type": "application/json" }),
+            json: async () => ({ success: false, message: "Unauthorized hold action" }),
         });
 
-        // Request B starts immediately
-        const seqB = ctrl.bumpSequence();
-        const promiseB = ctrl.fetchOrders({
-            search: "cotton",
-            sequenceId: seqB,
-            fetcher: () => new Promise((resolve) => {
-                resolveRequestB = () => resolve({
+        harness.current.setHoldOrder(harness.current.orders[0]);
+        harness.current.setHoldNotes("Sensitive internal notes for hold");
+        assert.ok(harness.current.holdOrder);
+        assert.equal(harness.current.holdNotes, "Sensitive internal notes for hold");
+
+        await harness.current.handleResolveHoldSubmit("clear_hold");
+
+        assert.equal(harness.current.holdOrder, null, "Hold dialog must close on 401");
+        assert.equal(harness.current.holdNotes, "", "Hold notes must reset on 401");
+        assert.equal(harness.current.orders.length, 0, "Orders must clear on 401");
+        assert.equal(harness.current.fetchErrorStatus, 401);
+
+        // 9b: COD Reconcile Dialog with 403 response
+        harness.current.setOrders([
+            { _id: "ord_cod", orderId: "LS-COD", status: "delivered", pricing: { total: 2000 }, items: [] }
+        ]);
+        globalThis.fetch = async () => ({
+            ok: false,
+            status: 403,
+            headers: new Headers({ "content-type": "application/json" }),
+            json: async () => ({ success: false, message: "Forbidden COD action" }),
+        });
+
+        harness.current.setCodOrder(harness.current.orders[0]);
+        harness.current.setCodUtr("UTR-BANK-123456");
+        harness.current.setCodAmount("2000");
+        harness.current.setCodDiscrepancyReason("Suspected fraud discrepancy");
+
+        await harness.current.handleCodReconcileSubmit();
+
+        assert.equal(harness.current.codOrder, null, "COD dialog must close on 403");
+        assert.equal(harness.current.codUtr, "", "COD UTR must reset on 403");
+        assert.equal(harness.current.codAmount, "", "COD Amount must reset on 403");
+        assert.equal(harness.current.codDiscrepancyReason, "", "COD discrepancy reason must reset on 403");
+        assert.equal(harness.current.orders.length, 0, "Orders must clear on 403");
+        assert.equal(harness.current.fetchErrorStatus, 403);
+
+        // 9c: Physical Return Confirmation Dialog with 401 response
+        harness.current.setOrders([
+            { _id: "ord_ret", orderId: "LS-RET", status: "delivered", pricing: { total: 3000 }, items: [] }
+        ]);
+        globalThis.fetch = async () => ({
+            ok: false,
+            status: 401,
+            headers: new Headers({ "content-type": "application/json" }),
+            json: async () => ({ success: false, message: "Unauthorized return action" }),
+        });
+
+        harness.current.setReturnOrder(harness.current.orders[0]);
+        harness.current.setReturnNotes("Warehouse inspection comments");
+
+        await harness.current.handleConfirmReturnSubmit();
+
+        assert.equal(harness.current.returnOrder, null, "Return dialog must close on 401");
+        assert.equal(harness.current.returnNotes, "", "Return notes must reset on 401");
+        assert.equal(harness.current.orders.length, 0, "Orders must clear on 401");
+        assert.equal(harness.current.fetchErrorStatus, 401);
+    });
+
+    // -------------------------------------------------------------
+    // SCENARIOS 10, 11, 12: CONCURRENCY, RACES & UNMOUNT GUARDS
+    // -------------------------------------------------------------
+
+    test("Scenario 10: Resolve an older search/filter request after a newer one -> only the newer result remains", async () => {
+        setAdminToken("valid_admin_token");
+        let resolveReqA;
+        let resolveReqB;
+        let callIndex = 0;
+
+        globalThis.fetch = async (url) => {
+            callIndex++;
+            if (callIndex === 1) {
+                return new Promise((resolve) => {
+                    resolveReqA = () => resolve({
+                        ok: true,
+                        status: 200,
+                        headers: new Headers({ "content-type": "application/json" }),
+                        json: async () => ({
+                            success: true,
+                            orders: [{ _id: "ord_slow", orderId: "ORD-SLOW-A", status: "processing", pricing: { total: 100 }, items: [] }],
+                            pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                        }),
+                    });
+                });
+            } else {
+                return new Promise((resolve) => {
+                    resolveReqB = () => resolve({
+                        ok: true,
+                        status: 200,
+                        headers: new Headers({ "content-type": "application/json" }),
+                        json: async () => ({
+                            success: true,
+                            orders: [{ _id: "ord_fast", orderId: "ORD-FAST-B", status: "delivered", pricing: { total: 200 }, items: [] }],
+                            pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                        }),
+                    });
+                });
+            }
+        };
+
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+
+        // Intent A fires
+        const pA = harness.current.fetchOrders(1, "slow", "processing");
+
+        // Intent B fires while A is pending
+        const pB = harness.current.fetchOrders(1, "fast", "delivered");
+
+        // Intent B completes FIRST
+        resolveReqB();
+        await pB;
+
+        assert.equal(harness.current.orders[0].orderId, "ORD-FAST-B");
+
+        // Intent A completes LAST
+        resolveReqA();
+        await pA;
+
+        // Intent A must NOT overwrite Intent B
+        assert.equal(harness.current.orders[0].orderId, "ORD-FAST-B", "Obsolete Request A must not overwrite newer Request B");
+        assert.equal(harness.current.displayedQuery.status, "delivered");
+    });
+
+    test("Scenario 11: Change filters while request is pending, including during debounce -> obsolete results must not overwrite latest selection", async () => {
+        setAdminToken("valid_admin_token");
+        const fetchCalls = [];
+
+        globalThis.fetch = async (url) => {
+            fetchCalls.push(url);
+            return {
+                ok: true,
+                status: 200,
+                headers: new Headers({ "content-type": "application/json" }),
+                json: async () => ({
                     success: true,
-                    orders: [{ _id: "ord_cotton", orderId: "ORD-COTTON" }],
+                    orders: [{ _id: "ord_latest", orderId: "ORD-LATEST", status: "shipped", pricing: { total: 500 }, items: [] }],
+                    pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                }),
+            };
+        };
+
+        const harness = createHookHarness(useAdminOrders, { debounceMs: 50, autoFetch: true });
+
+        // User rapidly modifies status filter: 'processing' -> 'cancelled' -> 'shipped'
+        harness.current.setStatusFilter("processing");
+        await new Promise((r) => setTimeout(r, 10)); // during debounce
+        harness.current.setStatusFilter("cancelled");
+        await new Promise((r) => setTimeout(r, 10)); // during debounce
+        harness.current.setStatusFilter("shipped");
+
+        // Wait for debounce timer to expire
+        await new Promise((r) => setTimeout(r, 100));
+
+        // Only the final selection ('shipped') should trigger fetch
+        assert.ok(fetchCalls.length >= 1);
+        const lastCall = fetchCalls[fetchCalls.length - 1];
+        assert.ok(lastCall.includes("status=shipped"), "Latest status filter must be requested");
+        assert.equal(harness.current.orders[0].orderId, "ORD-LATEST");
+    });
+
+    test("Scenario 12: Unmount while request is pending -> no subsequent UI update", async () => {
+        setAdminToken("valid_admin_token");
+        let resolveReq;
+
+        globalThis.fetch = async () => {
+            return new Promise((resolve) => {
+                resolveReq = () => resolve({
+                    ok: true,
+                    status: 200,
+                    headers: new Headers({ "content-type": "application/json" }),
+                    json: async () => ({
+                        success: true,
+                        orders: [{ _id: "ord_unmounted", orderId: "ORD-AFTER-UNMOUNT", status: "placed", pricing: { total: 100 }, items: [] }],
+                        pagination: { page: 1, totalPages: 1, totalCount: 1 },
+                    }),
                 });
-            }),
-        });
+            });
+        };
 
-        // While B is still in flight (loading = true), A fails
-        rejectRequestA();
-        await promiseA;
+        const harness = createHookHarness(useAdminOrders, { autoFetch: false });
+        const fetchPromise = harness.current.fetchOrders(1, "", "");
 
-        // A must not set an error and must not terminate B's loading indicator!
-        assert.equal(ctrl.getState().loading, true, "Obsolete request failure must not stop active loading indicator");
-        assert.equal(ctrl.getState().fetchError, null, "Obsolete request error must be suppressed");
+        // Unmount while request is still pending
+        harness.unmount();
 
-        // Now B resolves
-        resolveRequestB();
-        await promiseB;
+        // Resolve fetch after unmount
+        resolveReq();
+        await fetchPromise;
 
-        assert.equal(ctrl.getState().loading, false);
-        assert.equal(ctrl.getState().orders[0].orderId, "ORD-COTTON");
-        assert.equal(ctrl.getState().fetchError, null);
-    });
-
-    test("8. Initial load failure shows error state and Retry", async () => {
-        const ctrl = createAdminOrdersController();
-
-        await ctrl.fetchOrders({
-            targetPage: 1,
-            fetcher: async () => {
-                throw new Error("Database connection refused (500)");
-            },
-        });
-
-        const state = ctrl.getState();
-        assert.equal(state.orders.length, 0);
-        assert.equal(state.fetchError, "Database connection refused (500)");
-        assert.equal(state.isOutdated, false, "Initial load failure has no prior rows, not outdated");
-    });
-
-    test("9. Refresh failure preserves existing rows, displays error banner, and marks rows as outdated (Task 3)", async () => {
-        const ctrl = createAdminOrdersController();
-
-        // 1. Initial successful fetch
-        await ctrl.fetchOrders({
-            targetPage: 1,
-            status: "confirmed",
-            fetcher: async () => ({
-                success: true,
-                orders: [{ _id: "ord_1", orderId: "ORD-CONFIRMED-1" }],
-                pagination: { page: 1, totalPages: 3, totalCount: 60 },
-            }),
-        });
-
-        assert.equal(ctrl.getState().orders.length, 1);
-        assert.equal(ctrl.getState().fetchError, null);
-        assert.equal(ctrl.getState().isOutdated, false);
-
-        // 2. User changes filter to "shipped", but refresh fails
-        await ctrl.fetchOrders({
-            targetPage: 1,
-            status: "shipped",
-            fetcher: async () => {
-                throw new Error("Temporary gateway timeout (504)");
-            },
-        });
-
-        const state = ctrl.getState();
-        // Existing rows PRESERVED!
-        assert.equal(state.orders.length, 1, "Previously loaded rows must be preserved");
-        assert.equal(state.orders[0].orderId, "ORD-CONFIRMED-1");
-        // Error banner is populated
-        assert.equal(state.fetchError, "Temporary gateway timeout (504)");
-        // Mark explicitly as outdated!
-        assert.equal(state.isOutdated, true);
-        // Query mismatch correctly identified: displayed rows are "confirmed", but current filter is "shipped"
-        assert.equal(state.hasQueryMismatch("shipped", "", 1), true, "Must flag mismatch between displayed rows and active selection");
-    });
-
-    test("10. Retry clears error banner, removes outdated flag, and updates rows", async () => {
-        const ctrl = createAdminOrdersController();
-
-        // Existing rows
-        ctrl.setOrdersDirectly([{ _id: "ord_old", orderId: "ORD-OLD" }]);
-
-        // 1. Refresh failed
-        await ctrl.fetchOrders({
-            targetPage: 1,
-            status: "shipped",
-            fetcher: async () => {
-                throw new Error("500 Server Error");
-            },
-        });
-        assert.equal(ctrl.getState().isOutdated, true);
-        assert.ok(ctrl.getState().fetchError);
-
-        // 2. User clicks Retry -> successful fetch
-        await ctrl.fetchOrders({
-            targetPage: 1,
-            status: "shipped",
-            fetcher: async () => ({
-                success: true,
-                orders: [{ _id: "ord_new", orderId: "ORD-SHIPPED-NEW" }],
-                pagination: { page: 1, totalPages: 1, totalCount: 1 },
-            }),
-        });
-
-        const state = ctrl.getState();
-        assert.equal(state.fetchError, null, "Error must be cleared upon successful retry");
-        assert.equal(state.isOutdated, false, "Outdated flag must be cleared");
-        assert.equal(state.orders[0].orderId, "ORD-SHIPPED-NEW");
-    });
-
-    test("11. Empty response shows empty state, but malformed response triggers error", async () => {
-        const ctrl = createAdminOrdersController();
-
-        // Legitimate empty response
-        await ctrl.fetchOrders({
-            fetcher: async () => ({ success: true, orders: [], pagination: { totalCount: 0 } }),
-        });
-        assert.equal(ctrl.getState().orders.length, 0);
-        assert.equal(ctrl.getState().fetchError, null, "Legitimate empty response is NOT an error");
-
-        // Malformed / failure response (success: false)
-        await ctrl.fetchOrders({
-            fetcher: async () => ({ success: false, message: "Internal catalogue index failure" }),
-        });
-        assert.equal(ctrl.getState().fetchError, "Internal catalogue index failure", "success: false must be treated as an error");
-
-        // Malformed orders field (null/missing)
-        await ctrl.fetchOrders({
-            fetcher: async () => ({ success: true, orders: null }),
-        });
-        assert.match(ctrl.getState().fetchError, /Failed to retrieve valid order listing/, "Non-array orders must be treated as an error");
-    });
-
-    test("12. 401/403 authorization failure immediately clears protected rows", async () => {
-        const ctrl = createAdminOrdersController();
-
-        // Initial loaded state with sensitive customer orders
-        ctrl.setOrdersDirectly([{ _id: "sensitive_1", orderId: "ORD-SECRET-1" }]);
-
-        // Session expired (401)
-        await ctrl.fetchOrders({
-            fetcher: async () => {
-                const err = new Error("Unauthorized");
-                err.status = 401;
-                throw err;
-            },
-        });
-
-        const state = ctrl.getState();
-        assert.equal(state.orders.length, 0, "Protected orders must be wiped out on 401");
-        assert.equal(state.displayedQuery, null);
-        assert.match(state.fetchError, /Admin session was not recognized/);
-    });
-
-    test("13. Component unmount discards in-flight requests cleanly", async () => {
-        const ctrl = createAdminOrdersController();
-        let resolveRequest;
-
-        const promise = ctrl.fetchOrders({
-            fetcher: () => new Promise((resolve) => {
-                resolveRequest = () => resolve({
-                    success: true,
-                    orders: [{ _id: "late", orderId: "ORD-LATE" }],
-                });
-            }),
-        });
-
-        // Component unmounts while request is in-flight
-        ctrl.unmount();
-
-        // Request finishes after unmount
-        resolveRequest();
-        await promise;
-
-        // State remains empty, not mutated after unmount
-        assert.equal(ctrl.getState().orders.length, 0);
+        // UI state was preserved without applying late response
+        assert.equal(harness.current.orders.length, 0, "No state update after unmount");
     });
 });
-
