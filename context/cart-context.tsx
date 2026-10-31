@@ -203,16 +203,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (genAtRun !== latestGen) {
         return false
       }
-      if (op.kind === "set" || op.kind === "add") {
-        const prev = lastSyncedQty.current.get(op.productId)
-        setItems((current) => {
-          const next = prev === undefined ? current.filter((i) => i.product.id !== op.productId) : current.map((i) => (i.product.id === op.productId ? { ...i, quantity: prev } : i))
-          itemsRef.current = next
-          return next
-        })
+
+      // If the server rejected due to expired/invalid session (401),
+      // transition gracefully to guest mode so the user's cart is preserved and usable!
+      if (err?.status === 401) {
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("auth_user")
+        }
+        isAuthRef.current = false
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("cart:guest", JSON.stringify(itemsRef.current))
+        }
+        return true
       }
-      fetchServerCart(genAtRun)
-      toast.error("Could not update your cart. Showing the saved version.")
+
+      // If the server rejected because the product was deleted (404) or invalid quantity (400)
+      if (err?.status === 400 || err?.status === 404) {
+        if (op.kind === "set" || op.kind === "add") {
+          const prev = lastSyncedQty.current.get(op.productId)
+          setItems((current) => {
+            const next = prev === undefined ? current.filter((i) => i.product.id !== op.productId) : current.map((i) => (i.product.id === op.productId ? { ...i, quantity: prev } : i))
+            itemsRef.current = next
+            return next
+          })
+        }
+        fetchServerCart(genAtRun)
+        toast.error(err?.message || "Could not update your cart.")
+        return false
+      }
+
+      // For network blips or server unreachability, preserve local items so the user
+      // does not have their cart wiped out while shopping or buying!
+      console.warn("Cart sync network error — preserving local cart items:", err?.message || err)
       return false
     }
   }, [])
