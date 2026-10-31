@@ -82,7 +82,11 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+
+  // Dedicated monotonic sequence ref for list search/filter/pagination ordering
   const requestSeqRef = useRef(0)
+  // Dedicated session & lifecycle generation ref to invalidate stale async callbacks
+  const sessionGenRef = useRef(0)
   const isMountedRef = useRef(true)
 
   // Protected dialog & item preview state
@@ -113,11 +117,17 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
   /**
    * Centralized cleanup for protected order UI when access is rejected (401/403).
    * Immediately clears order rows, closes all action & details dialogs, resets
-   * sensitive form values, and invalidates any in-flight requests.
+   * sensitive form values, and explicitly resets all loading states.
    */
   const clearProtectedOrderState = (errStatus?: number | null) => {
-    // Invalidate in-flight and pending asynchronous callbacks so they cannot repopulate data
+    // Invalidate sessions and pending asynchronous callbacks
+    sessionGenRef.current += 1
     requestSeqRef.current += 1
+
+    // Explicitly reset loading indicators so no spinner or badge gets stuck
+    setLoading(false)
+    setActionLoading(false)
+    setIsSearchingSku(false)
 
     // Clear order list & displayed query metadata
     setOrders([])
@@ -162,11 +172,15 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
 
   const handleSkuSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && skuQuery.trim()) {
+      const mySession = sessionGenRef.current
       setIsSearchingSku(true)
       setSkuNoResult(false)
       try {
         const cleanQuery = skuQuery.replace(/^sku[:\s]+/i, "").trim()
         const res = await apiGet(`/api/product/by-sku/${encodeURIComponent(cleanQuery)}`)
+        if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+          return
+        }
         if (res.success && res.product) {
           setSearchedProduct(res.product)
           setShowSkuModal(true)
@@ -174,14 +188,18 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
           setSkuNoResult(true)
         }
       } catch (err: any) {
-        console.error("SKU Search Error:", err)
+        if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+          return
+        }
         const status = err?.status || err?.response?.status
         if (status === 401 || status === 403) {
           clearProtectedOrderState(status)
         }
         setSkuNoResult(true)
       } finally {
-        setIsSearchingSku(false)
+        if (isMountedRef.current && mySession === sessionGenRef.current) {
+          setIsSearchingSku(false)
+        }
       }
     }
   }
@@ -190,6 +208,7 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
     isMountedRef.current = true
     return () => {
       isMountedRef.current = false
+      sessionGenRef.current += 1
       requestSeqRef.current += 1
     }
   }, [])
@@ -200,12 +219,15 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
     // Invalidate in-flight and pending requests immediately when search/filter intent changes
     requestSeqRef.current += 1
     const currentSeq = requestSeqRef.current
+    const currentSession = sessionGenRef.current
 
     // Filter/search changes reset pagination correctly
     setCurrentPage(1)
 
     const timer = setTimeout(() => {
-      fetchOrders(1, searchTerm, statusFilter, currentSeq)
+      if (isMountedRef.current && currentSession === sessionGenRef.current && currentSeq === requestSeqRef.current) {
+        fetchOrders(1, searchTerm, statusFilter, currentSeq)
+      }
     }, debounceMs)
 
     return () => {
@@ -216,29 +238,39 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
 
   const handleResolveHoldSubmit = async (action: "clear_hold" | "cancel_order") => {
     if (!holdOrder) return
+    const mySession = sessionGenRef.current
     setActionLoading(true)
     try {
       const res: any = await apiPost(`/api/order/admin/${holdOrder._id}/resolve-hold`, {
         action,
         notes: holdNotes.trim(),
       })
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       toast.success(res?.message || "Fulfillment hold resolved")
       setHoldOrder(null)
       setHoldNotes("")
       fetchOrders()
     } catch (err: any) {
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       const status = err?.status || err?.response?.status
       if (status === 401 || status === 403) {
         clearProtectedOrderState(status)
       }
       toast.error(err?.message || "Failed to resolve hold")
     } finally {
-      setActionLoading(false)
+      if (isMountedRef.current && mySession === sessionGenRef.current) {
+        setActionLoading(false)
+      }
     }
   }
 
   const handleCodReconcileSubmit = async () => {
     if (!codOrder) return
+    const mySession = sessionGenRef.current
     setActionLoading(true)
     try {
       const res: any = await apiPost(`/api/order/admin/${codOrder._id}/cod-reconcile`, {
@@ -247,6 +279,9 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
         utr: codUtr.trim(),
         discrepancyReason: codDiscrepancyReason.trim(),
       })
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       toast.success(res?.message || "COD remittance reconciled")
       setCodOrder(null)
       setCodUtr("")
@@ -254,18 +289,24 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
       setCodDiscrepancyReason("")
       fetchOrders()
     } catch (err: any) {
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       const status = err?.status || err?.response?.status
       if (status === 401 || status === 403) {
         clearProtectedOrderState(status)
       }
       toast.error(err?.message || "Failed to reconcile COD remittance")
     } finally {
-      setActionLoading(false)
+      if (isMountedRef.current && mySession === sessionGenRef.current) {
+        setActionLoading(false)
+      }
     }
   }
 
   const handleConfirmReturnSubmit = async () => {
     if (!returnOrder) return
+    const mySession = sessionGenRef.current
     setActionLoading(true)
     try {
       const res: any = await apiPost(`/api/order/admin/${returnOrder._id}/confirm-return`, {
@@ -273,18 +314,26 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
         condition: returnCondition,
         notes: returnNotes.trim(),
       })
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       toast.success(res?.message || "Physical return confirmed")
       setReturnOrder(null)
       setReturnNotes("")
       fetchOrders()
     } catch (err: any) {
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       const status = err?.status || err?.response?.status
       if (status === 401 || status === 403) {
         clearProtectedOrderState(status)
       }
       toast.error(err?.message || "Failed to confirm return")
     } finally {
-      setActionLoading(false)
+      if (isMountedRef.current && mySession === sessionGenRef.current) {
+        setActionLoading(false)
+      }
     }
   }
 
@@ -294,6 +343,7 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
     status = statusFilter,
     sequenceId?: number
   ) => {
+    const mySession = sessionGenRef.current
     const mySeq = sequenceId !== undefined ? sequenceId : ++requestSeqRef.current
 
     try {
@@ -306,8 +356,8 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
 
       const data = await apiGet(`/api/order/admin/all?${params.toString()}`)
 
-      // If this request was superseded by a newer request or unmounted, discard it completely
-      if (!isMountedRef.current || mySeq !== requestSeqRef.current) {
+      // If this request was superseded by a newer request, newer session, or unmounted, discard it
+      if (!isMountedRef.current || mySession !== sessionGenRef.current || mySeq !== requestSeqRef.current) {
         return
       }
 
@@ -327,7 +377,7 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
       setFetchErrorStatus(null)
     } catch (err: any) {
       // Obsolete request errors must NEVER be displayed or clear the loading state of a newer request
-      if (!isMountedRef.current || mySeq !== requestSeqRef.current) {
+      if (!isMountedRef.current || mySession !== sessionGenRef.current || mySeq !== requestSeqRef.current) {
         return
       }
 
@@ -344,7 +394,7 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
       }
     } finally {
       // Ensure an older request cannot stop the latest request's loading indicator
-      if (isMountedRef.current && mySeq === requestSeqRef.current) {
+      if (isMountedRef.current && mySession === sessionGenRef.current && mySeq === requestSeqRef.current) {
         setLoading(false)
       }
     }
@@ -364,8 +414,12 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
   }
 
   const updateStatus = async (orderId: string, status: string) => {
+    const mySession = sessionGenRef.current
     try {
       const data: any = await apiPut(`/api/order/admin/${orderId}/status`, { status })
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
 
       if (status === "cancelled") {
         if (data.finalized) {
@@ -384,6 +438,9 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
 
       fetchOrders()
     } catch (err: any) {
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       console.error("Failed to update order status:", err)
       const errStatus = err?.status || err?.response?.status
       if (errStatus === 401 || errStatus === 403) {
@@ -394,11 +451,18 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
   }
 
   const triggerAdminRefund = async (orderId: string) => {
+    const mySession = sessionGenRef.current
     try {
       const res: any = await apiPost(`/api/order/admin/${orderId}/refund`, { reason: "Refund issued by admin" })
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       toast.success(res?.message || "Refund initiated/reconciled successfully")
       fetchOrders()
     } catch (err: any) {
+      if (!isMountedRef.current || mySession !== sessionGenRef.current) {
+        return
+      }
       console.error("Failed to issue refund:", err)
       const errStatus = err?.status || err?.response?.status
       if (errStatus === 401 || errStatus === 403) {
@@ -489,6 +553,7 @@ export function useAdminOrders(options: UseAdminOrdersOptions = {}) {
     isOutdated,
     hasQueryMismatch,
     requestSeqRef,
+    sessionGenRef,
     isMountedRef,
   }
 }
