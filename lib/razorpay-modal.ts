@@ -124,6 +124,7 @@ export interface OpenRazorpayModalParams {
   onDismiss: () => void
   onFailure: (err: any) => void
   onErrorState: (message: string) => void
+  onOpened?: () => void
   loadScript?: () => Promise<boolean>
   getRazorpayConstructor?: () => any
 }
@@ -304,6 +305,15 @@ export async function openRazorpayModal(params: OpenRazorpayModalParams): Promis
           onDismiss()
           settleOnce()
         },
+        onhidden: function () {
+          if (retryManager.isModalSessionValid(modalSession)) {
+            retryManager.endModalSession(modalSession!)
+            onDismiss()
+          }
+          settleOnce()
+        },
+        escape: true,
+        backdropclose: true,
       },
     }
 
@@ -321,6 +331,9 @@ export async function openRazorpayModal(params: OpenRazorpayModalParams): Promis
     })
 
     paymentObject.open()
+    try {
+      params.onOpened?.()
+    } catch {}
   } catch (sdkErr: any) {
     // TASK 2: Catch SDK constructor, .on(), or .open() exceptions without hanging
     retryManager.endModalSession(modalSession)
@@ -329,7 +342,8 @@ export async function openRazorpayModal(params: OpenRazorpayModalParams): Promis
         paymentObject.close?.()
       } catch {}
     }
-    onErrorState(sdkErr?.message || "Could not launch payment gateway. Tap 'Resume Payment' to retry.")
+    const sanitizedError = sdkErr?.description || sdkErr?.error?.description || sdkErr?.message || "Could not launch payment gateway. Tap 'Resume Payment' to retry."
+    onErrorState(sanitizedError)
     settleOnce()
     return modalCompletionPromise
   }

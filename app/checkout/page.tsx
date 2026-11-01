@@ -737,6 +737,9 @@ export default function CheckoutPage() {
         toast.error(response?.error?.description || "Payment did not complete. You can retry with another method, or it will be reconciled automatically.")
         clearCheckoutLoadingStates()
       },
+      onOpened: () => {
+        clearCheckoutLoadingStates()
+      },
       onErrorState: (message: string) => {
         clearCheckoutLoadingStates()
         patchAttempt(scope, { phase: "awaiting_payment" })
