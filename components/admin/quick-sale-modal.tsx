@@ -156,7 +156,7 @@ export function QuickSaleModal({ product, isOpen, onClose, onSave }: QuickSaleMo
                             onClick={async () => {
                                 setIsSaving(true)
                                 try {
-                                    await onSave(product.id || product._id, { isOnSale: false, price: regularPrice })
+                                    await onSave(product.id || product._id, { isOnSale: false, productCollection: (product.productCollection === "big-sale" || product.productCollection === "sale") ? "" : (product.productCollection || ""), price: regularPrice })
                                     onClose()
                                 } finally {
                                     setIsSaving(false)

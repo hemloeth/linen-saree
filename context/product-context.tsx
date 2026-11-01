@@ -110,7 +110,7 @@ export function ProductProvider({ children, initialProducts = [] }: { children: 
         const fetchProducts = async () => {
             try {
                 // limit=0 disables pagination on the backend -> complete catalog
-                const data = await apiGet('/api/product/allproducts?limit=0&fullData=true')
+                const data = await apiGet('/api/product/allproducts?limit=100&fullData=true')
                 if (data.products) {
                     setProducts(data.products)
                 }

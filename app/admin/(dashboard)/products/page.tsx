@@ -148,10 +148,39 @@ export default function AdminProductsPage() {
     setUpdatingId(product._id)
     setUpdatingField('isFestive')
     try {
-      await quickUpdateProduct(product._id, { isFestive: !product.isFestive })
+      const nextIsFestive = !product.isFestive
+      await quickUpdateProduct(product._id, {
+        isFestive: nextIsFestive,
+        productCollection: nextIsFestive ? "festive" : (product.productCollection === "festive" ? "" : (product.productCollection || ""))
+      })
       showToast(
-        product.isFestive ? "Removed from Festive" : "Added to Festive",
-        `"${product.name}" is ${product.isFestive ? "no longer" : "now"} in the festive collection`
+        nextIsFestive ? "Added to Festive" : "Removed from Festive",
+        `"${product.name}" is ${nextIsFestive ? "now" : "no longer"} in the festive collection`
+      )
+    } catch (err: any) {
+      showToast(
+        "Update Failed",
+        err.message || "Not authorized to modify products",
+        "error"
+      )
+    } finally {
+      setUpdatingId(null)
+      setUpdatingField(null)
+    }
+  }
+
+  const handleToggleCelebrity = async (product: any) => {
+    setUpdatingId(product._id)
+    setUpdatingField('celebrity')
+    try {
+      const isCurrentlyStar = product.productCollection === "celebrity"
+      const nextCollection = isCurrentlyStar ? "" : "celebrity"
+      await quickUpdateProduct(product._id, {
+        productCollection: nextCollection
+      })
+      showToast(
+        !isCurrentlyStar ? "Added to Dress Like a Star" : "Removed from Celebrity Collection",
+        `"${product.name}" is ${!isCurrentlyStar ? "now" : "no longer"} in the celebrity collection`
       )
     } catch (err: any) {
       showToast(
@@ -166,72 +195,58 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <AdminToast toasts={toasts} onDismiss={dismissToast} />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight font-serif text-primary">Products</h2>
-          <p className="text-muted-foreground">Manage your product catalog.</p>
+      {/* Top Header & Tab Switcher: compact single line */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b pb-3">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight font-serif text-primary">Products</h2>
+          <span className="text-xs text-muted-foreground font-medium hidden sm:inline">
+            ({products.length} in catalog)
+          </span>
         </div>
-      </div>
 
-      {/* Tab Switcher */}
-      <div className="flex items-center gap-1 p-1 bg-muted/40 rounded-xl w-fit border border-primary/5 backdrop-blur-sm">
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`relative px-6 py-2.5 text-sm font-bold transition-all duration-300 rounded-lg group ${
-            activeTab === 'all' ? 'text-primary' : 'text-muted-foreground hover:text-primary'
-          }`}
-        >
-          {activeTab === 'all' && (
-            <motion.div
-              layoutId="activeTab"
-              className="absolute inset-0 bg-background shadow-sm border border-primary/10 rounded-lg"
-              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-            />
-          )}
-          <span className="relative flex items-center gap-2">
-            All Products
-            <span className={`px-1.5 py-0.5 rounded text-[10px] ${
-              activeTab === 'all' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+        {/* Compact Tab Switcher */}
+        <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg w-fit border border-primary/10">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`relative px-3 py-1.5 text-xs font-bold transition-all rounded-md flex items-center gap-1.5 ${
+              activeTab === 'all' ? 'bg-background text-primary shadow-xs' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <span>All Products</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
+              activeTab === 'all' ? 'bg-primary/10 text-primary font-bold' : 'bg-muted text-muted-foreground'
             }`}>
               {products.length}
             </span>
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveTab('sale')}
-          className={`relative px-6 py-2.5 text-sm font-bold transition-all duration-300 rounded-lg group ${
-            activeTab === 'sale' ? 'text-primary' : 'text-muted-foreground hover:text-primary'
-          }`}
-        >
-          {activeTab === 'sale' && (
-            <motion.div
-              layoutId="activeTab"
-              className="absolute inset-0 bg-background shadow-sm border border-primary/10 rounded-lg"
-              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-            />
-          )}
-          <span className="relative flex items-center gap-2">
-            On Sale
-            <span className={`px-1.5 py-0.5 rounded text-[10px] ${
-              activeTab === 'sale' ? 'bg-orange-500/10 text-orange-600' : 'bg-muted text-muted-foreground'
+          </button>
+          <button
+            onClick={() => setActiveTab('sale')}
+            className={`relative px-3 py-1.5 text-xs font-bold transition-all rounded-md flex items-center gap-1.5 ${
+              activeTab === 'sale' ? 'bg-background text-orange-600 shadow-xs' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <span>On Sale</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
+              activeTab === 'sale' ? 'bg-orange-500/10 text-orange-600 font-bold' : 'bg-muted text-muted-foreground'
             }`}>
               {saleCount}
             </span>
-          </span>
-        </button>
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      {/* Toolbar: Search and Multiple Actions */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="relative flex-1 max-w-xs sm:max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+            className="pl-8 h-8 text-xs rounded-none"
           />
         </div>
 
@@ -378,7 +393,8 @@ export default function AdminProductsPage() {
                   <TableCell className="font-semibold">₹{product.price?.toLocaleString('en-IN')}</TableCell>
                   <TableCell>{product.stock}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                        {/* SALE / BIG SALE */}
                         <span
                           role="button"
                           onClick={() => {
@@ -386,13 +402,14 @@ export default function AdminProductsPage() {
                               handleOpenSaleModal(product);
                             }
                           }}
-                          className={`group relative inline-flex items-center justify-center py-1 px-3 rounded-full text-[10px] font-bold cursor-pointer select-none transition-all duration-200 border whitespace-nowrap ${product.isOnSale
-                            ? "bg-orange-500 border-orange-500 text-white shadow-sm hover:scale-105"
+                          className={`group relative inline-flex items-center justify-center py-0.5 px-2 rounded-none text-[10px] font-bold cursor-pointer select-none transition-all duration-200 border whitespace-nowrap ${product.isOnSale || product.productCollection === "big-sale"
+                            ? "bg-orange-500 border-orange-500 text-white shadow-xs hover:bg-orange-600"
                             : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:border-orange-500 hover:text-orange-500"
                             } ${updatingId === product._id && updatingField === 'isOnSale' ? "animate-pulse opacity-70 cursor-not-allowed" : ""}`}
-                          title={product.isOnSale ? "Edit Sale Price" : "Add to Sale"}
-                        ><span className="translate-y-px">{product.isOnSale ? "SALE" : "+ SALE"}</span></span>
+                          title={product.isOnSale ? "Edit Sale Price / Stop Sale" : "Add to Big Sale"}
+                        ><span className="translate-y-px">{product.isOnSale || product.productCollection === "big-sale" ? "✓ SALE" : "+ SALE"}</span></span>
 
+                        {/* FESTIVE */}
                         <span
                           role="button"
                           onClick={() => {
@@ -400,12 +417,27 @@ export default function AdminProductsPage() {
                               handleToggleFestive(product);
                             }
                           }}
-                          className={`group relative inline-flex items-center justify-center py-1 px-3 rounded-full text-[10px] font-bold cursor-pointer select-none transition-all duration-200 border whitespace-nowrap ${product.isFestive
-                            ? "bg-purple-500 border-purple-500 text-white shadow-sm hover:scale-105"
+                          className={`group relative inline-flex items-center justify-center py-0.5 px-2 rounded-none text-[10px] font-bold cursor-pointer select-none transition-all duration-200 border whitespace-nowrap ${product.isFestive || product.productCollection === "festive"
+                            ? "bg-purple-600 border-purple-600 text-white shadow-xs hover:bg-purple-700"
                             : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:border-purple-500 hover:text-purple-500"
                             } ${updatingId === product._id && updatingField === 'isFestive' ? "animate-pulse opacity-70 cursor-not-allowed" : ""}`}
-                          title={product.isFestive ? "Remove from Festive" : "Add to Festive"}
-                        ><span className="translate-y-px">{product.isFestive ? "FESTIVE" : "+ FESTIVE"}</span></span>
+                          title={product.isFestive ? "Remove from Festive" : "Add to Festive Collection"}
+                        ><span className="translate-y-px">{product.isFestive || product.productCollection === "festive" ? "✓ FESTIVE" : "+ FESTIVE"}</span></span>
+
+                        {/* CELEBRITY / DRESS LIKE A STAR */}
+                        <span
+                          role="button"
+                          onClick={() => {
+                            if (!(updatingId === product._id && updatingField === 'celebrity')) {
+                              handleToggleCelebrity(product);
+                            }
+                          }}
+                          className={`group relative inline-flex items-center justify-center py-0.5 px-2 rounded-none text-[10px] font-bold cursor-pointer select-none transition-all duration-200 border whitespace-nowrap ${product.productCollection === "celebrity"
+                            ? "bg-amber-600 border-amber-600 text-white shadow-xs hover:bg-amber-700"
+                            : "bg-background border-dashed border-muted-foreground/30 text-muted-foreground hover:border-amber-500 hover:text-amber-500"
+                            } ${updatingId === product._id && updatingField === 'celebrity' ? "animate-pulse opacity-70 cursor-not-allowed" : ""}`}
+                          title={product.productCollection === "celebrity" ? "Remove from Celebrity Collection" : "Add to Dress Like a Star (Celebrity)"}
+                        ><span className="translate-y-px">{product.productCollection === "celebrity" ? "✓ STAR" : "+ STAR"}</span></span>
                     </div>
                   </TableCell>
                   <TableCell>

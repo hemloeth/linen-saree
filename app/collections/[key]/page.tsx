@@ -57,7 +57,7 @@ export default function MarketingCollectionDetailPage({ params }: Props) {
                 }
 
                 // Fetch all products and filter by collection key
-                const prodResponse = await apiGet('/api/product/allproducts')
+                const prodResponse = await apiGet('/api/product/allproducts?limit=100')
                 if (prodResponse.success) {
                     let filtered = prodResponse.products;
                     
