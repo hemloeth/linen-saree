@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { API_BASE_URL } from "@/lib/api"
+import { resolveMediaUrl } from "@/lib/media"
 import { useProducts } from "@/context/product-context"
 import { ProductCard } from "@/components/products/product-card"
 import { ArrowRight } from "lucide-react"
@@ -58,7 +59,7 @@ export function CollectionBanners() {
             {/* Base Image with Smooth Cinematic Zoom */}
             <div className="absolute inset-0 overflow-hidden">
               <Image
-                src={festiveData?.image || "/images/bridal-saree.jpg"}
+                src={resolveMediaUrl(festiveData?.image || "/images/bridal-saree.jpg")}
                 alt="Festival Collection"
                 fill
                 className="object-cover object-top origin-top group-hover:scale-105 transition-transform duration-[6000ms] ease-out"
@@ -155,7 +156,7 @@ export function CollectionBanners() {
             {/* Base Image with Smooth Cinematic Zoom */}
             <div className="absolute inset-0 overflow-hidden">
               <Image
-                src={saleData?.image || "/images/designer-saree.jpg"}
+                src={resolveMediaUrl(saleData?.image || "/images/designer-saree.jpg")}
                 alt="Special Offers"
                 fill
                 className="object-cover object-top origin-top group-hover:scale-105 transition-transform duration-[6000ms] ease-out"

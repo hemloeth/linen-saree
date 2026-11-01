@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Plus, Images, FileText, Users, TicketPercent, X } from "lucide-react"
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Plus, Images, FileText, Users, TicketPercent, X, Sparkles, Star, Tag } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { clearAdminToken } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -64,9 +64,24 @@ const sidebarSections = [
                 icon: Images,
             },
             {
-                title: "Marketing Collections",
+                title: "Homepage Banners",
                 href: "/admin/marketing-collections",
                 icon: Images,
+            },
+            {
+                title: "Festive Collection",
+                href: "/admin/marketing-collections?tab=festive",
+                icon: Sparkles,
+            },
+            {
+                title: "Big Sale Banner",
+                href: "/admin/marketing-collections?tab=big-sale",
+                icon: Tag,
+            },
+            {
+                title: "Dress Like a Star",
+                href: "/admin/marketing-collections?tab=celebrity",
+                icon: Star,
             },
             {
                 title: "Category Banners",
