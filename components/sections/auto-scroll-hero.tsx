@@ -98,12 +98,30 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
     emblaApi.on("reInit", onSelect)
   }, [emblaApi, onSelect])
 
+  useEffect(() => {
+    const updateHeaderOffset = () => {
+      const headerEl = document.getElementById('main-header')
+      if (headerEl) {
+        document.documentElement.style.setProperty('--header-offset', `${headerEl.offsetHeight}px`)
+      }
+    }
+    updateHeaderOffset()
+    window.addEventListener('resize', updateHeaderOffset)
+    return () => window.removeEventListener('resize', updateHeaderOffset)
+  }, [])
+
   if (!slides || slides.length === 0) {
     return null
   }
 
   return (
-    <section className="relative w-full h-[600px] sm:h-[660px] md:h-[720px] lg:h-[calc(100vh-var(--header-offset,80px))] min-h-[580px] max-h-[920px] bg-neutral-950 text-white overflow-hidden group border-b border-foreground/10 select-none">
+    <section
+      style={{
+        marginTop: "var(--header-offset, 140px)",
+        height: "calc(100vh - var(--header-offset, 140px))",
+      }}
+      className="relative w-full min-h-[540px] max-h-[860px] bg-neutral-950 text-white overflow-hidden group border-b border-foreground/10 select-none"
+    >
       <div className="overflow-hidden h-full w-full" ref={emblaRef}>
         <div className="flex h-full touch-pan-y">
           {slides.map((slide, index) => {
@@ -127,7 +145,7 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
                       src={resolveMediaUrl(slide.image)}
                       alt={slide.title || "Celebrity Linen Couture"}
                       fill
-                      className={`object-cover object-left md:object-center transition-transform duration-[14000ms] ease-out ${
+                      className={`object-cover object-[left_top] md:object-[center_top] transition-transform duration-[14000ms] ease-out ${
                         isActive ? "scale-105" : "scale-100"
                       }`}
                       priority={index === 0}
@@ -222,7 +240,7 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
                       src={resolveMediaUrl(slide.image)}
                       alt={slide.title || "Artisanal Handloom Sale"}
                       fill
-                      className={`object-cover object-right md:object-center transition-transform duration-[14000ms] ease-out ${
+                      className={`object-cover object-[right_top] md:object-[center_top] transition-transform duration-[14000ms] ease-out ${
                         isActive ? "scale-105" : "scale-100"
                       }`}
                       priority={index === 0}
@@ -327,7 +345,7 @@ export function AutoScrollHero({ initialSlides = [] }: AutoScrollHeroProps) {
                     src={resolveMediaUrl(slide.image)}
                     alt={slide.title || "Festive Royal Linen Saree"}
                     fill
-                    className={`object-cover object-right md:object-center transition-transform duration-[14000ms] ease-out ${
+                    className={`object-cover object-[right_top] md:object-[center_top] transition-transform duration-[14000ms] ease-out ${
                       isActive ? "scale-105" : "scale-100"
                     }`}
                     priority={index === 0}
