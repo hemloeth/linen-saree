@@ -24,7 +24,7 @@ import {
 import { resolveCheckoutOutcome } from "@/lib/checkout-outcomes"
 import { PreparingRetryManager, type CheckoutOperationIdentity, type ModalSession } from "@/lib/preparing-retry"
 import { openRazorpayModal, loadRazorpayScript, clearCheckoutLoadingStates as clearCheckoutLoadingStatesHelper } from "@/lib/razorpay-modal"
-import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X, ChevronDown, Search, Loader2 } from "lucide-react"
+import { Check, CreditCard, Truck, ShieldCheck, ArrowLeft, Tag, X, ChevronDown, Search, Loader2, Wallet, Smartphone } from "lucide-react"
 
 export default function CheckoutPage() {
   const { items, totalPrice, removePurchasedItems, isHydrated, flushCart, reconcileCart } = useCart()
@@ -324,6 +324,7 @@ export default function CheckoutPage() {
     amount?: number
     currency?: string
     key?: string
+    preferredMethod?: string
   } | null>(null)
   const [isResumingPayment, setIsResumingPayment] = useState(false)
   const [isCheckingPending, setIsCheckingPending] = useState(false)
@@ -369,6 +370,7 @@ export default function CheckoutPage() {
     amount?: number
     currency?: string
     key?: string
+    preferredMethod?: string
   }) => {
     setPendingOrderId(o.orderId)
     setPendingOrder(o)
@@ -660,6 +662,7 @@ export default function CheckoutPage() {
     amount: number
     currency: string
     key?: string
+    preferredMethod?: string
     prefill?: { name?: string; email?: string; contact?: string }
     purchasedLines?: Array<{ productId: string; quantity: number }>
     parentOp?: CheckoutOperationIdentity | null
@@ -667,6 +670,7 @@ export default function CheckoutPage() {
     return openRazorpayModal({
       ...params,
       scope,
+      preferredMethod: params.preferredMethod || pendingOrder?.preferredMethod || formData.paymentMethod,
       retryManager: retryManagerRef.current,
       prefill: {
         name: params.prefill?.name || `${formData.firstName} ${formData.lastName}`.trim(),
@@ -1564,53 +1568,110 @@ export default function CheckoutPage() {
                       <div>
                         <h2 className="font-medium text-lg mb-4">Payment Method</h2>
                         <div className="space-y-3">
-                          <label className="flex items-center gap-4 p-4 border border-border cursor-pointer hover:bg-muted/50 transition-colors">
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value="card"
-                              checked={formData.paymentMethod === "card"}
-                              onChange={() => setFormData({ ...formData, paymentMethod: "card" })}
-                              className="w-4 h-4 accent-primary"
-                            />
-                            <CreditCard className="w-5 h-5 text-primary" />
-                            <div className="flex flex-col">
-                              <span className="font-medium">Credit / Debit Card</span>
-                              <span className="text-xs text-muted-foreground mt-0.5">Powered by Razorpay Secure</span>
+                          {/* 1. UPI */}
+                          <label className={`flex flex-col gap-2 p-4 border cursor-pointer rounded-lg transition-all ${
+                            formData.paymentMethod === "upi" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted/50"
+                          }`}>
+                            <div className="flex items-center gap-4">
+                              <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="upi"
+                                checked={formData.paymentMethod === "upi"}
+                                onChange={() => setFormData({ ...formData, paymentMethod: "upi" })}
+                                className="w-4 h-4 accent-primary"
+                              />
+                              <Smartphone className="w-5 h-5 text-primary shrink-0" />
+                              <div className="flex flex-col flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-sm sm:text-base">UPI (Instant Payment)</span>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded">Fastest</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground mt-0.5">Google Pay, PhonePe, Paytm, BHIM, CRED & any UPI App</span>
+                              </div>
                             </div>
-                          </label>
-                          
-                          <label className="flex items-center gap-4 p-4 border border-border cursor-pointer hover:bg-muted/50 transition-colors">
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value="upi"
-                              checked={formData.paymentMethod === "upi"}
-                              onChange={() => setFormData({ ...formData, paymentMethod: "upi" })}
-                              className="w-4 h-4 accent-primary"
-                            />
-                            <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                            </svg>
-                            <div className="flex flex-col">
-                              <span className="font-medium">UPI / NetBanking / Wallets</span>
-                              <span className="text-xs text-muted-foreground mt-0.5">GPay, PhonePe, Paytm & more</span>
+                            <div className="flex flex-wrap gap-1.5 ml-8 mt-1">
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">Google Pay</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">PhonePe</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">Paytm UPI</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">BHIM / CRED</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">Scan QR</span>
                             </div>
                           </label>
 
-                          <label className="flex items-center gap-4 p-4 border border-border cursor-pointer hover:bg-muted/50 transition-colors">
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value="cod"
-                              checked={formData.paymentMethod === "cod"}
-                              onChange={() => setFormData({ ...formData, paymentMethod: "cod" })}
-                              className="w-4 h-4 accent-primary"
-                            />
-                            <Truck className="w-5 h-5 text-primary" />
-                            <div className="flex flex-col">
-                              <span className="font-medium">Cash on Delivery</span>
-                              <span className="text-xs text-muted-foreground mt-0.5">Pay when you receive your order</span>
+                          {/* 2. Wallets & NetBanking */}
+                          <label className={`flex flex-col gap-2 p-4 border cursor-pointer rounded-lg transition-all ${
+                            formData.paymentMethod === "wallet" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted/50"
+                          }`}>
+                            <div className="flex items-center gap-4">
+                              <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="wallet"
+                                checked={formData.paymentMethod === "wallet"}
+                                onChange={() => setFormData({ ...formData, paymentMethod: "wallet" })}
+                                className="w-4 h-4 accent-primary"
+                              />
+                              <Wallet className="w-5 h-5 text-primary shrink-0" />
+                              <div className="flex flex-col flex-1">
+                                <span className="font-semibold text-sm sm:text-base">Wallets & NetBanking</span>
+                                <span className="text-xs text-muted-foreground mt-0.5">Paytm Wallet, PhonePe, MobiKwik, Freecharge, Airtel Money & 50+ Banks</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 ml-8 mt-1">
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">Paytm Wallet</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">PhonePe Wallet</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">MobiKwik</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">Freecharge</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">Airtel Money</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">50+ Banks</span>
+                            </div>
+                          </label>
+
+                          {/* 3. Credit / Debit Cards */}
+                          <label className={`flex flex-col gap-2 p-4 border cursor-pointer rounded-lg transition-all ${
+                            formData.paymentMethod === "card" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted/50"
+                          }`}>
+                            <div className="flex items-center gap-4">
+                              <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="card"
+                                checked={formData.paymentMethod === "card"}
+                                onChange={() => setFormData({ ...formData, paymentMethod: "card" })}
+                                className="w-4 h-4 accent-primary"
+                              />
+                              <CreditCard className="w-5 h-5 text-primary shrink-0" />
+                              <div className="flex flex-col flex-1">
+                                <span className="font-semibold text-sm sm:text-base">Credit / Debit Card</span>
+                                <span className="text-xs text-muted-foreground mt-0.5">Visa, MasterCard, RuPay, Maestro</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 ml-8 mt-1">
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">Visa</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">MasterCard</span>
+                              <span className="text-[11px] font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">RuPay</span>
+                            </div>
+                          </label>
+
+                          {/* 4. Cash on Delivery */}
+                          <label className={`flex flex-col gap-2 p-4 border cursor-pointer rounded-lg transition-all ${
+                            formData.paymentMethod === "cod" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:bg-muted/50"
+                          }`}>
+                            <div className="flex items-center gap-4">
+                              <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="cod"
+                                checked={formData.paymentMethod === "cod"}
+                                onChange={() => setFormData({ ...formData, paymentMethod: "cod" })}
+                                className="w-4 h-4 accent-primary"
+                              />
+                              <Truck className="w-5 h-5 text-primary shrink-0" />
+                              <div className="flex flex-col flex-1">
+                                <span className="font-semibold text-sm sm:text-base">Cash on Delivery</span>
+                                <span className="text-xs text-muted-foreground mt-0.5">Pay in cash when you receive your order</span>
+                              </div>
                             </div>
                           </label>
                         </div>
@@ -1630,7 +1691,15 @@ export default function CheckoutPage() {
                           className="flex-1 bg-primary hover:bg-primary/90 py-6 text-primary-foreground font-medium flex items-center justify-center gap-2"
                           disabled={isPlacingOrder}
                         >
-                          {isPlacingOrder ? "Processing..." : formData.paymentMethod === "cod" ? "Place Order (COD)" : "Pay Now with Razorpay"}
+                          {isPlacingOrder
+                            ? "Processing..."
+                            : formData.paymentMethod === "cod"
+                            ? "Place Order (COD)"
+                            : formData.paymentMethod === "upi"
+                            ? `Pay ₹${totalPrice.toLocaleString("en-IN")} via UPI`
+                            : formData.paymentMethod === "wallet"
+                            ? `Pay ₹${totalPrice.toLocaleString("en-IN")} via Wallet / NetBanking`
+                            : `Pay ₹${totalPrice.toLocaleString("en-IN")} with Card`}
                         </Button>
                       </div>
                     </div>

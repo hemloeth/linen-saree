@@ -114,6 +114,7 @@ export interface OpenRazorpayModalParams {
   amount: number
   currency: string
   key?: string
+  preferredMethod?: string
   prefill?: { name?: string; email?: string; contact?: string }
   purchasedLines?: Array<{ productId: string; quantity: number }>
   parentOp?: CheckoutOperationIdentity | null
@@ -136,6 +137,7 @@ export async function openRazorpayModal(params: OpenRazorpayModalParams): Promis
     amount,
     currency,
     key,
+    preferredMethod,
     prefill,
     purchasedLines,
     parentOp,
@@ -211,6 +213,65 @@ export async function openRazorpayModal(params: OpenRazorpayModalParams): Promis
       throw new Error("Payment gateway SDK is not available.")
     }
 
+    const config = {
+      display: {
+        blocks: {
+          upi: {
+            name: "Pay using UPI",
+            instruments: [
+              {
+                method: "upi",
+                flows: ["intent", "qr", "collect"],
+                apps: ["google_pay", "phonepe", "paytm", "bhim", "cred"],
+              },
+            ],
+          },
+          wallets: {
+            name: "Wallets",
+            instruments: [
+              {
+                method: "wallet",
+                wallets: [
+                  "paytm",
+                  "phonepe",
+                  "mobikwik",
+                  "freecharge",
+                  "airtelmoney",
+                  "olamoney",
+                  "amazonpay",
+                  "payzapp",
+                ],
+              },
+            ],
+          },
+          cards: {
+            name: "Cards (Credit/Debit)",
+            instruments: [
+              {
+                method: "card",
+              },
+            ],
+          },
+          netbanking: {
+            name: "NetBanking",
+            instruments: [
+              {
+                method: "netbanking",
+              },
+            ],
+          },
+        },
+        sequence: preferredMethod === "wallet"
+          ? ["block.wallets", "block.upi", "block.cards", "block.netbanking"]
+          : preferredMethod === "card"
+          ? ["block.cards", "block.upi", "block.wallets", "block.netbanking"]
+          : ["block.upi", "block.wallets", "block.cards", "block.netbanking"],
+        preferences: {
+          show_default_blocks: true,
+        },
+      },
+    }
+
     const options = {
       key: key || (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID : "") || "",
       amount,
@@ -218,6 +279,7 @@ export async function openRazorpayModal(params: OpenRazorpayModalParams): Promis
       name: "Handloomer",
       description: "Order Payment",
       order_id: razorpayOrderId,
+      config,
       handler: async function (response: any) {
         if (!retryManager.isModalSessionValid(modalSession)) return
         const verifyOp = retryManager.startVerificationFromModal(modalSession!)
