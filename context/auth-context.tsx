@@ -55,7 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             const userData = { _id: data._id, name: data.name, email: data.email, phone: data.phone }
             setUser(userData)
-            localStorage.setItem("auth_user", JSON.stringify(userData))
+            localStorage.setItem("auth_user", JSON.stringify(userData));
+            if (data.token) { localStorage.setItem("user_token", data.token); }
 
             // Signal cart/wishlist to sync
             setLoginEvent(prev => prev + 1)
@@ -72,7 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             const userData = { _id: data.user._id, name: data.user.name, email: data.user.email, phone: data.user.phone }
             setUser(userData)
-            localStorage.setItem("auth_user", JSON.stringify(userData))
+            localStorage.setItem("auth_user", JSON.stringify(userData));
+            if (data.token) { localStorage.setItem("user_token", data.token); }
 
             // Signal cart/wishlist to sync
             setLoginEvent(prev => prev + 1)
@@ -90,7 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error("Logout API failed:", error)
         }
         setUser(null)
-        localStorage.removeItem("auth_user")
+        localStorage.removeItem("auth_user");
+        localStorage.removeItem("user_token");
     }
 
     const updateProfile = async (data: Partial<User>) => {

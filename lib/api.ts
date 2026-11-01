@@ -91,6 +91,16 @@ function notifyAdminSessionChange(newToken: string | null): void {
     });
 }
 
+
+export function getUserToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    try {
+        return window.localStorage.getItem('user_token');
+    } catch {
+        return null;
+    }
+}
+
 export function getAdminToken(): string | null {
     if (typeof window === 'undefined') return null;
     try {
@@ -300,6 +310,17 @@ async function request<T = any>(
     );
     if (Object.keys(adminHeaders).length > 0) {
         options = { ...options, headers: { ...(options.headers as any), ...adminHeaders } };
+    } else {
+        const userToken = getUserToken();
+        if (userToken) {
+            options = {
+                ...options,
+                headers: {
+                    ...(options.headers as any),
+                    Authorization: `Bearer ${userToken}`,
+                },
+            };
+        }
     }
 
     let lastError: Error | null = null;

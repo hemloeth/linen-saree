@@ -19,6 +19,7 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { useAuth } from "@/context/auth-context"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { resolveMediaUrl } from "@/lib/media"
 import { Button } from "@/components/ui/button"
 import {
@@ -95,7 +96,8 @@ const CANCELLATION_REASONS = [
 ]
 
 export default function OrdersPage() {
-  const { isAuthenticated, isHydrated, user } = useAuth()
+  const { isAuthenticated, isHydrated, user, logout } = useAuth()
+  const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -429,9 +431,15 @@ export default function OrdersPage() {
             <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-foreground mb-1">Failed to load orders</h3>
             <p className="text-sm text-muted-foreground mb-4">{fetchError}</p>
-            <Button onClick={() => fetchOrders(1, false)} variant="outline" className="gap-2">
-              <RotateCcw className="w-4 h-4" /> Try Again
-            </Button>
+            {fetchError.toLowerCase().includes("session expired") || fetchError.toLowerCase().includes("not authorized") ? (
+              <Button onClick={() => { logout(); router.push("/account/login"); }} className="gap-2">
+                Log In Again
+              </Button>
+            ) : (
+              <Button onClick={() => fetchOrders(1, false)} variant="outline" className="gap-2">
+                <RotateCcw className="w-4 h-4" /> Try Again
+              </Button>
+            )}
           </div>
         )}
 
