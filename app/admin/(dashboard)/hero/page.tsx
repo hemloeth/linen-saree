@@ -26,9 +26,9 @@ interface HeroSlide {
 }
 
 const LAYOUT_OPTIONS = [
-    { value: "editorial-split", label: "Editorial Split (Sabyasachi-style)" },
-    { value: "cinematic-canvas", label: "Cinematic Canvas (Full-Bleed Lookbook)" },
-    { value: "asymmetric-showcase", label: "Asymmetric Showcase (Modern Curated)" }
+    { value: "editorial-split", label: "Royal Palace Haveli (Left Typography, Right Models)" },
+    { value: "cinematic-canvas", label: "Celebrity Couture Studio (Left Models, Right Typography)" },
+    { value: "asymmetric-showcase", label: "Artisanal Heritage (Left Festive Promo, Right Models)" }
 ]
 
 export default function HeroAdminPage() {
