@@ -308,7 +308,7 @@ async function request<T = any>(
         options.method || 'GET',
         (config as any)?.isAdmin
     );
-    if (Object.keys(adminHeaders).length > 0) {
+    if (adminHeaders.Authorization) {
         options = { ...options, headers: { ...(options.headers as any), ...adminHeaders } };
     } else {
         const userToken = getUserToken();
@@ -333,6 +333,13 @@ async function request<T = any>(
             const { data } = await parseResponse(response);
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    if (isAdminEndpoint(endpoint, options.method || 'GET') || (config as any)?.isAdmin) {
+                        clearAdminToken();
+                    } else if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('auth:session_expired'));
+                    }
+                }
                 throw new ApiError(
                     data.message || `Request failed with status ${response.status}`,
                     response.status,

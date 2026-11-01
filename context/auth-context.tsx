@@ -47,6 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
         }
         setIsHydrated(true)
+
+        const handleSessionExpired = () => {
+            setUser(null)
+            localStorage.removeItem("auth_user")
+            localStorage.removeItem("user_token")
+        }
+        window.addEventListener("auth:session_expired", handleSessionExpired)
+        return () => window.removeEventListener("auth:session_expired", handleSessionExpired)
     }, [])
 
     const signup = async (name: string, email: string, phone: string, password: string) => {
