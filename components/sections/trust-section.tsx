@@ -12,7 +12,7 @@ export function TrustSection({
   subtitle = "Direct from master weavers with complete peace of mind"
 }: TrustSectionProps) {
   return (
-    <section className={`py-12 md:py-16 bg-stone-50/80 dark:bg-stone-900/40 border-t border-b border-border/40 ${className}`}>
+    <section className={`py-16 md:py-20 bg-stone-50/80 dark:bg-stone-900/40 border-t border-b border-border/40 ${className}`}>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8 sm:mb-10">
           <span className="text-[11px] uppercase tracking-[0.25em] text-amber-700/80 dark:text-amber-400/80 font-medium">

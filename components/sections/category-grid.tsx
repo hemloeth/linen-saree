@@ -65,7 +65,7 @@ export function CategoryGrid({ initialCategories }: CategoryGridProps) {
   }, [categories.length])
 
   return (
-    <section className="pt-16 sm:pt-20 pb-8 sm:pb-10 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
+    <section className="py-16 md:py-20 bg-gradient-to-br from-secondary via-secondary to-secondary/80">
       <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">

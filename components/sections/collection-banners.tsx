@@ -48,7 +48,7 @@ export function CollectionBanners() {
   }, [])
 
   return (
-    <div className="space-y-14 md:space-y-20 pt-0 pb-16 md:pb-20 bg-background">
+    <div className="space-y-14 md:space-y-20 py-16 md:py-20 bg-background">
       {/* =========================================================================
           1. FESTIVE COLLECTION BANNER (Theme-matched rounded-none)
          ========================================================================= */}

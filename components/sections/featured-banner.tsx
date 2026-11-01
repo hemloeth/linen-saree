@@ -57,7 +57,7 @@ export function FeaturedBanner() {
   }, [])
 
   return (
-    <section className="py-16 md:py-24 bg-background border-t border-border/40">
+    <section className="py-16 md:py-20 bg-background border-t border-border/40">
       <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-14 items-center">
           {/* Left Column: Actress Showcase Image (5 cols) - explicit height ensures 100% visibility */}

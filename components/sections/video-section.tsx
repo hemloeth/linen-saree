@@ -211,20 +211,15 @@ export function VideoSection() {
   }
 
   return (
-    <section className="py-24 bg-gradient-to-br from-background to-secondary/30">
+    <section className="py-16 md:py-20 bg-gradient-to-br from-background to-secondary/30">
       <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 text-sm tracking-[0.3em] uppercase text-muted-foreground mb-4">
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            Featured Collections
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-          </div>
-          <h2 className="font-serif text-5xl md:text-6xl mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+        <div className="text-center mb-12">
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-light tracking-tight text-foreground mb-3">
             Experience Our Sarees
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Watch our premium collection come to life with these exclusive video showcases
+          <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto font-light">
+            Watch our handcrafted collection in motion with these exclusive video showcases
           </p>
         </div>
 
