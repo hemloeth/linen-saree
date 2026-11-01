@@ -274,67 +274,121 @@ function VideoCollectionContent() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-black pt-[96px] lg:pt-[104px]">
+      <div
+        className="min-h-screen bg-black"
+        style={{ paddingTop: 'var(--header-offset, 80px)' }}
+      >
         {/* Full-Page Video Cover Hero */}
-        <section className="relative h-[calc(100vh-100px)] w-full overflow-hidden">
-          {heroVideos.map((video, index) => (
-            index === currentHeroVideo && (
+        <section className="relative h-[calc(100vh-var(--header-offset,80px))] min-h-[540px] max-h-[960px] w-full overflow-hidden bg-black flex items-center justify-center">
+          {heroVideos.map((video, index) => {
+            const isActive = index === currentHeroVideo
+            if (!isActive) return null
+
+            return (
               <div
                 key={video.productId || index}
-                className="absolute inset-0 animate-in fade-in duration-1000"
+                className="absolute inset-0 flex items-center justify-center animate-in fade-in duration-700"
               >
+                {/* Ambient Blurred Background Video to fill wide screens */}
                 <video
                   autoPlay
                   loop
                   muted
                   playsInline
                   preload="auto"
+                  aria-hidden="true"
+                  tabIndex={-1}
                   poster={video.image ? resolveMediaUrl(video.image) : undefined}
-                  className="w-full h-full object-cover object-top"
+                  className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-35 scale-110 pointer-events-none select-none"
                   src={resolveMediaUrl(video.videoSrc)}
                 />
+
+                {/* Dark Vignette Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/60 pointer-events-none" />
+
+                {/* Main Foreground Video - constrained to container height so whole body is 100% visible */}
+                <div className="relative z-10 h-full w-full flex items-center justify-center px-4 py-2">
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    poster={video.image ? resolveMediaUrl(video.image) : undefined}
+                    className="h-full w-auto max-w-full max-h-full object-contain object-center shadow-2xl drop-shadow-[0_25px_50px_rgba(0,0,0,0.9)]"
+                    src={resolveMediaUrl(video.videoSrc)}
+                  />
+                </div>
               </div>
             )
-          ))}
+          })}
 
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-black/40" />
+          {/* Top Header Badge */}
+          <div className="absolute top-4 inset-x-0 z-20 flex justify-center pointer-events-none px-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/60 backdrop-blur-md border border-white/15 text-[10px] md:text-xs tracking-[0.25em] uppercase text-white/90">
+              <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+              <span>Saree Stories • Motion Lookbook</span>
+            </div>
+          </div>
 
           {/* Navigation Arrows */}
           {heroVideos.length > 1 && (
             <>
               <button
                 onClick={goToPrevious}
-                className="absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 p-1.5 md:p-3 bg-white/10 md:bg-white/20 hover:bg-white/20 md:hover:bg-white/30 backdrop-blur-sm transition-colors text-white/70 md:text-white group rounded-full md:rounded-none cursor-pointer"
+                className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 bg-black/60 hover:bg-black/90 border border-white/20 backdrop-blur-md transition-colors text-white group rounded-none cursor-pointer"
                 aria-label="Previous video"
               >
-                <ChevronLeft className="w-4 h-4 md:w-6 md:h-6 group-hover:-translate-x-0.5 transition-transform" />
+                <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6 group-hover:-translate-x-0.5 transition-transform" />
               </button>
               <button
                 onClick={goToNext}
-                className="absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 p-1.5 md:p-3 bg-white/10 md:bg-white/20 hover:bg-white/20 md:hover:bg-white/30 backdrop-blur-sm transition-colors text-white/70 md:text-white group rounded-full md:rounded-none cursor-pointer"
+                className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-3 bg-black/60 hover:bg-black/90 border border-white/20 backdrop-blur-md transition-colors text-white group rounded-none cursor-pointer"
                 aria-label="Next video"
               >
-                <ChevronRight className="w-4 h-4 md:w-6 md:h-6 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </>
           )}
 
-          {/* Hero Content */}
-          <div className="absolute inset-0 flex items-center justify-center text-center text-white z-10 pointer-events-none">
-            <div className="max-w-4xl px-4">
-              <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-tight drop-shadow-xl">
-                Saree Stories
-              </h1>
+          {/* Featured Saree Floating Card */}
+          {heroVideos[currentHeroVideo] && (
+            <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-8 z-20 max-w-[280px] sm:max-w-xs">
+              <div className="bg-black/80 backdrop-blur-md border border-white/15 p-3 sm:p-4 text-white shadow-2xl rounded-none">
+                <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-white/60 mb-1">
+                  Featured Saree
+                </div>
+                <h3 className="font-serif text-xs sm:text-sm font-semibold line-clamp-1 text-white">
+                  {heroVideos[currentHeroVideo].title}
+                </h3>
+                <div className="flex items-center gap-2 mt-1 mb-2.5">
+                  <span className="text-xs sm:text-sm font-bold text-white">
+                    ₹{heroVideos[currentHeroVideo].price.toLocaleString('en-IN')}
+                  </span>
+                  {heroVideos[currentHeroVideo].originalPrice > heroVideos[currentHeroVideo].price && (
+                    <span className="text-[10px] sm:text-xs text-white/50 line-through">
+                      ₹{heroVideos[currentHeroVideo].originalPrice.toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </div>
+                <Link
+                  href={`/product/${heroVideos[currentHeroVideo].slug}`}
+                  className="inline-flex items-center justify-center w-full px-3 py-1.5 bg-white text-black text-[11px] font-semibold uppercase tracking-wider hover:bg-white/90 transition-colors rounded-none"
+                >
+                  View Saree
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-8 right-8 text-white/60 animate-bounce z-10">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </div>
+          {/* Slide Indicator */}
+          {heroVideos.length > 1 && (
+            <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-8 z-20 flex items-center gap-2 text-white/80 text-xs font-mono tracking-widest bg-black/60 backdrop-blur-md border border-white/15 px-3 py-1.5 rounded-none">
+              <span>{String(currentHeroVideo + 1).padStart(2, '0')}</span>
+              <span className="text-white/30">/</span>
+              <span>{String(heroVideos.length).padStart(2, '0')}</span>
+            </div>
+          )}
         </section>
 
         {/* Category Filter */}
@@ -416,7 +470,7 @@ function VideoCollectionContent() {
         {/* Bottom CTA */}
         <section className="px-2 pb-16 bg-gradient-to-br from-gray-50 via-white to-gray-100">
           <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 text-center">
-            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl p-12">
+            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-none border border-primary/20 p-12">
               <h2 className="font-serif text-4xl mb-4 text-gray-900">
                 Discover More Collections
               </h2>
