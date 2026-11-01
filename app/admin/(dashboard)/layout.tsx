@@ -19,6 +19,26 @@ export default function AdminLayout({
 }) {
     const router = useRouter()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem("handloomer_admin_sidebar_collapsed")
+            if (saved !== null) {
+                setIsSidebarCollapsed(saved === "true")
+            }
+        } catch (e) {}
+    }, [])
+
+    const toggleSidebarCollapse = () => {
+        setIsSidebarCollapsed(prev => {
+            const next = !prev
+            try {
+                localStorage.setItem("handloomer_admin_sidebar_collapsed", String(next))
+            } catch (e) {}
+            return next
+        })
+    }
     const [isAuthorizing, setIsAuthorizing] = useState(true)
     const [authError, setAuthError] = useState<string | null>(null)
 

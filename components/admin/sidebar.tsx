@@ -1,10 +1,25 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Plus, Images, FileText, Users, TicketPercent, X, Sparkles, Star, Tag } from "lucide-react"
+import {
+    LayoutDashboard,
+    Package,
+    ShoppingCart,
+    LogOut,
+    Plus,
+    Images,
+    FileText,
+    Users,
+    TicketPercent,
+    X,
+    Sparkles,
+    Star,
+    Tag,
+    PanelLeftClose,
+    PanelLeftOpen
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { clearAdminToken } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -12,6 +27,8 @@ import { Button } from "@/components/ui/button"
 interface AdminSidebarProps {
     isOpen: boolean
     onClose: () => void
+    isCollapsed?: boolean
+    onToggleCollapse?: () => void
 }
 
 const sidebarSections = [
@@ -112,148 +129,88 @@ const sidebarSections = [
     },
 ]
 
-// Motion constants (Supabase-like: thin panel glide, no bounce)
-const RAIL_WIDTH = 56      // collapsed icon rail
-const PANEL_WIDTH = 240    // expanded overlay panel
-const EASE = [0.2, 0, 0, 1] as const
-const DURATION = 0.2
-const OPEN_DELAY = 100     // ms of hover before expanding
-const CLOSE_DELAY = 180    // ms after leaving before collapsing
-
-export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
+export function AdminSidebar({
+    isOpen,
+    onClose,
+    isCollapsed = false,
+    onToggleCollapse
+}: AdminSidebarProps) {
     const pathname = usePathname()
-    const prefersReducedMotion = useReducedMotion()
+    const [currentSearch, setCurrentSearch] = useState("")
 
-    const [hoverOpen, setHoverOpen] = useState(false)
-    const [focusOpen, setFocusOpen] = useState(false)
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            setCurrentSearch(window.location.search)
+        }
+    }, [pathname])
 
-    const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const dismissedRef = useRef(false) // Escape temporarily locks the panel closed
+    const isItemActive = (href: string) => {
+        const [itemPath, itemQuery] = href.split('?')
+        if (itemPath !== pathname) return false
 
-    const expanded = hoverOpen || focusOpen
-    const instant = prefersReducedMotion ? 0 : DURATION
-
-    // Shared animation variants; `custom` = 0 when reduced motion is preferred
-    const container = {
-        open: { width: PANEL_WIDTH, boxShadow: "4px 0 12px -6px rgba(0,0,0,0.15)", transition: { duration: instant, ease: EASE } },
-        closed: { width: RAIL_WIDTH, boxShadow: "0 0 0 0 rgba(0,0,0,0)", transition: { duration: instant, ease: EASE } },
-    }
-    const labelMotion = {
-        open: { opacity: 1, x: 0, pointerEvents: "auto" as const, transition: { duration: instant, ease: EASE } },
-        closed: { opacity: 0, x: prefersReducedMotion ? 0 : 4, pointerEvents: "none" as const, transition: { duration: instant, ease: EASE } },
-    }
-    const motionCustom = prefersReducedMotion ? 0 : 1
-
-    const clearTimers = useCallback(() => {
-        if (openTimer.current) { clearTimeout(openTimer.current); openTimer.current = null }
-        if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null }
-    }, [])
-
-    useEffect(() => clearTimers, [clearTimers])
-
-    const handleEnter = () => {
-        // Rail + panel are one continuous hover area — entering cancels any close
-        clearTimers()
-        if (dismissedRef.current) return
-        if (!expanded) {
-            openTimer.current = setTimeout(() => setHoverOpen(true), OPEN_DELAY)
+        if (itemQuery) {
+            const itemParams = new URLSearchParams(itemQuery)
+            const activeParams = new URLSearchParams(currentSearch)
+            return itemParams.get('tab') === activeParams.get('tab')
         } else {
-            // Already open (e.g. focus) — make sure hover keeps it open too
-            setHoverOpen(true)
+            const activeParams = new URLSearchParams(currentSearch)
+            const tab = activeParams.get('tab')
+            if (tab && ['festive', 'big-sale', 'celebrity'].includes(tab)) return false
+            return true
         }
     }
 
-    const handleLeave = () => {
-        clearTimers()
-        dismissedRef.current = false // re-arm hover for the next entry
-        closeTimer.current = setTimeout(() => setHoverOpen(false), CLOSE_DELAY)
+    const handleLogout = () => {
+        localStorage.removeItem("auth_user")
+        clearAdminToken()
+        window.location.href = "/admin"
     }
 
-    const handleEscaped = (e: React.KeyboardEvent) => {
-        if (e.key !== "Escape") return
-        dismissedRef.current = true
-        clearTimers()
-        setHoverOpen(false)
-        setFocusOpen(false)
-        ;(e.currentTarget as HTMLElement).querySelector<HTMLElement>("a, button")?.focus()
-    }
+    const renderNav = (isMobile: boolean = false) => {
+        const collapsed = !isMobile && isCollapsed
 
-    const handleBlur = (e: React.FocusEvent) => {
-        // Keep expanded while focus moves within the sidebar
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-            setFocusOpen(false)
-        }
-    }
-
-    const renderContent = (forceOpen: boolean) => {
-        const show = forceOpen || expanded
         return (
-        <>
-            <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar py-4">
-                <nav id="admin-nav" className={cn("flex flex-col items-start text-sm font-medium", expanded ? "gap-6" : "gap-2")} style={{ width: PANEL_WIDTH - 8 }} onMouseLeave={handleLeave}>
+            <div className="flex-1 flex flex-col justify-between overflow-y-auto overflow-x-hidden py-4 px-3 space-y-6">
+                <nav className="space-y-5">
                     {sidebarSections.map((section) => (
-                        <div key={section.label} className="w-full grid gap-0.5 px-2">
-                            <motion.h3
-                                className={cn("px-3 text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/60 whitespace-nowrap overflow-hidden", expanded ? "mb-2" : "mb-0")}
-                                variants={labelMotion}
-                                initial={show ? "open" : "closed"}
-                                animate={show ? "open" : "closed"}
-                                custom={motionCustom}
-                            >
-                                {section.label}
-                            </motion.h3>
-                            <div className="grid gap-0.5">
+                        <div key={section.label} className="space-y-1">
+                            {!collapsed && (
+                                <h3 className="px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70 select-none">
+                                    {section.label}
+                                </h3>
+                            )}
+                            <div className="space-y-0.5">
                                 {section.items.map((item) => {
-                                    const isActive = pathname === item.href
+                                    const isActive = isItemActive(item.href)
                                     return (
                                         <Link
                                             key={item.href}
                                             href={item.href}
                                             aria-label={item.title}
                                             aria-current={isActive ? "page" : undefined}
+                                            title={collapsed ? item.title : undefined}
                                             onClick={() => {
-                                                if (window.innerWidth < 1024) onClose()
+                                                if (isMobile) onClose()
                                             }}
                                             className={cn(
-                                                "relative flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:text-primary overflow-hidden",
+                                                "group relative flex items-center rounded-lg text-sm font-medium transition-colors select-none",
+                                                collapsed
+                                                    ? "justify-center p-2.5"
+                                                    : "gap-3.5 px-3.5 py-2.5",
                                                 isActive
-                                                    ? "text-primary"
-                                                    : "text-muted-foreground"
+                                                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                                                    : "text-muted-foreground hover:bg-muted/90 hover:text-foreground active:scale-[0.98]"
                                             )}
                                         >
-                                            {isActive && (
-                                                <motion.div
-                                                    layoutId="sidebar-active-pill"
-                                                    className="absolute inset-0 rounded-lg bg-muted"
-                                                    transition={{
-                                                        type: "spring",
-                                                        stiffness: 350,
-                                                        damping: 30,
-                                                    }}
-                                                />
+                                            <item.icon className={cn(
+                                                "h-4.5 w-4.5 shrink-0 transition-transform duration-150 group-hover:scale-110",
+                                                isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                                            )} />
+                                            {!collapsed && (
+                                                <span className="truncate whitespace-nowrap">
+                                                    {item.title}
+                                                </span>
                                             )}
-                                            {isActive && (
-                                                <motion.div
-                                                    layoutId="sidebar-active-bar"
-                                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full bg-primary"
-                                                    transition={{
-                                                        type: "spring",
-                                                        stiffness: 350,
-                                                        damping: 30,
-                                                    }}
-                                                />
-                                            )}
-                                            <item.icon className="relative z-10 h-4 w-4 shrink-0" />
-                                            <motion.span
-                                                className="relative z-10 whitespace-nowrap overflow-hidden"
-                                                variants={labelMotion}
-                                                initial={show ? "open" : "closed"}
-                                                animate={show ? "open" : "closed"}
-                                                custom={motionCustom}
-                                            >
-                                                {item.title}
-                                            </motion.span>
                                         </Link>
                                     )
                                 })}
@@ -261,97 +218,94 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
                         </div>
                     ))}
                 </nav>
-            </div>
-            <div className="mt-auto border-t p-2 flex justify-center">
-                <Button
-                    variant="outline"
-                    aria-label="Logout"
-                    className={cn(
-                        "justify-start gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 hover:border-destructive/30 transition-colors shrink-0",
-                        show ? "w-full" : "h-9 w-9 p-0 justify-center"
+
+                {/* Footer Controls: Collapse Toggle & Logout */}
+                <div className="pt-4 border-t space-y-2">
+                    {!isMobile && onToggleCollapse && (
+                        <button
+                            type="button"
+                            onClick={onToggleCollapse}
+                            className={cn(
+                                "flex items-center rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors w-full cursor-pointer",
+                                collapsed ? "justify-center p-2.5" : "gap-2.5 px-3.5 py-2"
+                            )}
+                            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        >
+                            {collapsed ? (
+                                <PanelLeftOpen className="h-4 w-4 shrink-0" />
+                            ) : (
+                                <>
+                                    <PanelLeftClose className="h-4 w-4 shrink-0" />
+                                    <span>Collapse Sidebar</span>
+                                </>
+                            )}
+                        </button>
                     )}
-                    onClick={() => {
-                        localStorage.removeItem("auth_user")
-                        clearAdminToken()
-                        window.location.href = "/admin"
-                    }}
-                >
-                    <LogOut className="h-4 w-4 shrink-0" />
-                    <motion.span
-                        className="whitespace-nowrap overflow-hidden"
-                        variants={labelMotion}
-                        initial={show ? "open" : "closed"}
-                        animate={show ? "open" : "closed"}
-                        custom={motionCustom}
+
+                    <Button
+                        variant="outline"
+                        aria-label="Logout"
+                        className={cn(
+                            "text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 hover:border-destructive/30 transition-colors cursor-pointer w-full",
+                            collapsed ? "p-0 h-9 w-full justify-center" : "justify-start gap-2.5 px-3.5"
+                        )}
+                        onClick={handleLogout}
+                        title="Logout"
                     >
-                        Logout
-                    </motion.span>
-                </Button>
+                        <LogOut className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span>Logout</span>}
+                    </Button>
+                </div>
             </div>
-        </>
         )
     }
 
     return (
         <>
-            {/* Desktop Sidebar — collapsed rail that expands OVER content on hover */}
-            <motion.aside
-                initial={false}
-                animate={expanded ? "open" : "closed"}
-                variants={container}
-                className="hidden lg:flex fixed top-16 bottom-0 left-0 flex-col border-r bg-card shrink-0 z-40 overflow-hidden"
-                onMouseEnter={handleEnter}
-                onFocus={handleEnter}
-                onBlur={handleBlur}
-                onKeyDown={handleEscaped}
+            {/* Desktop Solid Sidebar: stably docked, fat, no jittery hover overlay */}
+            <aside
+                className={cn(
+                    "hidden lg:flex fixed top-16 bottom-0 left-0 flex-col border-r bg-card z-40 transition-all duration-200 ease-in-out shadow-xs",
+                    isCollapsed ? "w-[72px]" : "w-[260px]"
+                )}
                 data-lenis-prevent
-                suppressHydrationWarning
             >
-                {renderContent(false)}
-            </motion.aside>
+                {renderNav(false)}
+            </aside>
 
-            {/* Mobile Overlay */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-                        onClick={onClose}
-                    />
-                )}
-            </AnimatePresence>
+            {/* Mobile Backdrop Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
+                    onClick={onClose}
+                    aria-hidden="true"
+                />
+            )}
 
-            {/* Mobile Sidebar (Drawer) — unchanged behavior */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.aside
-                        initial={{ x: "-100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: "-100%" }}
-                        transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 30,
-                        }}
-                        className="fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r bg-card lg:hidden overflow-hidden"
-                    >
-                        <div className="flex h-12 shrink-0 items-center justify-end border-b px-2">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={onClose}
-                                aria-label="Close sidebar"
-                            >
-                                <X className="h-5 w-5" />
-                            </Button>
+            {/* Mobile Slide-Over Drawer: fat 280px width */}
+            {isOpen && (
+                <aside
+                    className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r bg-card lg:hidden shadow-2xl animate-in slide-in-from-left duration-200"
+                    data-lenis-prevent
+                >
+                    <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg font-serif font-bold text-primary">The Handloomer</span>
+                            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Admin</span>
                         </div>
-                        {renderContent(true)}
-                    </motion.aside>
-                )}
-            </AnimatePresence>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onClose}
+                            aria-label="Close sidebar"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="h-4.5 w-4.5" />
+                        </Button>
+                    </div>
+                    {renderNav(true)}
+                </aside>
+            )}
         </>
     )
 }
