@@ -41,6 +41,16 @@ export default function AdminProductsPage() {
   const [activeSaleProduct, setActiveSaleProduct] = useState<any | null>(null)
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'sale'>('all')
+  const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set())
+
+  const toggleExpandName = (id: string) => {
+    setExpandedProductIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   // Multi-select state
   const [selectionMode, setSelectionMode] = useState(false)
@@ -208,15 +218,15 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Compact Tab Switcher */}
-        <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg w-fit border border-primary/10">
+        <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg w-fit border border-primary/10 whitespace-nowrap">
           <button
             onClick={() => setActiveTab('all')}
             className={`relative px-3 py-1.5 text-xs font-bold transition-all rounded-md flex items-center gap-1.5 ${
               activeTab === 'all' ? 'bg-background text-primary shadow-xs' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <span>All Products</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
+            <span className="whitespace-nowrap">All Products</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono whitespace-nowrap ${
               activeTab === 'all' ? 'bg-primary/10 text-primary font-bold' : 'bg-muted text-muted-foreground'
             }`}>
               {products.length}
@@ -228,8 +238,8 @@ export default function AdminProductsPage() {
               activeTab === 'sale' ? 'bg-background text-orange-600 shadow-xs' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <span>On Sale</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
+            <span className="whitespace-nowrap">On Sale</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-mono whitespace-nowrap ${
               activeTab === 'sale' ? 'bg-orange-500/10 text-orange-600 font-bold' : 'bg-muted text-muted-foreground'
             }`}>
               {saleCount}
@@ -328,7 +338,7 @@ export default function AdminProductsPage() {
         )}
       </AnimatePresence>
 
-      <div className="rounded-md border bg-card">
+      <div className="rounded-md border bg-card overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -336,14 +346,14 @@ export default function AdminProductsPage() {
               {selectionMode && (
                 <TableHead className="w-12" />
               )}
-              <TableHead>Product Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Regular Price</TableHead>
-              <TableHead>Sale Price</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Promotion</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="whitespace-nowrap">Product Name</TableHead>
+              <TableHead className="whitespace-nowrap">Category</TableHead>
+              <TableHead className="whitespace-nowrap">Regular Price</TableHead>
+              <TableHead className="whitespace-nowrap">Sale Price</TableHead>
+              <TableHead className="whitespace-nowrap">Stock</TableHead>
+              <TableHead className="whitespace-nowrap">Promotion</TableHead>
+              <TableHead className="whitespace-nowrap">Status</TableHead>
+              <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -387,11 +397,39 @@ export default function AdminProductsPage() {
                       </TableCell>
                     )}
                   </AnimatePresence>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell className="text-muted-foreground line-through">₹{product.regularPrice?.toLocaleString('en-IN') || "—"}</TableCell>
-                  <TableCell className="font-semibold">₹{product.price?.toLocaleString('en-IN')}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
+                  <TableCell className="font-medium max-w-[280px]">
+                    {expandedProductIds.has(product._id) ? (
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-foreground leading-snug block">
+                          {product.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandName(product._id)}
+                          className="text-[11px] text-primary hover:underline font-semibold cursor-pointer inline-flex items-center gap-1"
+                        >
+                          Show less
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => toggleExpandName(product._id)}
+                        className="group cursor-pointer flex items-center gap-1.5"
+                        title={`${product.name} (Click to see full name)`}
+                      >
+                        <span className="truncate max-w-[200px] sm:max-w-[240px] text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                          {product.name}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/80 group-hover:text-primary font-mono shrink-0 select-none px-1.5 py-0.5 rounded bg-muted/60 group-hover:bg-primary/10 transition-colors">
+                          more
+                        </span>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{product.category}</TableCell>
+                  <TableCell className="text-muted-foreground line-through whitespace-nowrap">₹{product.regularPrice?.toLocaleString('en-IN') || "—"}</TableCell>
+                  <TableCell className="font-semibold whitespace-nowrap">₹{product.price?.toLocaleString('en-IN')}</TableCell>
+                  <TableCell className="whitespace-nowrap">{product.stock}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                         {/* SALE / BIG SALE */}

@@ -187,8 +187,8 @@ function MarketingCollectionsContent() {
                             >
                                 <IconComponent className="w-4 h-4 text-primary" />
                                 <div className="text-left">
-                                    <div className="font-semibold text-xs leading-none">{meta.label}</div>
-                                    <div className="text-[10px] text-muted-foreground font-normal">{meta.sublabel}</div>
+                                    <div className="font-semibold text-xs leading-none whitespace-nowrap">{meta.label}</div>
+                                    <div className="text-[10px] text-muted-foreground font-normal whitespace-nowrap">{meta.sublabel}</div>
                                 </div>
                             </TabsTrigger>
                         )

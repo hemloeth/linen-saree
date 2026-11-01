@@ -134,7 +134,7 @@ export default function AdminLayout({
         <CategoryProvider>
             <ProductProvider>
                 <BlogProvider>
-                    <div className="min-h-screen bg-muted/40" data-lenis-prevent>
+                    <div className="min-h-screen bg-muted/40 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" data-lenis-prevent data-admin-root="true">
                         <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                         {/* Full-width top bar, fixed to the viewport top from left to right above the rail */}
                         <div className="fixed top-0 inset-x-0 z-50 h-16 bg-background shadow-[0_1px_0_0_rgba(0,0,0,0.06)]">

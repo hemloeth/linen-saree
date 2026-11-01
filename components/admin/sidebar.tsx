@@ -178,12 +178,12 @@ export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         const expanded = isMobile || isHovered
 
         return (
-            <div className="flex-1 flex flex-col justify-between overflow-y-auto overflow-x-hidden py-4 px-2.5 space-y-6">
+            <div className="flex-1 flex flex-col justify-between overflow-y-auto overflow-x-hidden py-4 px-2.5 space-y-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <nav className="space-y-5">
                     {sidebarSections.map((section) => (
                         <div key={section.label} className="space-y-1">
                             {expanded ? (
-                                <h3 className="px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70 select-none animate-in fade-in duration-150">
+                                <h3 className="px-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70 select-none animate-in fade-in duration-150 whitespace-nowrap">
                                     {section.label}
                                 </h3>
                             ) : (

@@ -64,11 +64,11 @@ export default function CategoryBannersPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[300px]">Collection Name</TableHead>
-                            <TableHead>Slug</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Last Updated</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="w-[300px] whitespace-nowrap">Collection Name</TableHead>
+                            <TableHead className="whitespace-nowrap">Slug</TableHead>
+                            <TableHead className="whitespace-nowrap">Status</TableHead>
+                            <TableHead className="whitespace-nowrap">Last Updated</TableHead>
+                            <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

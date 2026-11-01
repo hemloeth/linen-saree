@@ -276,15 +276,15 @@ export function AdminOrdersView({ controller }: AdminOrdersViewProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order ID</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Payment</TableHead>
-              <TableHead>Courier</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="whitespace-nowrap">Order ID</TableHead>
+              <TableHead className="whitespace-nowrap">Customer</TableHead>
+              <TableHead className="whitespace-nowrap">Date</TableHead>
+              <TableHead className="whitespace-nowrap">Items</TableHead>
+              <TableHead className="whitespace-nowrap">Total</TableHead>
+              <TableHead className="whitespace-nowrap">Payment</TableHead>
+              <TableHead className="whitespace-nowrap">Courier</TableHead>
+              <TableHead className="whitespace-nowrap">Status</TableHead>
+              <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
