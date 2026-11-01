@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { Button } from "@/components/ui/button"
-import { Mail, Phone, MapPin, Clock } from "lucide-react"
+import { ArrowRight, CheckCircle2, AlertCircle } from "lucide-react"
 import { apiPost } from "@/lib/api"
 
 export default function ContactPage() {
@@ -39,138 +38,129 @@ export default function ContactPage() {
         setFormData({ name: "", phone: "", email: "", message: "" })
       } else {
         setSubmitStatus("error")
-        setErrorMessage(data?.message || "Failed to submit message.")
+        setErrorMessage(data?.message || "Failed to transmit message.")
       }
     } catch (error: any) {
       setSubmitStatus("error")
-      setErrorMessage(error?.message || "Failed to submit message. Please try again.")
+      setErrorMessage(error?.message || "Failed to transmit inquiry. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
       <Header />
-      
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-b from-muted/50 to-background pt-[96px] lg:pt-[104px]">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-8 lg:px-12 xl:px-16 py-20 lg:py-32">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="font-serif text-4xl lg:text-6xl font-light mb-6">
-              Contact Us
-            </h1>
-            <p className="font-sans text-lg lg:text-xl text-muted-foreground leading-relaxed">
-              We'd love to hear from you. Get in touch with our team.
-            </p>
-          </div>
-        </div>
-      </div>
 
-      <div className="max-w-[1200px] mx-auto px-2 py-16 lg:py-24">
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
-          {/* Contact Information */}
-          <div>
-            <h2 className="font-serif text-3xl lg:text-4xl font-light mb-8">
-              Get in Touch
-            </h2>
-            <p className="font-sans text-muted-foreground leading-relaxed mb-12">
-              Have questions about our sarees, need styling advice, or want to learn more about our artisans? 
-              We're here to help you find the perfect saree for any occasion.
+      <main
+        className="flex-1 max-w-[1300px] w-full mx-auto px-6 sm:px-10 lg:px-16 py-12 lg:py-16"
+        style={{ paddingTop: 'calc(var(--header-offset, 140px) + 2rem)' }}
+      >
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+          
+          {/* Left Column: Direct Atelier Coordinates */}
+          <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-36">
+            <div>
+              <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-muted-foreground block mb-2">
+                Client Concierge
+              </span>
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-foreground tracking-tight leading-[1.1]">
+                Direct Inquiries & Dialogue
+              </h1>
+            </div>
+
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-light max-w-md">
+              Whether you are curating a wedding trousseau, inquiring about custom weave lengths, or seeking drape styling advice, our master atelier concierge is at your service.
             </p>
 
-            <div className="space-y-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Mail className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-sans font-medium mb-2">Email Us</h3>
-                  <p className="text-muted-foreground">handloomer001@gmail.com</p>
-                  <p className="text-muted-foreground">support@handloomer.com</p>
-                </div>
+            <div className="space-y-6 pt-4 border-t border-border/80">
+              <div>
+                <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-muted-foreground block mb-1">
+                  Concierge Email
+                </span>
+                <a
+                  href="mailto:support@handloomer.com"
+                  className="text-sm sm:text-base font-normal text-foreground hover:text-primary transition-colors underline underline-offset-4 decoration-border"
+                >
+                  support@handloomer.com
+                </a>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Phone className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-sans font-medium mb-2">Call Us</h3>
-                  <p className="text-muted-foreground">+91 92641-51111</p>
-                </div>
+              <div>
+                <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-muted-foreground block mb-1">
+                  Direct WhatsApp & Call
+                </span>
+                <a
+                  href="https://wa.me/919264151111"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm sm:text-base font-normal text-foreground hover:text-primary transition-colors"
+                >
+                  +91 92641 51111
+                </a>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
+              <div className="grid grid-cols-2 gap-4 pt-2">
                 <div>
-                  <h3 className="font-sans font-medium mb-2">Visit Us</h3>
-                  <p className="text-muted-foreground">
-                    Bhagalpur<br />
-                     Bihar<br />
+                  <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-muted-foreground block mb-1">
+                    Atelier Origin
+                  </span>
+                  <p className="text-xs text-foreground/85 leading-snug">
+                    Bhagalpur & Banaras Looms, India
                   </p>
                 </div>
-              </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Clock className="w-5 h-5 text-primary" />
-                </div>
                 <div>
-                  <h3 className="font-sans font-medium mb-2">Business Hours</h3>
-                  <p className="text-muted-foreground">
-                    Monday - Saturday: 10:00 AM - 7:00 PM<br />
-                    Sunday: 11:00 AM - 5:00 PM
+                  <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-muted-foreground block mb-1">
+                    Operating Hours
+                  </span>
+                  <p className="text-xs text-foreground/85 leading-snug">
+                    Mon — Sat, 10:00 — 19:00 IST
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Contact Form */}
-          <div>
-            <div className="bg-muted/30 rounded-2xl p-8 lg:p-12">
-              <h2 className="font-serif text-2xl lg:text-3xl font-light mb-8">
-                Send us a Message
+          {/* Right Column: Minimalist Border-Bottom Form */}
+          <div className="lg:col-span-7 bg-card/40 border border-border/60 p-8 sm:p-12 lg:p-14">
+            <div className="mb-8">
+              <h2 className="font-serif text-2xl sm:text-3xl font-light text-foreground tracking-tight">
+                Send an Inquiry
               </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                We typically respond within 24 business hours.
+              </p>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block font-sans text-sm font-medium mb-2">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    placeholder="Enter your full name"
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Full Name */}
+              <div className="relative">
+                <label
+                  htmlFor="name"
+                  className="block text-[11px] font-mono tracking-wider uppercase text-muted-foreground mb-2"
+                >
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Enter your name"
+                  className="w-full bg-transparent border-b border-border py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground transition-colors rounded-none"
+                />
+              </div>
 
+              {/* Email & Phone Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div>
-                  <label htmlFor="phone" className="block font-sans text-sm font-medium mb-2">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="email" className="block font-sans text-sm font-medium mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-[11px] font-mono tracking-wider uppercase text-muted-foreground mb-2"
+                  >
                     Email Address *
                   </label>
                   <input
@@ -180,56 +170,83 @@ export default function ContactPage() {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    placeholder="Enter your email address"
+                    placeholder="name@domain.com"
+                    className="w-full bg-transparent border-b border-border py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground transition-colors rounded-none"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block font-sans text-sm font-medium mb-2">
-                    Message *
+                  <label
+                    htmlFor="phone"
+                    className="block text-[11px] font-mono tracking-wider uppercase text-muted-foreground mb-2"
+                  >
+                    Phone / WhatsApp *
                   </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleInputChange}
                     required
-                    rows={5}
-                    className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors resize-vertical"
-                    placeholder="Tell us how we can help you..."
+                    placeholder="+91 98765 43210"
+                    className="w-full bg-transparent border-b border-border py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground transition-colors rounded-none"
                   />
                 </div>
+              </div>
 
-                <Button
+              {/* Message */}
+              <div>
+                <label
+                  htmlFor="message"
+                  className="block text-[11px] font-mono tracking-wider uppercase text-muted-foreground mb-2"
+                >
+                  Inquiry Details *
+                </label>
+                <textarea
+                  id="message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  required
+                  rows={4}
+                  placeholder="Tell us about the drape, collection, or question..."
+                  className="w-full bg-transparent border-b border-border py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground transition-colors resize-none rounded-none"
+                />
+              </div>
+
+              {/* Submit Action */}
+              <div className="pt-2">
+                <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 text-base"
+                  className="inline-flex items-center justify-between gap-4 px-8 py-3.5 bg-foreground text-background text-xs font-mono tracking-[0.2em] uppercase hover:bg-foreground/90 transition-colors disabled:opacity-50 cursor-pointer rounded-none group"
                 >
-                  {isSubmitting ? "Sending..." : "Send Message"}
-                </Button>
+                  <span>{isSubmitting ? "Transmitting..." : "Send Message"}</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
 
-                {submitStatus === "success" && (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-green-800 text-sm">
-                      Thank you for your message! We'll get back to you within 24 hours.
-                    </p>
-                  </div>
-                )}
+              {/* Status Notifications */}
+              {submitStatus === "success" && (
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-2.5 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span>Thank you. Your inquiry has been received. Our concierge will be in touch shortly.</span>
+                </div>
+              )}
 
-                {submitStatus === "error" && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-800 text-sm">
-                      {errorMessage || "Sorry, there was an error sending your message. Please try again."}
-                    </p>
-                  </div>
-                )}
-              </form>
-            </div>
+              {submitStatus === "error" && (
+                <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2.5 animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMessage || "Unable to send message. Please reach us directly via WhatsApp."}</span>
+                </div>
+              )}
+            </form>
           </div>
+
         </div>
-      </div>
-      
+      </main>
+
       <Footer />
     </div>
   )
