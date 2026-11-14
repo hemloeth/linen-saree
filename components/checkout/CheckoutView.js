@@ -1212,26 +1212,8 @@ export default function CheckoutView() {
                   value={address}
                   onChange={setAddress}
                   error={error}
+                  onContinue={proceedToPayment}
                 />
-
-                <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-pine-950/10 bg-white p-6 shadow-sm sm:p-8">
-                  <div>
-                    <p className="font-display text-base font-semibold text-pine-950">
-                      Ready for Payment?
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      Proceed to choose Cash on Delivery or Secure Online Payment.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={proceedToPayment}
-                    className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-tomato px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-tomato-hover shrink-0"
-                  >
-                    <span>Continue to Payment</span>
-                    <span>→</span>
-                  </button>
-                </div>
               </div>
             ) : (
               /* STEP 2: Payment Method */
