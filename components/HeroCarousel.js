@@ -40,34 +40,33 @@ export default function HeroCarousel() {
 
   return (
     <section aria-label="Featured saree collection">
-      <h1 className="sr-only">House of Qalakari — handwoven Banarasi, Chanderi and cotton sarees</h1>
+      <h1 className="sr-only">Linen Saree — Authentic handcrafted pure linen sarees delivered PAN India</h1>
 
       <div className="bg-pine-950 lg:grid lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
         {/* Desktop copy panel */}
         <div className="relative z-10 hidden flex-col justify-center px-14 py-16 lg:flex xl:px-20">
           <p className="font-inter text-[11px] font-medium uppercase tracking-[0.45em] text-aqua">
-            House of Qalakari
+            Pure Linen Heritage
           </p>
           <h2 className="mt-5 max-w-md font-display text-[44px] font-medium uppercase leading-[1.12] tracking-[0.06em] text-white xl:text-[52px]">
-            Celebrate the elegance of tradition
+            {heroSlides[index]?.title || "Pure Linen Sarees"}
           </h2>
           <span aria-hidden="true" className="mt-6 block h-px w-20 bg-aqua/70" />
           <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/70">
-            Handwoven Banarasi silks, chanderi cotton and pure muslin — woven on
-            traditional pit looms, finished by hand, delivered across India.
+            Handcrafted pure organic linen woven on traditional pit looms by master artisans. Lightweight, breathable and draped to perfection.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/collections"
+              href="/shop"
               className="inline-flex h-11 items-center rounded-md bg-white px-6 font-inter text-[13px] font-semibold text-pine-950 transition-colors hover:bg-aqua"
             >
               Shop sarees
             </Link>
             <Link
-              href="/collections/fabric"
+              href="/collections"
               className="inline-flex h-11 items-center rounded-md border border-white/35 px-6 font-inter text-[13px] font-semibold text-white transition-colors hover:border-white hover:bg-white/10"
             >
-              Explore by fabric
+              Explore collections
             </Link>
           </div>
 
@@ -115,16 +114,14 @@ export default function HeroCarousel() {
           {/* Mobile overlay copy with CTA */}
           <div className="absolute inset-x-0 bottom-14 z-10 px-6 text-center lg:hidden">
             <p className="font-inter text-[10px] font-semibold uppercase tracking-[0.35em] text-aqua">
-              House of Qalakari
+              Pure Linen Sarees
             </p>
             <p className="mt-2 font-display text-[22px] font-medium uppercase leading-tight tracking-[0.16em] text-white drop-shadow-md sm:text-2xl">
-              Celebrate the elegance
-              <br />
-              of tradition
+              {heroSlides[index]?.title || "Celebrate The Elegance"}
             </p>
             <span className="mx-auto mt-3 block h-px w-14 bg-white/60" />
             <p className="mx-auto mt-2.5 max-w-xs font-inter text-[11px] leading-relaxed text-white/80">
-              Handcrafted pure linen & Banarasi sarees delivered across India.
+              {heroSlides[index]?.subtitle || "Handcrafted pure linen sarees delivered across India."}
             </p>
             <div className="mt-4 flex items-center justify-center gap-3">
               <Link
