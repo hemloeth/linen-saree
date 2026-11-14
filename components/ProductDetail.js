@@ -73,26 +73,30 @@ export default function ProductDetail({ product }) {
             <Stars rating={product.rating} reviews={product.reviews} />
           </div>
 
+          {/* Product Title */}
           <h1 className="mt-1.5 text-[17px] font-medium leading-snug text-black sm:text-xl lg:text-3xl">
             {product.name}
           </h1>
 
-          {/* Color & Fabric line right below product title */}
-          {(product.colour || product.fabric || product.material) && (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {product.colour && (
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-linen/80 px-2.5 py-1 font-inter text-xs font-semibold text-pine-950">
-                  <span className="h-2 w-2 rounded-full border border-pine-950/20 bg-pine-900" aria-hidden="true" />
-                  Color: <span className="font-medium text-pine-900">{product.colour}</span>
-                </span>
-              )}
-              {(product.fabric || product.material) && (
-                <span className="inline-flex items-center rounded-md border border-pine-950/15 bg-white px-2.5 py-1 font-inter text-xs font-medium text-muted">
-                  Material: <span className="ml-1 font-semibold text-pine-950 capitalize">{product.fabric || product.material}</span>
-                </span>
-              )}
-            </div>
-          )}
+          {/* Color & Material badge directly under Product Name */}
+          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+            {product.colour && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-pine-900/20 bg-linen/90 px-3 py-1 font-inter text-xs font-semibold text-pine-950 shadow-xs">
+                <span className="h-2 w-2 rounded-full bg-pine-900" aria-hidden="true" />
+                Color: <span className="font-bold text-pine-900">{product.colour}</span>
+              </span>
+            )}
+            {product.fabric && (
+              <span className="inline-flex items-center rounded-full border border-pine-950/15 bg-white px-3 py-1 font-inter text-xs font-medium text-muted">
+                Material: <span className="ml-1 font-semibold text-pine-950 capitalize">{product.fabric}</span>
+              </span>
+            )}
+            {product.sareeSize && (
+              <span className="inline-flex items-center rounded-full border border-pine-950/15 bg-white px-2.5 py-1 font-inter text-xs text-muted">
+                Size: <span className="ml-1 font-semibold text-pine-950">{product.sareeSize}</span>
+              </span>
+            )}
+          </div>
 
           {hasVideo && (
             <div className="mt-2.5">
