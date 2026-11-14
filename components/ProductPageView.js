@@ -26,8 +26,11 @@ export default function ProductPageView({ productId }) {
     if (!productId) return;
 
     let active = true;
-    setDirectLoading(true);
-    setDirectError(null);
+    Promise.resolve().then(() => {
+      if (!active) return;
+      setDirectLoading(true);
+      setDirectError(null);
+    });
 
     fetchProductById(productId)
       .then((prod) => {
@@ -164,7 +167,7 @@ export default function ProductPageView({ productId }) {
                   Similar Sarees
                 </h2>
               </div>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
                 {related.slice(0, 4).map((item) => (
                   <ProductCard key={item.id} product={item} />
                 ))}
@@ -186,7 +189,7 @@ export default function ProductPageView({ productId }) {
                 View all
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
               {more.slice(0, 8).map((item) => (
                 <ProductCard key={item.id} product={item} />
               ))}
