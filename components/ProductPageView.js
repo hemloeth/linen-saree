@@ -144,17 +144,17 @@ export default function ProductPageView({ productId }) {
       <JsonLd id={`product-schema-${product.id}`} data={productSchema} />
       <Header />
       <main className="flex-1 pb-16 lg:pb-0">
-        <div className="mx-auto max-w-[1240px] px-4 py-4 lg:px-10 lg:py-10">
-          <nav aria-label="Breadcrumb" className="mb-4 text-[11px] text-muted lg:mb-6">
-            <Link href="/" className="hover:text-pine-900">
+        <div className="mx-auto max-w-[1240px] px-3.5 py-3 sm:px-4 sm:py-4 lg:px-10 lg:py-10">
+          <nav aria-label="Breadcrumb" className="mb-3 flex flex-wrap items-center gap-y-1 text-[11px] text-muted lg:mb-6">
+            <Link href="/" className="hover:text-pine-900 shrink-0">
               Home
             </Link>
-            <span className="px-1.5">/</span>
-            <Link href="/shop" className="hover:text-pine-900">
+            <span className="px-1.5 shrink-0">/</span>
+            <Link href="/shop" className="hover:text-pine-900 shrink-0">
               Sarees
             </Link>
-            <span className="px-1.5">/</span>
-            <span className="text-pine-900 font-medium">{product.name}</span>
+            <span className="px-1.5 shrink-0">/</span>
+            <span className="text-pine-900 font-medium truncate max-w-[200px] sm:max-w-none">{product.name}</span>
           </nav>
 
           <ProductDetail product={product} />

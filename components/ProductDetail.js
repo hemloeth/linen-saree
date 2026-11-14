@@ -59,12 +59,12 @@ export default function ProductDetail({ product }) {
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2 md:gap-10 lg:gap-16">
-        <div className="md:sticky md:top-6 md:self-start">
+      <div className="grid gap-4 md:grid-cols-2 md:gap-10 lg:gap-16">
+        <div className="min-w-0 md:sticky md:top-6 md:self-start">
           <ProductGallery images={mediaItems} index={index} onSelect={setIndex} />
         </div>
 
-        <div className="pb-20 lg:pb-0">
+        <div className="min-w-0 pb-20 lg:pb-0">
           <div className="flex items-center gap-2">
             <p className="font-inter text-[10px] uppercase tracking-wider text-muted">
               SKU {product.sku}
