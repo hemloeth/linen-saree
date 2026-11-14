@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore } from "@/components/StoreProvider";
 import { accountApi } from "@/lib/api/account";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 export default function AuthForm() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function AuthForm() {
 
   // Address form modal
   const [showAddressModal, setShowAddressModal] = useState(false);
+  useScrollLock(showAddressModal);
   const [addressForm, setAddressForm] = useState({
     fullName: "",
     mobile: "",

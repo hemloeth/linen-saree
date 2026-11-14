@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import { useStore } from "@/components/StoreProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 import {
   STATIC_NAV_LINKS,
   ACCOUNT_LINKS,
@@ -14,15 +15,12 @@ export default function MobileNav({ open, onClose }) {
   const [expandedSection, setExpandedSection] = useState(null);
   const { categories, collectionsData } = useStore();
 
+  useScrollLock(open);
+
   useEffect(() => {
     if (!open) return;
     const reset = setTimeout(() => setExpandedSection(null), 0);
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      clearTimeout(reset);
-      document.body.style.overflow = original;
-    };
+    return () => clearTimeout(reset);
   }, [open]);
 
   const categoryLinks = useMemo(
@@ -43,9 +41,10 @@ export default function MobileNav({ open, onClose }) {
         type="button"
         aria-label="Close menu"
         onClick={onClose}
-        className="absolute inset-0 bg-pine-950/45 backdrop-blur-[2px] transition-opacity"
+        onTouchMove={(e) => e.preventDefault()}
+        className="absolute inset-0 bg-pine-950/45 backdrop-blur-[2px] transition-opacity touch-none"
       />
-      <div className="relative flex h-full w-[86%] max-w-sm flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-300">
+      <div className="relative flex h-full w-[86%] max-w-sm flex-col bg-white shadow-2xl animate-in slide-in-from-left duration-300 overscroll-contain">
         <header className="flex items-center justify-between border-b border-pine-950/10 px-4 py-3.5">
           <span className="font-display text-sm font-semibold uppercase tracking-[0.18em] text-pine-900">
             Linen Saree

@@ -2,21 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
 import { useStore } from "@/components/StoreProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 import { formatINR } from "@/lib/data";
 
 export default function CartDrawer() {
   const { cartOpen, closeCart, items, setQty, remove, subtotal, count } = useStore();
 
-  useEffect(() => {
-    if (!cartOpen) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = original;
-    };
-  }, [cartOpen]);
+  useScrollLock(cartOpen);
 
   if (!cartOpen) return null;
 
@@ -28,14 +21,15 @@ export default function CartDrawer() {
         type="button"
         aria-label="Close bag"
         onClick={closeCart}
-        className="absolute inset-0 bg-pine-950/45 backdrop-blur-[1px]"
+        onTouchMove={(e) => e.preventDefault()}
+        className="absolute inset-0 bg-pine-950/45 backdrop-blur-[1px] touch-none"
       />
 
       <aside
         role="dialog"
         aria-modal="true"
         aria-label="Shopping bag"
-        className="relative flex h-full w-full max-w-md flex-col bg-white shadow-2xl"
+        className="relative flex h-full w-full max-w-md flex-col bg-white shadow-2xl overscroll-contain"
       >
         <header className="flex items-center justify-between border-b border-pine-950/10 px-5 py-4">
           <h2 className="font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">

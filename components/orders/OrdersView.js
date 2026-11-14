@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useStore } from "@/components/StoreProvider";
 import { ordersApi } from "@/lib/api/orders";
 import { apiConfigured } from "@/lib/api/client";
+import { useScrollLock } from "@/lib/useScrollLock";
 import { formatINR } from "@/lib/data";
 
 export default function OrdersView() {
@@ -19,6 +20,7 @@ export default function OrdersView() {
 
   // Cancellation modal state
   const [cancellingOrder, setCancellingOrder] = useState(null);
+  useScrollLock(Boolean(cancellingOrder));
   const [cancelReason, setCancelReason] = useState("Order placed by mistake");
   const [cancelDetails, setCancelDetails] = useState("");
   const [cancelBusy, setCancelBusy] = useState(false);
@@ -55,7 +57,13 @@ export default function OrdersView() {
   }, [user]);
 
   useEffect(() => {
-    loadOrders();
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) loadOrders();
+    });
+    return () => {
+      active = false;
+    };
   }, [loadOrders]);
 
   function toggleExpand(id) {

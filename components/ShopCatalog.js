@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import { formatINR } from "@/lib/data";
 import { useStore } from "@/components/StoreProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 
 const PRICE_BANDS = [
   { key: "under-2000", label: "Under Rs. 2,000", test: (p) => p < 2000 },
@@ -56,6 +57,7 @@ export default function ShopCatalog() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sort, setSort] = useState("featured");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  useScrollLock(filtersOpen);
 
   const toggle = (list, setList, value) =>
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
@@ -239,9 +241,10 @@ export default function ShopCatalog() {
             type="button"
             aria-label="Close filters"
             onClick={() => setFiltersOpen(false)}
-            className="absolute inset-0 bg-pine-950/45"
+            onTouchMove={(e) => e.preventDefault()}
+            className="absolute inset-0 bg-pine-950/45 backdrop-blur-[1px] touch-none"
           />
-          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-xs flex-col bg-white shadow-2xl">
+          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-xs flex-col bg-white shadow-2xl overscroll-contain">
             <header className="flex items-center justify-between border-b border-pine-950/10 px-4 py-3">
               <h2 className="font-display text-sm font-semibold uppercase tracking-[0.12em] text-pine-950">
                 Filters

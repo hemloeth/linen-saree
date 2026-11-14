@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/components/StoreProvider";
+import { useScrollLock } from "@/lib/useScrollLock";
 import { formatINR } from "@/lib/data";
 
 const QUICK_TAGS = ["Silk", "Cotton", "Banarasi", "Festive", "Under Rs. 3,000"];
@@ -14,6 +15,8 @@ export default function SearchModal() {
   const { searchOpen, closeSearch, catalog: products } = useStore();
   const [query, setQuery] = useState("");
   const inputRef = useRef(null);
+
+  useScrollLock(searchOpen);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -32,15 +35,6 @@ export default function SearchModal() {
     }
   }, [searchOpen]);
 
-  useEffect(() => {
-    if (!searchOpen) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = original;
-    };
-  }, [searchOpen]);
-
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return products.slice(0, 4);
@@ -57,7 +51,7 @@ export default function SearchModal() {
   if (!searchOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[65] flex flex-col bg-white">
+    <div className="fixed inset-0 z-[65] flex flex-col bg-white overscroll-contain">
       <div className="border-b border-pine-950/10">
         <form onSubmit={handleSearchSubmit} className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4 lg:px-6">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0 text-pine-900" aria-hidden="true">
