@@ -15,11 +15,10 @@ test("Mobile Product Card Standard Suite", async (t) => {
     assert.match(content, /export default function ProductCard/, "Must export ProductCard component");
   });
 
-  await t.test("2. Full image visibility: uses object-contain with p-1 and subtle theme background", () => {
+  await t.test("2. Full width image: uses edge-to-edge object-cover with object-top and aspect-[3/4]", () => {
     const content = fs.readFileSync(path.join(ROOT, "components", "ProductCard.js"), "utf8");
-    assert.match(content, /object-contain/, "Must use object-contain so saree/pallu is not cropped");
-    assert.match(content, /aspect-\[4\/5\]/, "Must maintain consistent aspect-[4/5] portrait ratio");
-    assert.doesNotMatch(content, /object-cover object-top/, "Must not use cropping object-cover object-top");
+    assert.match(content, /object-cover object-top/, "Must use object-cover object-top for edge-to-edge full width without gaps");
+    assert.match(content, /aspect-\[3\/4\]/, "Must maintain native 3:4 saree aspect ratio (1080x1440)");
   });
 
   await t.test("3. No duplicated discount badges: single discount badge in price area only", () => {

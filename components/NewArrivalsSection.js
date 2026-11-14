@@ -44,7 +44,7 @@ function ProductSkeletonGrid({ count = 8 }) {
     <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="flex h-full flex-col rounded-lg border border-pine-950/[0.06] bg-white overflow-hidden">
-          <div className="aspect-[4/5] w-full animate-pulse bg-chip" />
+          <div className="aspect-[3/4] w-full animate-pulse bg-chip" />
           <div className="p-2 sm:p-2.5 space-y-1.5">
             <div className="h-3 w-4/5 animate-pulse rounded bg-chip" />
             <div className="h-3 w-1/2 animate-pulse rounded bg-chip" />

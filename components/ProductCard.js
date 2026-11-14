@@ -114,15 +114,15 @@ export default function ProductCard({ product, variant = "default" }) {
       onMouseLeave={stopCycle}
     >
       {/* ── Image Stage ── */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-lg bg-[#fbfaf8]">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-lg bg-[#fbfaf8]">
         <Link
           href={`/product/${product.id}`}
           aria-label={product.name}
           className="absolute inset-0 block"
         >
-          {/* Base image — object-contain so saree, head, pallu are 100% visible */}
+          {/* Base image — edge-to-edge full width with object-top */}
           {gallery[0] && (
-            <span className="absolute inset-0 z-0 flex items-center justify-center">
+            <span className="absolute inset-0 z-0">
               <Image
                 src={gallery[0]}
                 unoptimized={/^https?:\/\//.test(gallery[0] || "")}
@@ -130,7 +130,7 @@ export default function ProductCard({ product, variant = "default" }) {
                 fill
                 quality={85}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-contain p-1 transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transform-none"
+                className="h-full w-full object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transform-none"
               />
             </span>
           )}
@@ -143,7 +143,7 @@ export default function ProductCard({ product, variant = "default" }) {
               <span
                 key={src + frameIndex}
                 aria-hidden={!isCurrent}
-                className={`absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-300 ${
+                className={`absolute inset-0 z-10 transition-opacity duration-300 ${
                   isCurrent ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
               >
@@ -154,7 +154,7 @@ export default function ProductCard({ product, variant = "default" }) {
                   fill
                   quality={85}
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-contain p-1 motion-reduce:transform-none"
+                  className="h-full w-full object-cover object-top motion-reduce:transform-none"
                 />
               </span>
             );
