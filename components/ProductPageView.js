@@ -11,6 +11,7 @@ import JsonLd from "@/components/JsonLd";
 import Link from "next/link";
 import { useStore } from "@/components/StoreProvider";
 import { fetchProductById } from "@/lib/api/products";
+import { products as fallbackCatalog } from "@/lib/data";
 
 export default function ProductPageView({ productId }) {
   const { catalog: products, catalogLoading, catalogError } = useStore();
@@ -47,11 +48,12 @@ export default function ProductPageView({ productId }) {
     };
   }, [productId]);
 
-  // Use the full detail product first, fallback to catalogMatch while loading
+  // Use the full detail product first, fallback to store catalog, then static catalog
   const catalogMatch = products.find((p) => String(p.id) === String(productId));
-  const product = directProduct || catalogMatch;
+  const fallbackMatch = fallbackCatalog.find((p) => String(p.id) === String(productId));
+  const product = directProduct || catalogMatch || fallbackMatch;
   const isLoading = !product && (catalogLoading || directLoading);
-  const isError = directError || (!product && !isLoading && catalogError);
+  const isError = !product && !isLoading && (directError || catalogError);
 
   if (!product) {
     return (

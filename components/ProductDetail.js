@@ -9,6 +9,11 @@ import Stars from "@/components/Stars";
 import { AddToBagButton, BuyNowButton } from "@/components/ProductActions";
 import { formatINR, trustPoints } from "@/lib/data";
 
+const STOCK_LABEL = {
+  true: "In stock",
+  false: "Sold out",
+};
+
 // Map common saree color names to background and text styling for dynamic color pill
 function getColorStyles(colorName) {
   const c = String(colorName || "").toLowerCase().trim();
