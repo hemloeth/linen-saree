@@ -88,8 +88,8 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
               aria-selected={i === index}
               aria-label={`View ${isVideo ? "video" : `photo ${i + 1}`}: ${item.label || ""}`}
               onClick={() => onSelect(i)}
-              className={`relative aspect-[3/4] w-full overflow-hidden rounded ring-2 transition cursor-pointer ${
-                i === index ? "ring-pine-900" : "ring-transparent hover:ring-pine-900/30"
+              className={`relative aspect-[3/4] w-full overflow-hidden rounded transition cursor-pointer ${
+                i === index ? "border-2 border-neutral-900" : "border border-neutral-200 hover:border-neutral-400"
               }`}
             >
               {thumbSrc ? (
@@ -266,10 +266,10 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                       aria-selected={isSelected}
                       aria-label={`View ${isVideo ? "video" : `photo ${i + 1}`}`}
                       onClick={() => goTo(i)}
-                      className={`relative aspect-[3/4] w-full overflow-hidden rounded-md border-2 transition-all duration-150 cursor-pointer ${
+                      className={`relative aspect-[3/4] w-full overflow-hidden rounded-md transition-all duration-150 cursor-pointer ${
                         isSelected
-                          ? "border-pine-900 ring-2 ring-pine-900/30 scale-[1.03] shadow-sm z-10"
-                          : "border-pine-950/15 opacity-70 hover:opacity-100 hover:border-pine-950/40"
+                          ? "border-2 border-neutral-900 scale-[1.02] shadow-sm z-10 opacity-100"
+                          : "border border-neutral-200 opacity-60 hover:opacity-100 hover:border-neutral-400"
                       }`}
                     >
                       {thumbSrc ? (
