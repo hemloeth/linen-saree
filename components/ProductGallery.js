@@ -194,14 +194,14 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
           </p>
         </div>
 
-        {/* Mobile swipe stage */}
+        {/* Mobile Media Stage */}
         <div className="w-full max-w-full overflow-hidden lg:hidden">
-          {/* Main swipeable media container with controlled mobile height */}
-          <div className="relative mx-auto w-full max-w-[420px] overflow-hidden rounded-lg bg-[#fbfaf8] shadow-xs">
+          {/* Main media container showing full uncropped image */}
+          <div className="relative mx-auto w-full overflow-hidden rounded-lg bg-[#fbfaf8] shadow-xs">
             <div
               ref={trackRef}
               onScroll={handleScroll}
-              className="no-scrollbar flex aspect-[4/5] max-h-[50vh] w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain touch-pan-x"
+              className="no-scrollbar flex aspect-[3/4] w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain touch-pan-x"
               aria-label="Product media — swipe to browse"
             >
               {images.map((item, i) => {
@@ -230,8 +230,8 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                         fill
                         quality={90}
                         preload={i === 0}
-                        sizes="(max-width: 640px) 100vw, 420px"
-                        className="h-full w-full object-cover object-top"
+                        sizes="100vw"
+                        className="h-full w-full object-contain"
                       />
                     )}
                   </div>
@@ -239,14 +239,14 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
               })}
             </div>
 
-            {/* Left/Right arrow hints on mobile */}
+            {/* Left/Right navigation arrows */}
             {count > 1 && (
-              <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-2">
+              <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-2.5">
                 <button
                   type="button"
                   onClick={() => step(-1)}
                   aria-label="Previous image"
-                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-pine-950 shadow-sm backdrop-blur-xs transition active:scale-95"
+                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-xs transition hover:bg-black/60 active:scale-95"
                 >
                   <Chevron direction="left" />
                 </button>
@@ -254,7 +254,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                   type="button"
                   onClick={() => step(1)}
                   aria-label="Next image"
-                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-pine-950 shadow-sm backdrop-blur-xs transition active:scale-95"
+                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-xs transition hover:bg-black/60 active:scale-95"
                 >
                   <Chevron direction="right" />
                 </button>
@@ -267,12 +267,11 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
             </span>
           </div>
 
-          {/* Mobile Thumbnail Carousel / Rail below the big image - strictly single horizontal row */}
+          {/* Mobile Thumbnails Grid - wraps to next line, zero horizontal scrolling, strictly within screen */}
           {count > 1 && (
-            <div className="mt-2.5 w-full max-w-full overflow-hidden">
+            <div className="mt-3 w-full">
               <div
-                ref={thumbTrackRef}
-                className="no-scrollbar flex w-full max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain py-1 px-0.5 touch-pan-x"
+                className="grid grid-cols-5 gap-2 sm:grid-cols-6"
                 role="tablist"
                 aria-label="Product media thumbnails"
               >
@@ -291,9 +290,9 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                       aria-selected={isSelected}
                       aria-label={`View ${isVideo ? "video" : `photo ${i + 1}`}`}
                       onClick={() => goTo(i)}
-                      className={`relative aspect-[3/4] w-[54px] shrink-0 overflow-hidden rounded-md border-2 transition-all duration-150 cursor-pointer ${
+                      className={`relative aspect-[3/4] w-full overflow-hidden rounded-md border-2 transition-all duration-150 cursor-pointer ${
                         isSelected
-                          ? "border-pine-900 ring-2 ring-pine-900/30 scale-[1.04] shadow-sm z-10"
+                          ? "border-pine-900 ring-2 ring-pine-900/30 scale-[1.03] shadow-sm z-10"
                           : "border-pine-950/15 opacity-70 hover:opacity-100 hover:border-pine-950/40"
                       }`}
                     >
@@ -303,7 +302,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                           src={thumbSrc}
                           alt=""
                           fill
-                          sizes="60px"
+                          sizes="20vw"
                           className="object-cover object-top"
                         />
                       ) : (
@@ -315,10 +314,10 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
 
                       {isVideo && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white">
-                          <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-pine-900/90 text-white shadow">
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-pine-900/90 text-white shadow">
                             <PlayIcon className="h-2 w-2 ml-0.5" />
                           </span>
-                          <span className="mt-0.5 font-inter text-[7px] font-bold uppercase tracking-wider">
+                          <span className="mt-0.5 font-inter text-[6.5px] font-bold uppercase tracking-wider">
                             Video
                           </span>
                         </div>
@@ -328,10 +327,10 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                 })}
               </div>
 
-              {/* Progress counter + swipe hint */}
-              <div className="mt-1.5 flex items-center justify-between px-0.5">
+              {/* Progress counter + hint */}
+              <div className="mt-2 flex items-center justify-between px-0.5">
                 <span className="font-inter text-[10.5px] text-muted">
-                  Tap thumbnail or swipe image
+                  Tap thumbnail or swipe above
                 </span>
                 <span className="font-inter text-[10.5px] font-semibold tabular-nums text-pine-900">
                   {index + 1} / {count}
