@@ -11,7 +11,7 @@ import {
 } from "react";
 
 import { apiConfigured } from "@/lib/api/client";
-import { fetchPaginatedProducts, normalizeProduct } from "@/lib/api/products";
+import { fetchAllProducts, fetchPaginatedProducts, normalizeProduct } from "@/lib/api/products";
 import { accountApi, wishlistIds } from "@/lib/api/account";
 import { cartApi } from "@/lib/api/cart";
 import { fetchMerchandising } from "@/lib/api/merchandising";
@@ -215,7 +215,7 @@ export function StoreProvider({ children }) {
     };
   }, [user, authInitialized]);
 
-  // 3. Real Product Catalog Loading: Fetch initial 30 products without demo fallbacks
+  // 3. Real Product Catalog Loading: Fetch all products without demo fallbacks
   useEffect(() => {
     if (!apiConfigured) {
       setCatalogLoading(false);
@@ -225,16 +225,26 @@ export function StoreProvider({ children }) {
 
     let active = true;
 
-    fetchPaginatedProducts({ page: 1, limit: 30, sortBy: "newest" })
-      .then((res) => {
+    fetchAllProducts()
+      .then((prods) => {
         if (!active) return;
-        setCatalog(res.products || []);
+        setCatalog(prods || []);
         setCatalogError(null);
       })
       .catch((error) => {
         if (!active) return;
-        setCatalog([]);
-        setCatalogError(error.message || "Failed to load product catalog.");
+        // Fallback to paginated endpoint if batch fails
+        fetchPaginatedProducts({ page: 1, limit: 100, sortBy: "newest" })
+          .then((res) => {
+            if (!active) return;
+            setCatalog(res.products || []);
+            setCatalogError(null);
+          })
+          .catch((err2) => {
+            if (!active) return;
+            setCatalog([]);
+            setCatalogError(err2.message || error.message || "Failed to load product catalog.");
+          });
       })
       .finally(() => {
         if (active) setCatalogLoading(false);

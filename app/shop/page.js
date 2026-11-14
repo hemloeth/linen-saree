@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ShopCatalog from "@/components/ShopCatalog";
@@ -24,7 +25,9 @@ export default function ShopPage() {
             <span aria-hidden="true" className="mt-3 block h-px w-16 bg-pine-950/40" />
           </div>
 
-          <ShopCatalog />
+          <Suspense fallback={<div className="py-16 text-center text-xs text-muted">Loading sarees…</div>}>
+            <ShopCatalog />
+          </Suspense>
         </div>
       </main>
       <Footer />

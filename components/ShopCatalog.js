@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { formatINR } from "@/lib/data";
 import { useStore } from "@/components/StoreProvider";
@@ -47,8 +48,14 @@ function Check({ label, checked, onChange }) {
   );
 }
 
+const ITEMS_PER_PAGE = 30;
+
 export default function ShopCatalog() {
   const { catalog: products, catalogLoading, catalogError } = useStore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const FABRICS = [...new Set(products.map((p) => p.fabric).filter(Boolean))].sort();
   const COLOURS = [...new Set(products.map((p) => p.colour).filter(Boolean))].sort();
   const [bands, setBands] = useState([]);
@@ -56,6 +63,7 @@ export default function ShopCatalog() {
   const [colours, setColours] = useState([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sort, setSort] = useState("featured");
+  const [currentPage, setCurrentPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   useScrollLock(filtersOpen);
 
@@ -91,6 +99,50 @@ export default function ShopCatalog() {
     }
     return sorted;
   }, [products, bands, fabrics, colours, inStockOnly, sort]);
+
+  // Total pages and pagination bounds
+  const totalPages = Math.max(1, Math.ceil(results.length / ITEMS_PER_PAGE));
+
+  // Sync page from URL query parameter on initial load or popstate
+  useEffect(() => {
+    const p = parseInt(searchParams.get("page"), 10);
+    if (!isNaN(p) && p >= 1 && p <= totalPages) {
+      setCurrentPage(p);
+    }
+  }, [searchParams, totalPages]);
+
+  // Reset to page 1 whenever any filter or sort option changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [bands, fabrics, colours, inStockOnly, sort]);
+
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, results.length);
+  const paginatedResults = useMemo(() => {
+    return results.slice(startIndex, endIndex);
+  }, [results, startIndex, endIndex]);
+
+  const goToPage = (pageNumber) => {
+    if (pageNumber < 1 || pageNumber > totalPages || pageNumber === currentPage) return;
+    setCurrentPage(pageNumber);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (pageNumber === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(pageNumber));
+    }
+    const query = params.toString();
+    router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+
+    // Smooth scroll to top of catalog section
+    const anchor = document.getElementById("catalog-content-top");
+    if (anchor) {
+      anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const activeCount = bands.length + fabrics.length + colours.length + (inStockOnly ? 1 : 0);
 
@@ -174,13 +226,14 @@ export default function ShopCatalog() {
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1">
+      <div id="catalog-content-top" className="min-w-0 flex-1 scroll-mt-24">
         {catalogError && <p role="alert" className="mb-4 text-sm text-red-700">Unable to load products: {catalogError}</p>}
         {catalogLoading && <p className="mb-4 text-sm text-muted">Loading products…</p>}
         <div className="mb-4 flex items-center justify-between gap-3">
           <p className="text-xs text-muted">
-            {results.length} of {products.length} sarees
+            Showing <span className="font-medium text-pine-950">{results.length === 0 ? 0 : startIndex + 1}</span>–<span className="font-medium text-pine-950">{endIndex}</span> of <span className="font-medium text-pine-950">{results.length}</span> sarees
             {activeCount > 0 ? ` · ${activeCount} filter${activeCount === 1 ? "" : "s"}` : ""}
+            {totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}
           </p>
 
           <div className="flex items-center gap-2">
@@ -222,14 +275,81 @@ export default function ShopCatalog() {
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-6">
-            {results.map((product) => (
+            {paginatedResults.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
 
-        <p className="mt-8 text-[11px] text-muted">
-          Showing {results.length} piece{results.length === 1 ? "" : "s"}
+        {/* Pagination Bar */}
+        {totalPages > 1 && (
+          <nav aria-label="Catalog pagination" className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-pine-950/10 pt-6 sm:flex-row">
+            <p className="font-inter text-xs text-muted">
+              Page <span className="font-semibold text-pine-950">{currentPage}</span> of{" "}
+              <span className="font-semibold text-pine-950">{totalPages}</span>{" "}
+              <span className="text-faint">({results.length} sarees total)</span>
+            </p>
+
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+                aria-label="Previous page"
+                className={`flex h-9 items-center gap-1 rounded-md border px-3 font-inter text-xs font-medium transition-colors ${
+                  currentPage <= 1
+                    ? "cursor-not-allowed border-pine-950/10 bg-cream-card/30 text-muted/40"
+                    : "cursor-pointer border-pine-950/20 bg-white text-pine-900 shadow-2xs hover:bg-cream-card hover:border-pine-900"
+                }`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+                <span className="hidden sm:inline">Prev</span>
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                const isActive = pageNum === currentPage;
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    onClick={() => goToPage(pageNum)}
+                    aria-current={isActive ? "page" : undefined}
+                    aria-label={`Page ${pageNum}`}
+                    className={`flex h-9 min-w-9 items-center justify-center rounded-md px-3 font-inter text-xs font-semibold transition-all ${
+                      isActive
+                        ? "bg-pine-900 text-white shadow-xs pointer-events-none"
+                        : "cursor-pointer border border-pine-950/20 bg-white text-pine-900 hover:bg-cream-card hover:border-pine-900 shadow-2xs"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+                aria-label="Next page"
+                className={`flex h-9 items-center gap-1 rounded-md border px-3 font-inter text-xs font-medium transition-colors ${
+                  currentPage >= totalPages
+                    ? "cursor-not-allowed border-pine-950/10 bg-cream-card/30 text-muted/40"
+                    : "cursor-pointer border-pine-950/20 bg-white text-pine-900 shadow-2xs hover:bg-cream-card hover:border-pine-900"
+                }`}
+              >
+                <span className="hidden sm:inline">Next</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          </nav>
+        )}
+
+        <p className="mt-6 text-[11px] text-muted">
+          Showing {results.length === 0 ? 0 : startIndex + 1}–{endIndex} of {results.length} piece{results.length === 1 ? "" : "s"}
           {results.length ? ` · from ${formatINR(Math.min(...results.map((p) => p.price)))}` : ""}
         </p>
       </div>
