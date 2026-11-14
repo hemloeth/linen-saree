@@ -56,6 +56,8 @@ export function StoreProvider({ children }) {
   // Concurrency guard refs to prevent duplicate synchronization operations
   const isSyncingCartRef = useRef(false);
   const isSyncingWishlistRef = useRef(false);
+  const cartQueueRef = useRef(Promise.resolve());
+  const wishlistInFlightRef = useRef(new Set());
 
   const notify = useCallback((message, item) => {
     setToast({ id: Date.now(), message, item });
@@ -417,104 +419,183 @@ export function StoreProvider({ children }) {
     }
   }, [user]);
 
-  // Cart Operation: Add with Optimistic Rollback
+  // Cart Operation: Add with Request Serialization & Guaranteed Result
   const add = useCallback(
     async (product, quantity = 1, message = "Added to bag") => {
-      if (!product) return;
+      if (!product) {
+        return { success: false, error: "Invalid product" };
+      }
+      if (!product.inStock && Number(product.stock) <= 0) {
+        notify("This saree is currently out of stock.");
+        return { success: false, error: "Out of stock" };
+      }
+
       const pid = String(product.id);
       const previousItems = items;
+      let nextItems = [];
 
-      // Optimistic update
-      setItems((current) => {
-        const existing = current.find((line) => String(line.product.id) === pid);
-        if (existing) {
-          return current.map((line) =>
-            String(line.product.id) === pid ? { ...line, qty: line.qty + quantity } : line
-          );
-        }
-        return [...current, { product, qty: quantity }];
-      });
-      notify(message, product.name);
+      const existing = items.find((line) => String(line.product.id) === pid);
+      if (existing) {
+        nextItems = items.map((line) =>
+          String(line.product.id) === pid ? { ...line, qty: line.qty + quantity } : line
+        );
+      } else {
+        nextItems = [...items, { product, qty: quantity }];
+      }
 
-      // Authenticated backend mutation with rollback
-      if (user && /^[a-f\d]{24}$/i.test(pid)) {
+      setItems(nextItems);
+
+      // Immediately synchronize to localStorage for guests to guarantee zero checkout race conditions
+      if (!user && typeof window !== "undefined") {
         try {
-          const res = await cartApi.add(pid, quantity);
-          if (res?.cart) {
-            // Reconcile with authoritative server state
-            setItems(
-              res.cart
-                .filter((l) => l.productId)
-                .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
-            );
-          }
-        } catch (err) {
-          // Rollback on failure
-          setItems(previousItems);
-          notify(err.message || "Could not add item to bag. Please try again.");
-          await refetchServerCart();
+          window.localStorage.setItem(
+            CART_KEY,
+            JSON.stringify(nextItems.map((l) => ({ id: l.product.id, qty: l.qty })))
+          );
+        } catch {
+          /* storage unavailable */
         }
       }
+
+      if (message) notify(message, product.name);
+
+      // Authenticated backend mutation serialized via queue
+      if (user && /^[a-f\d]{24}$/i.test(pid)) {
+        return new Promise((resolve) => {
+          cartQueueRef.current = cartQueueRef.current
+            .then(async () => {
+              try {
+                const res = await cartApi.add(pid, quantity);
+                if (res?.cart) {
+                  setItems(
+                    res.cart
+                      .filter((l) => l.productId)
+                      .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
+                  );
+                }
+                resolve({ success: true, count: nextItems.length });
+              } catch (err) {
+                setItems(previousItems);
+                notify(err.message || "Could not add item to bag. Please try again.");
+                await refetchServerCart();
+                resolve({ success: false, error: err.message || "Failed to add to bag" });
+              }
+            })
+            .catch(() => {
+              resolve({ success: false, error: "Network error" });
+            });
+        });
+      }
+
+      return { success: true, count: nextItems.length };
     },
     [user, items, notify, refetchServerCart]
   );
 
-  // Cart Operation: Set Quantity with Optimistic Rollback
+  // Cart Operation: Set Quantity with Serialized Mutation
   const setQty = useCallback(
     async (id, qty) => {
       const pid = String(id);
       const previousItems = items;
 
-      setItems((current) =>
+      const nextItems =
         qty <= 0
-          ? current.filter((line) => String(line.product.id) !== pid)
-          : current.map((line) => (String(line.product.id) === pid ? { ...line, qty } : line))
-      );
+          ? items.filter((line) => String(line.product.id) !== pid)
+          : items.map((line) => (String(line.product.id) === pid ? { ...line, qty } : line));
 
-      if (user && /^[a-f\d]{24}$/i.test(pid)) {
+      setItems(nextItems);
+
+      if (!user && typeof window !== "undefined") {
         try {
-          const res = qty <= 0 ? await cartApi.remove(pid) : await cartApi.update(pid, qty);
-          if (res?.cart) {
-            setItems(
-              res.cart
-                .filter((l) => l.productId)
-                .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
-            );
-          }
-        } catch (err) {
-          setItems(previousItems);
-          notify(err.message || "Failed to update quantity. Please try again.");
-          await refetchServerCart();
+          window.localStorage.setItem(
+            CART_KEY,
+            JSON.stringify(nextItems.map((l) => ({ id: l.product.id, qty: l.qty })))
+          );
+        } catch {
+          /* storage unavailable */
         }
       }
+
+      if (user && /^[a-f\d]{24}$/i.test(pid)) {
+        return new Promise((resolve) => {
+          cartQueueRef.current = cartQueueRef.current
+            .then(async () => {
+              try {
+                const res = qty <= 0 ? await cartApi.remove(pid) : await cartApi.update(pid, qty);
+                if (res?.cart) {
+                  setItems(
+                    res.cart
+                      .filter((l) => l.productId)
+                      .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
+                  );
+                }
+                resolve({ success: true });
+              } catch (err) {
+                setItems(previousItems);
+                notify(err.message || "Failed to update quantity. Please try again.");
+                await refetchServerCart();
+                resolve({ success: false, error: err.message });
+              }
+            })
+            .catch(() => {
+              resolve({ success: false, error: "Network error" });
+            });
+        });
+      }
+
+      return { success: true };
     },
     [user, items, notify, refetchServerCart]
   );
 
-  // Cart Operation: Remove with Optimistic Rollback
+  // Cart Operation: Remove with Serialized Mutation
   const remove = useCallback(
     async (id) => {
       const pid = String(id);
       const previousItems = items;
+      const nextItems = items.filter((line) => String(line.product.id) !== pid);
 
-      setItems((current) => current.filter((line) => String(line.product.id) !== pid));
+      setItems(nextItems);
 
-      if (user && /^[a-f\d]{24}$/i.test(pid)) {
+      if (!user && typeof window !== "undefined") {
         try {
-          const res = await cartApi.remove(pid);
-          if (res?.cart) {
-            setItems(
-              res.cart
-                .filter((l) => l.productId)
-                .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
-            );
-          }
-        } catch (err) {
-          setItems(previousItems);
-          notify(err.message || "Failed to remove item. Please try again.");
-          await refetchServerCart();
+          window.localStorage.setItem(
+            CART_KEY,
+            JSON.stringify(nextItems.map((l) => ({ id: l.product.id, qty: l.qty })))
+          );
+        } catch {
+          /* storage unavailable */
         }
       }
+
+      if (user && /^[a-f\d]{24}$/i.test(pid)) {
+        return new Promise((resolve) => {
+          cartQueueRef.current = cartQueueRef.current
+            .then(async () => {
+              try {
+                const res = await cartApi.remove(pid);
+                if (res?.cart) {
+                  setItems(
+                    res.cart
+                      .filter((l) => l.productId)
+                      .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
+                  );
+                }
+                resolve({ success: true });
+              } catch (err) {
+                setItems(previousItems);
+                notify(err.message || "Failed to remove item. Please try again.");
+                await refetchServerCart();
+                resolve({ success: false, error: err.message });
+              }
+            })
+            .catch(() => {
+              resolve({ success: false, error: "Network error" });
+            });
+        });
+      }
+
+      return { success: true };
     },
     [user, items, notify, refetchServerCart]
   );
@@ -523,6 +604,14 @@ export function StoreProvider({ children }) {
   const clear = useCallback(async () => {
     const previousItems = items;
     setItems([]);
+
+    if (!user && typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(CART_KEY);
+      } catch {
+        /* storage unavailable */
+      }
+    }
 
     if (user) {
       try {
@@ -534,17 +623,25 @@ export function StoreProvider({ children }) {
     }
   }, [user, items, notify]);
 
-  // Wishlist Operation: Toggle with Optimistic Rollback
+  // Wishlist Operation: Toggle with Concurrency In-Flight Guard & Optimistic Rollback
   const toggleWishlist = useCallback(
     async (id) => {
       const productId = String(id);
+      if (wishlistInFlightRef.current.has(productId)) {
+        return; // Guard rapid double-taps
+      }
+      wishlistInFlightRef.current.add(productId);
+
       const previouslySaved = wishlist.includes(productId);
 
       setWishlist((current) =>
         previouslySaved ? current.filter((x) => x !== productId) : [...current, productId]
       );
 
-      if (!user) return;
+      if (!user) {
+        wishlistInFlightRef.current.delete(productId);
+        return;
+      }
 
       try {
         const updated = previouslySaved
@@ -554,13 +651,14 @@ export function StoreProvider({ children }) {
           setWishlist(wishlistIds(updated));
         }
       } catch (error) {
-        // Rollback state on API failure
         setWishlist((current) =>
           previouslySaved
             ? [...new Set([...current, productId])]
             : current.filter((x) => x !== productId)
         );
         notify(error.message || "Failed to update wishlist.");
+      } finally {
+        wishlistInFlightRef.current.delete(productId);
       }
     },
     [wishlist, user, notify]

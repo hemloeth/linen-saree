@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useStore } from "@/components/StoreProvider";
 import { formatINR, discountPercent } from "@/lib/data";
+import { useVideoCoordinator } from "@/components/video/useVideoCoordinator";
 
 function PlayIcon({ className = "h-4 w-4" }) {
   return (
@@ -31,114 +32,26 @@ function HeartIcon({ filled = false, size = 15 }) {
 }
 
 /**
- * Strict Viewport-Boundary Auto-Play Video Card
- * - Plays ONLY when the card is fully visible on screen
- * - If cut off even slightly at top (under header) or bottom (below fold), it STOPS immediately
- * - When entering from bottom, starts immediately once fully on screen
+ * Coordinated Video Card for Live Collection Page
  */
-function LiveVideoCard({ product }) {
+function LiveVideoCard({ product, isPlaying, registerCard, unregisterCard, onTogglePlay }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
-  const [inView, setInView] = useState(false);
-  const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
-  const [manualPause, setManualPause] = useState(false);
   const { isWished, toggleWishlist } = useStore();
   const wished = isWished(product.id);
   const off = discountPercent(product);
 
   useEffect(() => {
     const el = containerRef.current;
+    const vid = videoRef.current;
     if (!el) return;
 
-    function evaluateVisibility() {
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || 800;
-      const headerHeight = 55; // Sticky topbar offset
-
-      // Fully visible on screen: top is not past header (top >= 40) and bottom is not past screen (bottom <= vh + 10)
-      const isFullyVisible =
-        rect.top >= (headerHeight - 15) &&
-        rect.bottom <= (vh + 15) &&
-        rect.height > 0;
-
-      setInView((prev) => {
-        if (prev !== isFullyVisible) {
-          if (!isFullyVisible) {
-            setManualPause(false);
-          }
-          return isFullyVisible;
-        }
-        return prev;
-      });
-    }
-
-    // IntersectionObserver triggers evaluations across multiple thresholds
-    const observer = new IntersectionObserver(
-      () => {
-        evaluateVisibility();
-      },
-      {
-        threshold: [0, 0.1, 0.25, 0.5, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0],
-        rootMargin: "-50px 0px 0px 0px",
-      }
-    );
-    observer.observe(el);
-
-    // Realtime scroll and resize listener for pixel-exact top/bottom boundary detection
-    window.addEventListener("scroll", evaluateVisibility, { passive: true });
-    window.addEventListener("resize", evaluateVisibility, { passive: true });
-
-    // Initial check on mount
-    evaluateVisibility();
+    registerCard(product.id, el, vid);
 
     return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", evaluateVisibility);
-      window.removeEventListener("resize", evaluateVisibility);
+      unregisterCard(product.id);
     };
-  }, []);
-
-  // Handle play / pause based on strict visibility
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (inView && !manualPause && !prefersReducedMotion) {
-      video.muted = true;
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setHasStartedPlaying(true))
-          .catch(() => {});
-      }
-    } else {
-      video.pause();
-      setHasStartedPlaying(false);
-    }
-  }, [inView, manualPause]);
-
-  const togglePlayback = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.paused) {
-      setManualPause(false);
-      video.muted = true;
-      video.play().then(() => setHasStartedPlaying(true)).catch(() => {});
-    } else {
-      setManualPause(true);
-      video.pause();
-      setHasStartedPlaying(false);
-    }
-  }, []);
-
-  const isVideoVisible = inView && hasStartedPlaying && !manualPause;
+  }, [product.id, registerCard, unregisterCard]);
 
   return (
     <article
@@ -166,12 +79,12 @@ function LiveVideoCard({ product }) {
           fill
           quality={100}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className={`object-cover object-top transition-all duration-700 ease-out group-hover:scale-105 ${
-            isVideoVisible ? "opacity-0" : "opacity-100"
+          className={`object-cover object-top transition-all duration-500 ease-out group-hover:scale-105 ${
+            isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         />
 
-        {/* Video always mounted, plays strictly when fully in view */}
+        {/* Video always mounted, coordinated playback */}
         {product.video && (
           <video
             ref={videoRef}
@@ -183,9 +96,8 @@ function LiveVideoCard({ product }) {
             preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
-            onPlay={() => setHasStartedPlaying(true)}
             className={`h-full w-full object-cover object-top transition-opacity duration-300 group-hover:scale-105 ${
-              isVideoVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+              isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           />
         )}
@@ -229,7 +141,7 @@ function LiveVideoCard({ product }) {
           toggleWishlist(product.id);
         }}
         aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-        className={`absolute right-2.5 top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-md transition-all hover:scale-110 hover:bg-black/60 sm:h-8 sm:w-8 ${
+        className={`absolute right-2.5 top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-md transition-all hover:scale-110 hover:bg-black/60 cursor-pointer sm:h-8 sm:w-8 ${
           wished ? "text-tomato" : "text-white"
         }`}
       >
@@ -239,11 +151,19 @@ function LiveVideoCard({ product }) {
       {/* Play / Pause Toggle Button */}
       <button
         type="button"
-        onClick={togglePlayback}
-        aria-label={isVideoVisible ? "Pause video" : "Play video"}
-        className="absolute bottom-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white shadow-md backdrop-blur-md transition-all hover:scale-110 hover:bg-pine-900 focus:outline-none sm:h-8 sm:w-8"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onTogglePlay(product.id);
+        }}
+        aria-label={isPlaying ? "Pause video" : "Play video"}
+        className="absolute bottom-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white shadow-md backdrop-blur-md transition-all hover:scale-110 hover:bg-pine-900 focus:outline-none cursor-pointer sm:h-8 sm:w-8"
       >
-        {isVideoVisible ? <PauseIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <PlayIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 ml-0.5" />}
+        {isPlaying ? (
+          <PauseIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+        ) : (
+          <PlayIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 ml-0.5" />
+        )}
       </button>
     </article>
   );
@@ -252,6 +172,8 @@ function LiveVideoCard({ product }) {
 export default function LiveVideoCollection() {
   const { catalog, catalogLoading, catalogError } = useStore();
   const [active, setActive] = useState("all");
+
+  const { registerCard, unregisterCard, togglePlay, playingIds } = useVideoCoordinator();
 
   const videos = useMemo(() => catalog.filter((p) => p.video), [catalog]);
   const fabrics = useMemo(
@@ -324,7 +246,14 @@ export default function LiveVideoCollection() {
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
         {visible.map((p) => (
-          <LiveVideoCard key={p.id} product={p} />
+          <LiveVideoCard
+            key={p.id}
+            product={p}
+            isPlaying={playingIds.has(String(p.id))}
+            registerCard={registerCard}
+            unregisterCard={unregisterCard}
+            onTogglePlay={togglePlay}
+          />
         ))}
       </div>
     </div>

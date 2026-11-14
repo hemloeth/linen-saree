@@ -25,22 +25,30 @@ function CheckIcon({ size = 13 }) {
 export function AddToBagButton({ product, className = "", children }) {
   const { add } = useStore();
   const [justAdded, setJustAdded] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!product?.inStock) return;
-    add(product);
-    setJustAdded(true);
-    setTimeout(() => {
-      setJustAdded(false);
-    }, 1500);
+    if (!product?.inStock || loading) return;
+    setLoading(true);
+    try {
+      const res = await add(product);
+      if (res?.success) {
+        setJustAdded(true);
+        setTimeout(() => {
+          setJustAdded(false);
+        }, 1500);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <button
       type="button"
-      disabled={!product?.inStock}
+      disabled={!product?.inStock || loading}
       onClick={handleClick}
       aria-label={justAdded ? `Added ${product?.name} to bag` : `Add ${product?.name} to bag`}
       aria-live="polite"
@@ -50,6 +58,8 @@ export function AddToBagButton({ product, className = "", children }) {
         <span className="flex items-center justify-center gap-1 font-semibold animate-in fade-in zoom-in-75 duration-200">
           <CheckIcon size={14} /> Added
         </span>
+      ) : loading ? (
+        "Adding…"
       ) : (
         (children ?? "Add to bag")
       )}
@@ -62,14 +72,22 @@ export function BuyNowButton({ product, className = "", children }) {
   const { add, closeCart } = useStore();
   const [navigating, setNavigating] = useState(false);
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (!product?.inStock || navigating) return;
     setNavigating(true);
-    add(product, 1);
-    closeCart();
-    router.push("/checkout");
+    try {
+      const res = await add(product, 1);
+      if (res && res.success) {
+        closeCart();
+        router.push("/checkout");
+      } else {
+        setNavigating(false);
+      }
+    } catch {
+      setNavigating(false);
+    }
   };
 
   return (

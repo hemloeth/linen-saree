@@ -10,7 +10,7 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import JsonLd from "@/components/JsonLd";
 import Link from "next/link";
 import { useStore } from "@/components/StoreProvider";
-import { fetchProductById } from "@/lib/api/products";
+import { fetchProductById, fetchProductRecommendations } from "@/lib/api/products";
 import { products as fallbackCatalog } from "@/lib/data";
 
 export default function ProductPageView({ productId }) {
@@ -18,6 +18,28 @@ export default function ProductPageView({ productId }) {
   const [directProduct, setDirectProduct] = useState(null);
   const [directLoading, setDirectLoading] = useState(false);
   const [directError, setDirectError] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+
+  // Fetch real backend recommendations from `/api/product/recommendations/:id`
+  useEffect(() => {
+    if (!productId) return;
+    let active = true;
+
+    fetchProductRecommendations(productId, { limit: 12 })
+      .then((res) => {
+        if (!active) return;
+        if (res.products && res.products.length > 0) {
+          setRecommendations(res.products.filter((p) => String(p.id) !== String(productId)));
+        }
+      })
+      .catch((err) => {
+        console.warn("Recommendations unavailable:", err?.message || err);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [productId]);
 
   // Always fetch full detail from `/api/product/:id` so full description and specifications are loaded
   useEffect(() => {
@@ -99,21 +121,26 @@ export default function ProductPageView({ productId }) {
     );
   }
 
-  const related = products
+  // Prefer real scored backend recommendations, falling back to category/collection matching
+  const backendRelated = recommendations.slice(0, 4);
+  const fallbackRelated = products
     .filter(
       (item) =>
         String(item.id) !== String(product.id) &&
         (item.category === product.category || item.fabric === product.fabric)
     )
-    .slice(0, 5);
+    .slice(0, 4);
+  const related = backendRelated.length > 0 ? backendRelated : fallbackRelated;
 
-  const more = products
+  const backendMore = recommendations.slice(4, 12);
+  const fallbackMore = products
     .filter(
       (item) =>
         String(item.id) !== String(product.id) &&
         !related.some((r) => String(r.id) === String(item.id))
     )
-    .slice(0, 10);
+    .slice(0, 8);
+  const more = backendMore.length > 0 ? backendMore : fallbackMore;
 
   const productSchema = {
     "@context": "https://schema.org",

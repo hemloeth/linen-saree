@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
 import productsApi, { fetchVideoProducts } from "@/lib/api/products";
 import { formatINR, discountPercent } from "@/lib/data";
 import { useStore } from "@/components/StoreProvider";
+import { useVideoCoordinator } from "@/components/video/useVideoCoordinator";
 
 function getFetchVideo() {
   if (typeof fetchVideoProducts === "function") return fetchVideoProducts;
@@ -39,110 +40,30 @@ function HeartIcon({ filled = false, size = 15 }) {
 }
 
 /**
- * Strict Viewport-Boundary Auto-Play Video Product Card for Home Section
- * - Plays strictly when fully on screen
- * - Stops immediately if cut off at top (under header) or bottom
- * - Starts immediately when entering from bottom once fully visible
+ * Coordinated Video Card
+ * - Controlled by centralized useVideoCoordinator
+ * - Desktop: up to 4 videos autoplay simultaneously without click/hover
+ * - Mobile: up to 2 videos autoplay simultaneously with fair scheduling
+ * - Pauses immediately when outside viewport or tab hidden
  */
-function VideoProductCard({ product }) {
+function VideoProductCard({ product, isPlaying, registerCard, unregisterCard, onTogglePlay }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
-  const [inView, setInView] = useState(false);
-  const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
-  const [manualPause, setManualPause] = useState(false);
   const { isWished, toggleWishlist } = useStore();
   const wished = isWished(product.id);
   const off = discountPercent(product);
 
   useEffect(() => {
     const el = containerRef.current;
+    const vid = videoRef.current;
     if (!el) return;
 
-    function evaluateVisibility() {
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || 800;
-      const headerHeight = 55; // Sticky topbar offset
-
-      // Fully visible on screen: top is not past header (top >= 40) and bottom is not past screen (bottom <= vh + 10)
-      const isFullyVisible =
-        rect.top >= (headerHeight - 15) &&
-        rect.bottom <= (vh + 15) &&
-        rect.height > 0;
-
-      setInView((prev) => {
-        if (prev !== isFullyVisible) {
-          if (!isFullyVisible) {
-            setManualPause(false);
-          }
-          return isFullyVisible;
-        }
-        return prev;
-      });
-    }
-
-    const observer = new IntersectionObserver(
-      () => {
-        evaluateVisibility();
-      },
-      {
-        threshold: [0, 0.1, 0.25, 0.5, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0],
-        rootMargin: "-50px 0px 0px 0px",
-      }
-    );
-    observer.observe(el);
-
-    window.addEventListener("scroll", evaluateVisibility, { passive: true });
-    window.addEventListener("resize", evaluateVisibility, { passive: true });
-
-    evaluateVisibility();
+    registerCard(product.id, el, vid);
 
     return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", evaluateVisibility);
-      window.removeEventListener("resize", evaluateVisibility);
+      unregisterCard(product.id);
     };
-  }, []);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (inView && !manualPause && !prefersReducedMotion) {
-      video.muted = true;
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setHasStartedPlaying(true))
-          .catch(() => {});
-      }
-    } else {
-      video.pause();
-      setHasStartedPlaying(false);
-    }
-  }, [inView, manualPause]);
-
-  const togglePlayback = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.paused) {
-      setManualPause(false);
-      video.muted = true;
-      video.play().then(() => setHasStartedPlaying(true)).catch(() => {});
-    } else {
-      setManualPause(true);
-      video.pause();
-      setHasStartedPlaying(false);
-    }
-  }, []);
-
-  const isVideoVisible = inView && hasStartedPlaying && !manualPause;
+  }, [product.id, registerCard, unregisterCard]);
 
   return (
     <article
@@ -162,7 +83,7 @@ function VideoProductCard({ product }) {
         className="absolute inset-0 z-0 block"
         aria-label={`View ${product.name} video`}
       >
-        {/* Always have poster image rendered */}
+        {/* Poster image */}
         <Image
           src={product.image}
           unoptimized={/^https?:\/\//.test(product.image || "")}
@@ -170,12 +91,12 @@ function VideoProductCard({ product }) {
           fill
           quality={100}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className={`object-cover object-top transition-all duration-700 ease-out group-hover:scale-105 ${
-            isVideoVisible ? "opacity-0" : "opacity-100"
+          className={`object-cover object-top transition-all duration-500 ease-out group-hover:scale-105 ${
+            isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         />
 
-        {/* Video rendered near screen, plays when in view */}
+        {/* Coordinated HTML5 video element */}
         {product.video && (
           <video
             ref={videoRef}
@@ -187,15 +108,14 @@ function VideoProductCard({ product }) {
             preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
-            onPlay={() => setHasStartedPlaying(true)}
             className={`h-full w-full object-cover object-top transition-opacity duration-300 group-hover:scale-105 ${
-              isVideoVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+              isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           />
         )}
 
-        {/* Full-card bottom gradient overlay - price only, no name */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/40 to-transparent pb-3.5 pt-16 px-3 sm:px-3.5 text-white">
+        {/* Full-card bottom gradient overlay - price & watch callout */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/40 to-transparent pb-3.5 pt-16 px-3 sm:px-4 text-white">
           <div className="flex items-baseline gap-2">
             <span className="font-inter text-sm sm:text-base font-bold text-white tracking-tight drop-shadow-sm">
               {formatINR(product.price)}
@@ -215,7 +135,7 @@ function VideoProductCard({ product }) {
         </div>
       </Link>
 
-      {/* Badges */}
+      {/* Discount Badge */}
       {off > 0 && (
         <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-col items-start gap-1">
           <span className="rounded bg-tomato px-1.5 py-[3px] font-inter text-[9px] font-bold text-white shadow-sm">
@@ -233,7 +153,7 @@ function VideoProductCard({ product }) {
           toggleWishlist(product.id);
         }}
         aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-        className={`absolute right-2.5 top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-md transition-all hover:scale-110 hover:bg-black/60 sm:h-8 sm:w-8 ${
+        className={`absolute right-2.5 top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-md transition-all hover:scale-110 hover:bg-black/60 cursor-pointer sm:h-8 sm:w-8 ${
           wished ? "text-tomato" : "text-white"
         }`}
       >
@@ -243,11 +163,19 @@ function VideoProductCard({ product }) {
       {/* Play / Pause Toggle Button */}
       <button
         type="button"
-        onClick={togglePlayback}
-        aria-label={isVideoVisible ? "Pause video" : "Play video"}
-        className="absolute bottom-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white shadow-md backdrop-blur-md transition-all hover:scale-110 hover:bg-pine-900 focus:outline-none sm:h-8 sm:w-8"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onTogglePlay(product.id);
+        }}
+        aria-label={isPlaying ? "Pause video" : "Play video"}
+        className="absolute bottom-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white shadow-md backdrop-blur-md transition-all hover:scale-110 hover:bg-pine-900 focus:outline-none cursor-pointer sm:h-8 sm:w-8"
       >
-        {isVideoVisible ? <PauseIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <PlayIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 ml-0.5" />}
+        {isPlaying ? (
+          <PauseIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+        ) : (
+          <PlayIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 ml-0.5" />
+        )}
       </button>
     </article>
   );
@@ -255,11 +183,13 @@ function VideoProductCard({ product }) {
 
 export default function VideoCollectionSection() {
   const { catalog } = useStore();
-  const catalogVideos = (catalog || []).filter((p) => p.video).slice(0, 8);
+  const catalogVideos = (catalog || []).filter((p) => p.video).slice(0, 4);
 
-  // Synchronously initialize with in-memory catalog so cards are in DOM on Frame 0 with ZERO flash
+  // Synchronously initialize with in-memory catalog so cards are in DOM with ZERO flash
   const [videoProducts, setVideoProducts] = useState(() => catalogVideos);
   const [loading, setLoading] = useState(() => catalogVideos.length === 0);
+
+  const { registerCard, unregisterCard, togglePlay, playingIds } = useVideoCoordinator();
 
   useEffect(() => {
     if (catalogVideos.length > 0 && videoProducts.length === 0) {
@@ -277,11 +207,12 @@ export default function VideoCollectionSection() {
       });
       return;
     }
-    fetchFn(8)
+    // Exactly 4 video cards for the homepage row
+    fetchFn(4)
       .then((data) => {
         if (!active) return;
         if (data.products && data.products.length > 0) {
-          setVideoProducts(data.products);
+          setVideoProducts(data.products.slice(0, 4));
         }
       })
       .catch((err) => {
@@ -343,6 +274,10 @@ export default function VideoCollectionSection() {
               <VideoProductCard
                 key={product.id}
                 product={product}
+                isPlaying={playingIds.has(String(product.id))}
+                registerCard={registerCard}
+                unregisterCard={unregisterCard}
+                onTogglePlay={togglePlay}
               />
             ))}
           </div>
