@@ -44,7 +44,7 @@ export default function ProductCarousel({
       id={id}
       className={`py-6 sm:py-8 lg:py-14 overflow-hidden ${tone === "linen" ? "bg-linen" : ""}`}
     >
-      <div className="mx-auto max-w-[1240px] px-3.5 sm:px-4 lg:px-10">
+      <div className="mx-auto max-w-[1240px] px-4 lg:px-10">
         <div className="mb-3.5 sm:mb-6 flex items-end justify-between gap-3">
           {/* Section title + subtitle */}
           <div className="min-w-0">
@@ -59,7 +59,7 @@ export default function ProductCarousel({
             </div>
           </div>
 
-          {/* Right side: View All text just above the right side of the product cards + desktop arrows */}
+          {/* Right side: View All text + desktop arrows */}
           <div className="flex items-center gap-3 shrink-0">
             {viewAllHref && (
               <Link
@@ -76,11 +76,12 @@ export default function ProductCarousel({
           </div>
         </div>
 
+        {/* Carousel / Grid Track - Exact left margin alignment with px-4 and -mx-4 */}
         <div
           ref={trackRef}
-          className={`no-scrollbar -mx-3.5 flex items-stretch snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth px-3.5 pt-1 pb-1 sm:-mx-4 sm:px-4 lg:mx-0 lg:grid ${colClass} lg:gap-6 lg:overflow-visible lg:px-0 lg:pt-0`}
+          className={`no-scrollbar -mx-4 flex items-stretch snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth px-4 pt-1 pb-1 lg:mx-0 lg:grid ${colClass} lg:gap-6 lg:overflow-visible lg:px-0 lg:pt-0`}
         >
-          {/* Wrap each child in a flex-basis container for proper mobile carousel sizing */}
+          {/* Product cards */}
           {Array.isArray(children)
             ? children.map((child, i) => (
                 <div
@@ -91,7 +92,44 @@ export default function ProductCarousel({
                 </div>
               ))
             : children}
+
+          {/* End-of-carousel View All Card (visible on mobile / swipe) */}
+          {viewAllHref && (
+            <div className="flex w-[44vw] min-w-[150px] max-w-[200px] shrink-0 snap-start sm:w-[42vw] sm:max-w-[220px] lg:hidden">
+              <Link
+                href={viewAllHref}
+                className="group flex h-full w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-pine-900/30 bg-white/80 p-4 text-center shadow-xs transition-all duration-300 hover:border-pine-900 hover:bg-pine-900 hover:text-white"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pine-900 text-white shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-white group-hover:text-pine-900">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </div>
+                <span className="mt-3 font-display text-xs font-semibold tracking-wider uppercase text-pine-950 group-hover:text-white transition-colors">
+                  {viewAllLabel}
+                </span>
+                <span className="mt-1 font-inter text-[10px] text-muted group-hover:text-white/80 transition-colors">
+                  Explore all &rarr;
+                </span>
+              </Link>
+            </div>
+          )}
         </div>
+
+        {/* Bottom View All CTA Link when both sections end */}
+        {viewAllHref && (
+          <div className="mt-5 flex justify-center sm:mt-8">
+            <Link
+              href={viewAllHref}
+              className="inline-flex items-center gap-2 rounded-full border border-pine-900/30 bg-white px-5 py-2 font-inter text-xs font-semibold text-pine-900 shadow-xs transition-all duration-200 hover:bg-pine-900 hover:text-white cursor-pointer"
+            >
+              <span>{viewAllLabel}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );
