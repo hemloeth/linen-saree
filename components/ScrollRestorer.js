@@ -99,13 +99,16 @@ export default function ScrollRestorer() {
     const isBackNavigation = isPopStateRef.current;
     isPopStateRef.current = false;
 
-    // Normal forward navigation via Link (e.g. clicking "View all" to /shop, or any link):
+    // Normal forward navigation via Link or initial page load/refresh:
     // ALWAYS start at the top (top: 0)! Never restore previous scroll on forward links.
     if (!isBackNavigation) {
       window.scrollTo({ top: 0, behavior: "instant" });
       sessionStorage.removeItem(TARGET_ID_KEY);
       sessionStorage.removeItem(LEGACY_PRODUCT_ID_KEY);
       sessionStorage.removeItem(FALLBACK_SCROLL_KEY);
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      });
       prevPathnameRef.current = pathname;
       return;
     }

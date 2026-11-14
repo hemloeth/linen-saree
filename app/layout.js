@@ -55,6 +55,13 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
       className={`${cinzel.variable} ${inter.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if('scrollRestoration' in history){history.scrollRestoration='manual';}}catch(e){}`,
+          }}
+        />
+      </head>
       <body
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-white overflow-x-clip w-full max-w-full"

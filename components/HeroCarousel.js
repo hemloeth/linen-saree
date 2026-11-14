@@ -42,9 +42,9 @@ export default function HeroCarousel() {
     <section aria-label="Featured saree collection">
       <h1 className="sr-only">Linen Saree — Authentic handcrafted pure linen sarees delivered PAN India</h1>
 
-      <div className="bg-pine-950 min-h-[calc(100dvh-var(--header-offset,84px))] lg:min-h-[calc(100vh-var(--header-offset,104px))] lg:grid lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
+      <div className="bg-pine-950 min-h-[calc(100dvh-var(--header-offset,84px))] lg:h-[calc(100vh-var(--header-offset,92px))] lg:min-h-0 lg:max-h-[calc(100vh-var(--header-offset,92px))] lg:grid lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
         {/* Desktop copy panel */}
-        <div className="relative z-10 hidden flex-col justify-center px-14 py-16 lg:flex xl:px-20">
+        <div className="relative z-10 hidden h-full flex-col justify-center px-10 py-8 lg:flex xl:px-16 2xl:px-20 overflow-hidden">
           <p className="font-inter text-[11px] font-medium uppercase tracking-[0.45em] text-aqua">
             Pure Linen Heritage
           </p>
@@ -89,8 +89,8 @@ export default function HeroCarousel() {
           </div>
         </div>
 
-        {/* Slides - Full height edge-to-edge on mobile and desktop without white gaps */}
-        <div className="relative h-[calc(100dvh-var(--header-offset,84px))] min-h-[520px] w-full overflow-hidden sm:h-[calc(100vh-var(--header-offset,88px))] lg:h-full lg:min-h-[calc(100vh-var(--header-offset,104px))]">
+        {/* Slides - Exactly fits within 100vh fold on desktop */}
+        <div className="relative h-[calc(100dvh-var(--header-offset,84px))] min-h-[520px] w-full overflow-hidden sm:h-[calc(100vh-var(--header-offset,88px))] lg:h-full lg:min-h-0 lg:max-h-full">
           {heroSlides.map((slide, i) => (
             <div
               key={slide.id}
