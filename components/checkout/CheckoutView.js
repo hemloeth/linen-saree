@@ -1031,23 +1031,23 @@ export default function CheckoutView() {
           </div>
 
           {/* Stepper Progress */}
-          <div className="flex items-center gap-2 font-inter text-xs">
+          <div className="flex w-full sm:w-auto items-center justify-start sm:justify-end gap-1.5 sm:gap-2.5 font-inter text-[11px] sm:text-xs overflow-x-auto no-scrollbar whitespace-nowrap py-1 shrink-0">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className={`flex items-center gap-2 rounded-full px-3.5 py-1.5 font-semibold transition ${
+              className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-3.5 py-1.5 font-semibold transition shrink-0 whitespace-nowrap cursor-pointer ${
                 step === 1
-                  ? "bg-pine-900 text-white"
-                  : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                  ? "bg-pine-900 text-white shadow-xs"
+                  : "border border-pine-950/15 bg-cream-card/70 text-pine-900 hover:bg-cream-card"
               }`}
             >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[11px]">
+              <span className={`flex h-4.5 w-4.5 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-[11px] font-bold ${step === 1 ? "bg-white/20 text-white" : "bg-pine-900 text-white"}`}>
                 {step > 1 ? "✓" : "1"}
               </span>
               <span>Delivery Address</span>
             </button>
 
-            <span className="text-muted">──</span>
+            <span aria-hidden="true" className="h-px w-3 sm:w-5 bg-pine-950/20 shrink-0" />
 
             <button
               type="button"
@@ -1056,13 +1056,13 @@ export default function CheckoutView() {
                 if (!err) setStep(2);
                 else setError(err);
               }}
-              className={`flex items-center gap-2 rounded-full px-3.5 py-1.5 font-semibold transition ${
+              className={`flex items-center gap-1.5 sm:gap-2 rounded-full px-3 sm:px-3.5 py-1.5 font-semibold transition shrink-0 whitespace-nowrap cursor-pointer ${
                 step === 2
-                  ? "bg-pine-900 text-white"
-                  : "bg-neutral-100 text-muted hover:text-pine-950"
+                  ? "bg-pine-900 text-white shadow-xs"
+                  : "border border-pine-950/10 bg-cream-surface text-muted hover:text-pine-950 hover:bg-cream-card/60"
               }`}
             >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[11px]">
+              <span className={`flex h-4.5 w-4.5 sm:h-5 sm:w-5 items-center justify-center rounded-full text-[10px] sm:text-[11px] font-bold ${step === 2 ? "bg-white/20 text-white" : "bg-pine-950/10 text-muted"}`}>
                 2
               </span>
               <span>Payment Option</span>
@@ -1088,6 +1088,80 @@ export default function CheckoutView() {
         <div className="grid gap-8 lg:grid-cols-[1fr_390px] lg:items-start">
           {/* Left Column */}
           <div className="space-y-6">
+            {/* Mobile Selected Products Preview (Placed at the top so selected sarees are immediately visible) */}
+            <div className="lg:hidden rounded-2xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
+              <div className="flex items-center justify-between border-b border-pine-950/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-pine-900 font-inter text-[11px] font-bold text-white">
+                    {items.length}
+                  </span>
+                  <h2 className="font-display text-sm font-semibold text-pine-950">
+                    {items.length === 1 ? "Selected Saree for Purchase" : "Selected Sarees for Purchase"}
+                  </h2>
+                </div>
+                <span className="font-inter text-xs font-bold text-pine-950">
+                  {formatINR(grandTotal)}
+                </span>
+              </div>
+
+              <ul className="divide-y divide-pine-950/10">
+                {items.map(({ product, qty }) => {
+                  const thumb = product.image || product.gallery?.[0] || "/images/product-1.png";
+                  return (
+                    <li key={product.id} className="flex items-center gap-3 py-3.5 first:pt-3">
+                      <div className="relative h-18 w-14 shrink-0 overflow-hidden rounded-lg border border-pine-950/10 bg-cream-surface">
+                        <Image
+                          src={thumb}
+                          alt={product.name}
+                          fill
+                          unoptimized={/^https?:\/\//.test(thumb)}
+                          className="object-cover object-top"
+                          sizes="56px"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h4 className="line-clamp-1 font-display text-xs font-semibold text-pine-950">
+                          {product.name}
+                        </h4>
+                        <p className="mt-0.5 text-[11px] text-muted">
+                          {product.fabric || "Pure Linen"} {product.colour ? `· ${product.colour}` : ""}
+                        </p>
+                        <p className="mt-1 font-inter text-xs font-semibold text-pine-950">
+                          {formatINR((product.price || 0) * qty)}
+                        </p>
+                      </div>
+
+                      <div className="shrink-0 flex items-center rounded border border-pine-900/20 bg-cream-surface/70">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (qty <= 1) remove(product.id);
+                            else setQty(product.id, qty - 1);
+                          }}
+                          aria-label={qty <= 1 ? "Remove item" : "Decrease quantity"}
+                          className="flex h-6 w-6 cursor-pointer items-center justify-center text-pine-900 hover:bg-cream-card transition text-xs font-bold"
+                        >
+                          {qty <= 1 ? "×" : "−"}
+                        </button>
+                        <span className="w-5 text-center font-inter text-xs font-semibold text-pine-950">
+                          {qty}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setQty(product.id, qty + 1)}
+                          aria-label="Increase quantity"
+                          className="flex h-6 w-6 cursor-pointer items-center justify-center text-pine-900 hover:bg-cream-card transition text-xs font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
             {step === 1 ? (
               /* STEP 1: Address Entry */
               <div className="space-y-6">
@@ -1110,7 +1184,7 @@ export default function CheckoutView() {
                             onClick={() => selectSavedAddress(addr)}
                             className={`cursor-pointer rounded-xl border p-4 text-xs transition-all ${
                               isSelected
-                                ? "border-pine-900 bg-neutral-50 shadow-xs ring-1 ring-pine-900"
+                                ? "border-pine-900 bg-cream-card/60 shadow-xs ring-1 ring-pine-900"
                                 : "border-pine-950/15 bg-white hover:border-pine-900/40"
                             }`}
                           >
@@ -1163,7 +1237,7 @@ export default function CheckoutView() {
               /* STEP 2: Payment Method */
               <div className="space-y-6">
                 {/* Delivery Address Summary Card */}
-                <div className="rounded-2xl border border-pine-950/10 bg-neutral-50 p-5 sm:p-6">
+                <div className="rounded-2xl border border-pine-950/10 bg-cream-surface/70 p-5 sm:p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-pine-900">
@@ -1188,7 +1262,7 @@ export default function CheckoutView() {
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-pine-950/20 bg-white px-3 py-1.5 text-xs font-semibold text-pine-900 transition hover:bg-neutral-50 shrink-0"
+                      className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-pine-950/20 bg-white px-3 py-1.5 text-xs font-semibold text-pine-900 transition hover:bg-cream-card shrink-0"
                     >
                       ✏️ Edit Address
                     </button>
@@ -1206,7 +1280,7 @@ export default function CheckoutView() {
                         Select your preferred payment mode to place your order.
                       </p>
                     </div>
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-pine-900">
+                    <span className="rounded-full bg-cream-card px-3 py-1 text-xs font-semibold text-pine-900">
                       Step 2 of 2
                     </span>
                   </div>
@@ -1216,7 +1290,7 @@ export default function CheckoutView() {
                     <label
                       className={`block cursor-pointer rounded-2xl border p-5 transition-all ${
                         paymentMethod === "cod"
-                          ? "border-pine-900 bg-neutral-50/70 shadow-sm ring-1 ring-pine-900"
+                          ? "border-pine-900 bg-cream-card/50 shadow-sm ring-1 ring-pine-900"
                           : "border-pine-950/10 bg-white hover:border-pine-950/30"
                       }`}
                     >
@@ -1253,7 +1327,7 @@ export default function CheckoutView() {
                     <label
                       className={`block cursor-pointer rounded-2xl border p-5 transition-all ${
                         paymentMethod === "online"
-                          ? "border-pine-900 bg-neutral-50/70 shadow-sm ring-1 ring-pine-900"
+                          ? "border-pine-900 bg-cream-card/50 shadow-sm ring-1 ring-pine-900"
                           : "border-pine-950/10 bg-white hover:border-pine-950/30"
                       }`}
                     >
@@ -1271,7 +1345,7 @@ export default function CheckoutView() {
                             <span className="font-inter text-sm font-semibold text-pine-950">
                               Prepaid Online Payment (Instant &amp; 100% Secure)
                             </span>
-                            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-800">
+                            <span className="rounded-full bg-tomato-light border border-tomato/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-tomato">
                               Fastest Dispatch
                             </span>
                           </div>
@@ -1321,7 +1395,7 @@ export default function CheckoutView() {
                       type="button"
                       onClick={submit}
                       disabled={!isCheckoutEnabled || placing}
-                      className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-pine-900 px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-pine-950 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-tomato px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-tomato-hover disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {!isCheckoutEnabled
                         ? "Checkout Paused"
@@ -1398,18 +1472,21 @@ export default function CheckoutView() {
           {/* Right Column: Order Summary */}
           <aside className="rounded-2xl border border-pine-950/10 bg-white p-6 shadow-sm sm:p-8">
             <div className="flex items-center justify-between border-b border-pine-950/10 pb-4">
-              <h2 className="font-display text-lg font-semibold text-pine-950">Order Summary</h2>
+              <h2 className="font-display text-lg font-semibold text-pine-950">
+                <span className="lg:hidden">Payment Summary</span>
+                <span className="hidden lg:inline">Order Summary</span>
+              </h2>
               <span className="text-xs font-semibold text-muted">
                 {items.length} {items.length === 1 ? "item" : "items"}
               </span>
             </div>
 
-            <ul className="mt-4 divide-y divide-pine-950/10 max-h-[360px] overflow-y-auto pr-1">
+            <ul className="hidden lg:block mt-4 divide-y divide-pine-950/10 max-h-[360px] overflow-y-auto pr-1">
               {items.map(({ product, qty }) => {
                 const thumb = product.image || product.gallery?.[0] || "/images/product-1.png";
                 return (
                   <li key={product.id} className="flex items-center gap-3.5 py-3.5">
-                    <div className="relative h-18 w-14 shrink-0 overflow-hidden rounded-lg border border-pine-950/10 bg-neutral-50">
+                    <div className="relative h-18 w-14 shrink-0 overflow-hidden rounded-lg border border-pine-950/10 bg-cream-surface">
                       <Image
                         src={thumb}
                         alt={product.name}
