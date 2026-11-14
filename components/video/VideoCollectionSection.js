@@ -148,7 +148,7 @@ function VideoProductCard({ product }) {
     <article
       id={`video-card-${product.id}`}
       ref={containerRef}
-      className="group relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-pine-950 shadow-md ring-1 ring-black/10 transition-all duration-300 hover:shadow-2xl"
+      className="group relative aspect-[9/16] w-full overflow-hidden rounded-lg bg-pine-950 shadow-md ring-1 ring-black/10 transition-all duration-300 hover:shadow-2xl"
     >
       <Link
         href={`/product/${product.id}?media=video`}
@@ -334,7 +334,7 @@ export default function VideoCollectionSection() {
         {loading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-[9/16] animate-pulse rounded-2xl bg-chip" />
+              <div key={i} className="aspect-[9/16] animate-pulse rounded-lg bg-chip" />
             ))}
           </div>
         ) : (
