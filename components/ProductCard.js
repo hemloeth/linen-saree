@@ -87,9 +87,13 @@ export default function ProductCard({ product, variant = "default" }) {
     setIsOpening(true);
     if (typeof window !== "undefined") {
       try {
+        const scrollY = window.scrollY;
+        if (scrollY > 0) {
+          sessionStorage.setItem(`hoq_scroll_pos_${window.location.pathname}`, String(scrollY));
+          sessionStorage.setItem("hoq_last_scroll_y", String(scrollY));
+        }
         sessionStorage.setItem("hoq_last_clicked_product_id", String(product.id));
         sessionStorage.setItem("hoq_last_clicked_target_id", `product-card-${product.id}`);
-        sessionStorage.setItem(`hoq_scroll_pos_${window.location.pathname}`, String(window.scrollY));
       } catch {
         /* ignore */
       }
