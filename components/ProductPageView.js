@@ -18,11 +18,8 @@ export default function ProductPageView({ productId }) {
   const [directLoading, setDirectLoading] = useState(false);
   const [directError, setDirectError] = useState(null);
 
-  // First check if product is already in catalog
-  const catalogMatch = products.find((p) => String(p.id) === String(productId));
-
+  // Always fetch full detail from `/api/product/:id` so full description and specifications are loaded
   useEffect(() => {
-    if (catalogMatch) return;
     if (!productId) return;
 
     let active = true;
@@ -48,10 +45,12 @@ export default function ProductPageView({ productId }) {
     return () => {
       active = false;
     };
-  }, [productId, catalogMatch]);
+  }, [productId]);
 
-  const product = catalogMatch || directProduct;
-  const isLoading = catalogLoading || (!product && directLoading);
+  // Use the full detail product first, fallback to catalogMatch while loading
+  const catalogMatch = products.find((p) => String(p.id) === String(productId));
+  const product = directProduct || catalogMatch;
+  const isLoading = !product && (catalogLoading || directLoading);
   const isError = directError || (!product && !isLoading && catalogError);
 
   if (!product) {

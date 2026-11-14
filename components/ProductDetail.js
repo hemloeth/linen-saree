@@ -118,11 +118,21 @@ export default function ProductDetail({ product }) {
 
           <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-1">
             <p className="font-inter text-[12px] font-semibold text-pine-950">
-              Fabric: <span className="font-normal text-muted">{product.fabric}</span>
+              Fabric: <span className="font-normal text-muted">{product.fabric || product.material || "Pure Linen"}</span>
             </p>
             <p className="font-inter text-[12px] font-semibold text-pine-950">
-              Size: <span className="font-normal text-muted">{product.size ?? "Free size"}</span>
+              Length: <span className="font-normal text-muted">{product.sareeSize || product.size || "5.5 mtr"}</span>
             </p>
+            {product.blouseSize && (
+              <p className="font-inter text-[12px] font-semibold text-pine-950">
+                Blouse: <span className="font-normal text-muted">{product.blouseSize}</span>
+              </p>
+            )}
+            {product.colour && (
+              <p className="font-inter text-[12px] font-semibold text-pine-950">
+                Color: <span className="font-normal text-muted">{product.colour}</span>
+              </p>
+            )}
           </div>
 
           <div className="mt-3 flex items-center gap-2">
@@ -170,13 +180,76 @@ export default function ProductDetail({ product }) {
             ))}
           </ul>
 
-          {/* Details accordion */}
-          <div id="product-details" className="mt-6">
-            <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
-              Description
-            </h2>
-            <p className="mb-4 text-[13px] leading-relaxed text-muted">{product.description}</p>
-            <Accordion items={product.details} />
+          {/* Product Specifications & Details Card */}
+          <div id="product-details" className="mt-8 space-y-6">
+            {/* Description Section */}
+            <div className="rounded-xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
+              <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
+                Product Description
+              </h2>
+              <p className="font-sans text-[13.5px] leading-relaxed text-ink/80 whitespace-pre-line">
+                {product.description ||
+                  `Crafted from authentic handwoven ${product.fabric || "pure linen"}, this drape features a breathable, lightweight texture finished with intricate hand-detailed borders. Perfect for festive celebrations, formal gatherings and comfortable all-day wear.`}
+              </p>
+            </div>
+
+            {/* Structured Specifications Grid */}
+            <div className="rounded-xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
+              <h2 className="mb-3.5 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
+                Product Specifications
+              </h2>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                  <dt className="font-inter text-xs font-semibold text-pine-950">Material / Fabric</dt>
+                  <dd className="font-inter text-xs text-muted capitalize">{product.fabric || product.material || "Pure Linen"}</dd>
+                </div>
+                <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                  <dt className="font-inter text-xs font-semibold text-pine-950">Saree Length</dt>
+                  <dd className="font-inter text-xs text-muted">{product.sareeSize || "5.5 meters"}</dd>
+                </div>
+                {product.blouseSize && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">Blouse Piece</dt>
+                    <dd className="font-inter text-xs text-muted">{product.blouseSize}</dd>
+                  </div>
+                )}
+                {product.colour && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">Color</dt>
+                    <dd className="font-inter text-xs text-muted">{product.colour}</dd>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                  <dt className="font-inter text-xs font-semibold text-pine-950">Wash & Care</dt>
+                  <dd className="font-inter text-xs text-muted">{product.washCare || "Dry clean recommended"}</dd>
+                </div>
+                <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                  <dt className="font-inter text-xs font-semibold text-pine-950">Dispatch Time</dt>
+                  <dd className="font-inter text-xs text-muted">{product.dispatch || "2-3 business days"}</dd>
+                </div>
+                {product.sku && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">SKU Code</dt>
+                    <dd className="font-inter text-xs font-mono text-muted">{product.sku}</dd>
+                  </div>
+                )}
+              </dl>
+
+              {product.disclaimer && (
+                <div className="mt-4 rounded-lg bg-linen/50 p-3 text-[11px] leading-relaxed text-muted">
+                  <span className="font-semibold text-pine-950">Note: </span>
+                  {product.disclaimer}
+                </div>
+              )}
+            </div>
+
+            {/* Accordion for Delivery & Shipping details */}
+            <div className="rounded-xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
+              <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
+                Shipping & Returns
+              </h2>
+              <Accordion items={product.details} />
+            </div>
           </div>
         </div>
       </div>
