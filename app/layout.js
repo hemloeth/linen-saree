@@ -5,6 +5,7 @@ import StoreProvider from "@/components/StoreProvider";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import JsonLd from "@/components/JsonLd";
 import TopProgressBar from "@/components/TopProgressBar";
+import ScrollRestorer from "@/components/ScrollRestorer";
 
 const organizationSchema = {
   "@context": "https://schema.org",
@@ -60,6 +61,9 @@ export default function RootLayout({ children }) {
       >
         <Suspense fallback={null}>
           <TopProgressBar />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ScrollRestorer />
         </Suspense>
         <StoreProvider>
           {children}

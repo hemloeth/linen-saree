@@ -85,7 +85,15 @@ export default function ProductCard({ product, variant = "default" }) {
 
   const handleOpenProduct = useCallback(() => {
     setIsOpening(true);
-  }, []);
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("hoq_last_clicked_product_id", String(product.id));
+        sessionStorage.setItem(`hoq_scroll_pos_${window.location.pathname}`, String(window.scrollY));
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [product.id]);
 
   // Start image cycling only on desktop hover (intent-based pre-warming)
   const startCycle = useCallback(() => {
@@ -124,6 +132,7 @@ export default function ProductCard({ product, variant = "default" }) {
 
   return (
     <article
+      id={`product-card-${product.id}`}
       className={`group relative flex h-full w-full flex-col justify-between rounded-lg border border-pine-950/[0.07] bg-white shadow-[0_1px_3px_rgba(9,43,43,0.03)] transition-all duration-200 active:scale-[0.985] hover:border-pine-950/20 hover:shadow-[0_8px_22px_-8px_rgba(9,43,43,0.12)] ${
         isCompact ? "text-[11px]" : ""
       }`}

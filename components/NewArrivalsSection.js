@@ -56,12 +56,15 @@ function ProductSkeletonGrid({ count = 8 }) {
   );
 }
 
+// In-memory cache to preserve loaded pages and products across navigation
+let cachedNewArrivals = null;
+
 export default function NewArrivalsSection() {
-  const [products, setProducts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [products, setProducts] = useState(() => cachedNewArrivals?.products || []);
+  const [page, setPage] = useState(() => cachedNewArrivals?.page || 1);
+  const [totalPages, setTotalPages] = useState(() => cachedNewArrivals?.totalPages || 1);
+  const [totalProducts, setTotalProducts] = useState(() => cachedNewArrivals?.totalProducts || 0);
+  const [initialLoading, setInitialLoading] = useState(() => !cachedNewArrivals);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const isMountedRef = useRef(true);
@@ -69,6 +72,13 @@ export default function NewArrivalsSection() {
   useEffect(() => {
     isMountedRef.current = true;
     let active = true;
+
+    // If already loaded in memory (e.g. user returned from product details), skip re-fetch!
+    if (cachedNewArrivals && cachedNewArrivals.products?.length > 0) {
+      return () => {
+        isMountedRef.current = false;
+      };
+    }
 
     const fetchFn = getFetchPaginated();
     if (!fetchFn) {
@@ -91,10 +101,19 @@ export default function NewArrivalsSection() {
     })
       .then((data) => {
         if (!active) return;
-        setProducts(data.products || []);
+        const loaded = data.products || [];
+        const tPages = data.pagination?.totalPages || 1;
+        const tCount = data.pagination?.totalProducts || loaded.length || 0;
+        setProducts(loaded);
         setPage(1);
-        setTotalPages(data.pagination?.totalPages || 1);
-        setTotalProducts(data.pagination?.totalProducts || data.products?.length || 0);
+        setTotalPages(tPages);
+        setTotalProducts(tCount);
+        cachedNewArrivals = {
+          products: loaded,
+          page: 1,
+          totalPages: tPages,
+          totalProducts: tCount,
+        };
       })
       .catch((err) => {
         if (!active) return;
@@ -153,7 +172,14 @@ export default function NewArrivalsSection() {
       setProducts((prev) => {
         const existingIds = new Set(prev.map((p) => p.id));
         const uniqueIncoming = (data.products || []).filter((p) => !existingIds.has(p.id));
-        return [...prev, ...uniqueIncoming];
+        const combined = [...prev, ...uniqueIncoming];
+        cachedNewArrivals = {
+          products: combined,
+          page: nextPage,
+          totalPages: data.pagination?.totalPages || totalPages,
+          totalProducts: data.pagination?.totalProducts || totalProducts,
+        };
+        return combined;
       });
       setPage(nextPage);
       if (data.pagination?.totalPages) {
