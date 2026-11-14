@@ -56,15 +56,17 @@ function ProductSkeletonGrid({ count = 8 }) {
   );
 }
 
-// In-memory cache to preserve loaded pages and products across navigation
+// Bounded in-memory cache with 60-second revalidation TTL
+const CACHE_TTL_MS = 60 * 1000;
 let cachedNewArrivals = null;
 
 export default function NewArrivalsSection() {
-  const [products, setProducts] = useState(() => cachedNewArrivals?.products || []);
-  const [page, setPage] = useState(() => cachedNewArrivals?.page || 1);
-  const [totalPages, setTotalPages] = useState(() => cachedNewArrivals?.totalPages || 1);
-  const [totalProducts, setTotalProducts] = useState(() => cachedNewArrivals?.totalProducts || 0);
-  const [initialLoading, setInitialLoading] = useState(() => !cachedNewArrivals);
+  const isCacheValid = cachedNewArrivals && Date.now() - (cachedNewArrivals.timestamp || 0) < CACHE_TTL_MS;
+  const [products, setProducts] = useState(() => (isCacheValid ? cachedNewArrivals.products : []));
+  const [page, setPage] = useState(() => (isCacheValid ? cachedNewArrivals.page : 1));
+  const [totalPages, setTotalPages] = useState(() => (isCacheValid ? cachedNewArrivals.totalPages : 1));
+  const [totalProducts, setTotalProducts] = useState(() => (isCacheValid ? cachedNewArrivals.totalProducts : 0));
+  const [initialLoading, setInitialLoading] = useState(() => !isCacheValid || !products.length);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const isMountedRef = useRef(true);
@@ -73,8 +75,9 @@ export default function NewArrivalsSection() {
     isMountedRef.current = true;
     let active = true;
 
-    // If already loaded in memory (e.g. user returned from product details), skip re-fetch!
-    if (cachedNewArrivals && cachedNewArrivals.products?.length > 0) {
+    // If cache is fresh, skip redundant initial network request
+    if (cachedNewArrivals && Date.now() - (cachedNewArrivals.timestamp || 0) < CACHE_TTL_MS && cachedNewArrivals.products?.length > 0) {
+      setInitialLoading(false);
       return () => {
         isMountedRef.current = false;
       };
@@ -113,6 +116,7 @@ export default function NewArrivalsSection() {
           page: 1,
           totalPages: tPages,
           totalProducts: tCount,
+          timestamp: Date.now(),
         };
       })
       .catch((err) => {
@@ -178,6 +182,7 @@ export default function NewArrivalsSection() {
           page: nextPage,
           totalPages: data.pagination?.totalPages || totalPages,
           totalProducts: data.pagination?.totalProducts || totalProducts,
+          timestamp: Date.now(),
         };
         return combined;
       });

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useStore } from "@/components/StoreProvider";
 import { formatINR, discountPercent } from "@/lib/data";
 import { useVideoCoordinator } from "@/components/video/useVideoCoordinator";
+import { fetchVideoProducts } from "@/lib/api/products";
 
 function PlayIcon({ className = "h-4 w-4" }) {
   return (
@@ -34,9 +35,10 @@ function HeartIcon({ filled = false, size = 15 }) {
 /**
  * Coordinated Video Card for Live Collection Page
  */
-function LiveVideoCard({ product, isPlaying, registerCard, unregisterCard, onTogglePlay }) {
+function LiveVideoCard({ product, isPlaying, isNearViewport, registerCard, unregisterCard, onTogglePlay }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
+  const [hasRenderedFrame, setHasRenderedFrame] = useState(false);
   const { isWished, toggleWishlist } = useStore();
   const wished = isWished(product.id);
   const off = discountPercent(product);
@@ -52,6 +54,8 @@ function LiveVideoCard({ product, isPlaying, registerCard, unregisterCard, onTog
       unregisterCard(product.id);
     };
   }, [product.id, registerCard, unregisterCard]);
+
+  const showVideo = isPlaying && hasRenderedFrame;
 
   return (
     <article
@@ -71,7 +75,7 @@ function LiveVideoCard({ product, isPlaying, registerCard, unregisterCard, onTog
         className="absolute inset-0 z-0 block"
         aria-label={`View ${product.name} video`}
       >
-        {/* Poster image always present */}
+        {/* Poster image always present until video frame renders */}
         <Image
           src={product.image}
           unoptimized={/^https?:\/\//.test(product.image || "")}
@@ -80,24 +84,28 @@ function LiveVideoCard({ product, isPlaying, registerCard, unregisterCard, onTog
           quality={100}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className={`object-cover object-top transition-all duration-500 ease-out group-hover:scale-105 ${
-            isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"
+            showVideo ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         />
 
-        {/* Video always mounted, coordinated playback */}
+        {/* Video lazy-attached and metadata preloaded when near viewport */}
         {product.video && (
           <video
             ref={videoRef}
-            src={product.video}
+            src={isNearViewport || isPlaying ? product.video : undefined}
             poster={product.image}
             loop
             muted
             playsInline
-            preload="metadata"
+            preload={isNearViewport || isPlaying ? "metadata" : "none"}
             disablePictureInPicture
             disableRemotePlayback
+            onPlaying={() => setHasRenderedFrame(true)}
+            onPause={() => {
+              if (!isPlaying) setHasRenderedFrame(false);
+            }}
             className={`h-full w-full object-cover object-top transition-opacity duration-300 group-hover:scale-105 ${
-              isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
+              showVideo ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           />
         )}
@@ -170,12 +178,38 @@ function LiveVideoCard({ product, isPlaying, registerCard, unregisterCard, onTog
 }
 
 export default function LiveVideoCollection() {
-  const { catalog, catalogLoading, catalogError } = useStore();
+  const { catalog: storeCatalog } = useStore();
+  const [videoProducts, setVideoProducts] = useState(() => (storeCatalog || []).filter((p) => p.video));
+  const [loading, setLoading] = useState(() => videoProducts.length === 0);
+  const [error, setError] = useState(null);
   const [active, setActive] = useState("all");
 
-  const { registerCard, unregisterCard, togglePlay, playingIds } = useVideoCoordinator();
+  const { registerCard, unregisterCard, togglePlay, playingIds, nearViewportIds } = useVideoCoordinator();
 
-  const videos = useMemo(() => catalog.filter((p) => p.video), [catalog]);
+  // Fetch all video products using specialized paginated video endpoint
+  useEffect(() => {
+    let activeEffect = true;
+    fetchVideoProducts(100)
+      .then((res) => {
+        if (!activeEffect) return;
+        if (res.products && res.products.length > 0) {
+          setVideoProducts(res.products);
+        }
+      })
+      .catch((err) => {
+        if (!activeEffect) return;
+        setError(err.message || "Failed to load videos.");
+      })
+      .finally(() => {
+        if (activeEffect) setLoading(false);
+      });
+
+    return () => {
+      activeEffect = false;
+    };
+  }, []);
+
+  const videos = videoProducts;
   const fabrics = useMemo(
     () => ["all", ...new Set(videos.map((p) => p.fabric).filter(Boolean))],
     [videos]
@@ -206,13 +240,13 @@ export default function LiveVideoCollection() {
         </span>
       </div>
 
-      {catalogError && (
+      {error && (
         <p className="mt-5 text-sm text-red-700" role="alert">
-          {catalogError}
+          {error}
         </p>
       )}
 
-      {catalogLoading && (
+      {loading && (
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="aspect-[9/16] animate-pulse rounded-lg bg-chip" />
@@ -240,7 +274,7 @@ export default function LiveVideoCollection() {
         </div>
       )}
 
-      {!catalogLoading && !visible.length && (
+      {!loading && !visible.length && (
         <p className="mt-10 text-sm text-muted">No product videos are available yet.</p>
       )}
 
@@ -250,6 +284,7 @@ export default function LiveVideoCollection() {
             key={p.id}
             product={p}
             isPlaying={playingIds.has(String(p.id))}
+            isNearViewport={nearViewportIds.has(String(p.id))}
             registerCard={registerCard}
             unregisterCard={unregisterCard}
             onTogglePlay={togglePlay}

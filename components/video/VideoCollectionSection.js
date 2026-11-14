@@ -42,13 +42,15 @@ function HeartIcon({ filled = false, size = 15 }) {
 /**
  * Coordinated Video Card
  * - Controlled by centralized useVideoCoordinator
- * - Desktop: up to 4 videos autoplay simultaneously without click/hover
+ * - Desktop: exactly 4 videos per row, all four autoplay simultaneously when visible
  * - Mobile: up to 2 videos autoplay simultaneously with fair scheduling
- * - Pauses immediately when outside viewport or tab hidden
+ * - Lazy-attached sources and zero offscreen metadata overhead
+ * - Poster remains visible until first frame actually renders (zero black flash)
  */
-function VideoProductCard({ product, isPlaying, registerCard, unregisterCard, onTogglePlay }) {
+function VideoProductCard({ product, isPlaying, isNearViewport, registerCard, unregisterCard, onTogglePlay }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
+  const [hasRenderedFrame, setHasRenderedFrame] = useState(false);
   const { isWished, toggleWishlist } = useStore();
   const wished = isWished(product.id);
   const off = discountPercent(product);
@@ -64,6 +66,8 @@ function VideoProductCard({ product, isPlaying, registerCard, unregisterCard, on
       unregisterCard(product.id);
     };
   }, [product.id, registerCard, unregisterCard]);
+
+  const showVideo = isPlaying && hasRenderedFrame;
 
   return (
     <article
@@ -92,24 +96,28 @@ function VideoProductCard({ product, isPlaying, registerCard, unregisterCard, on
           quality={100}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className={`object-cover object-top transition-all duration-500 ease-out group-hover:scale-105 ${
-            isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"
+            showVideo ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         />
 
-        {/* Coordinated HTML5 video element */}
+        {/* Coordinated HTML5 video element with lazy-attached source */}
         {product.video && (
           <video
             ref={videoRef}
-            src={product.video}
+            src={isNearViewport || isPlaying ? product.video : undefined}
             poster={product.image}
             loop
             muted
             playsInline
-            preload="metadata"
+            preload={isNearViewport || isPlaying ? "metadata" : "none"}
             disablePictureInPicture
             disableRemotePlayback
+            onPlaying={() => setHasRenderedFrame(true)}
+            onPause={() => {
+              if (!isPlaying) setHasRenderedFrame(false);
+            }}
             className={`h-full w-full object-cover object-top transition-opacity duration-300 group-hover:scale-105 ${
-              isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
+              showVideo ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           />
         )}
@@ -189,7 +197,7 @@ export default function VideoCollectionSection() {
   const [videoProducts, setVideoProducts] = useState(() => catalogVideos);
   const [loading, setLoading] = useState(() => catalogVideos.length === 0);
 
-  const { registerCard, unregisterCard, togglePlay, playingIds } = useVideoCoordinator();
+  const { registerCard, unregisterCard, togglePlay, playingIds, nearViewportIds } = useVideoCoordinator();
 
   useEffect(() => {
     if (catalogVideos.length > 0 && videoProducts.length === 0) {
@@ -275,6 +283,7 @@ export default function VideoCollectionSection() {
                 key={product.id}
                 product={product}
                 isPlaying={playingIds.has(String(product.id))}
+                isNearViewport={nearViewportIds.has(String(product.id))}
                 registerCard={registerCard}
                 unregisterCard={unregisterCard}
                 onTogglePlay={togglePlay}

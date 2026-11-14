@@ -9,14 +9,21 @@ import { useEffect, useRef, useState, useCallback } from "react";
  * - Desktop (>= 1024px): Up to 4 videos autoplay simultaneously when eligible and visible
  * - Mobile (< 1024px): Up to 2 videos autoplay simultaneously when eligible and visible
  * - Centralized IntersectionObserver: single observer for all cards with hysteresis
+ * - Guard against redundant play()/pause() calls: checks video.paused before mutating
+ * - Render throttling: only triggers setPlayingIds when the active set actually changes
+ * - Lazy resource management: provides nearViewportIds so offscreen videos don't fetch metadata
  * - Automatic pause on tab hidden (document.visibilityState === 'hidden')
  * - Respects prefers-reduced-motion and navigator.connection.saveData
  * - Fair rotation scheduling on mobile when more than 2 videos are eligible
- * - Eliminates play/pause thrashing during minor scroll movements
+ * - Reset condition for manual pause: resets when card completely leaves the viewport
  */
 export function useVideoCoordinator() {
   const cardsRef = useRef(new Map()); // id -> { element, video, ratio, isIntersecting, manualPause, isPlaying }
+  const playingIdsRef = useRef(new Set());
   const [playingIds, setPlayingIds] = useState(() => new Set());
+  const nearViewportIdsRef = useRef(new Set());
+  const [nearViewportIds, setNearViewportIds] = useState(() => new Set());
+
   const rotationTimerRef = useRef(null);
   const rotationIndexRef = useRef(0);
   const observerRef = useRef(null);
@@ -26,7 +33,10 @@ export function useVideoCoordinator() {
 
     // 1. If tab is hidden, pause all
     if (document.visibilityState === "hidden") {
-      setPlayingIds(new Set());
+      if (playingIdsRef.current.size > 0) {
+        playingIdsRef.current = new Set();
+        setPlayingIds(new Set());
+      }
       cardsRef.current.forEach(({ video }) => {
         if (video && !video.paused) {
           video.pause();
@@ -40,7 +50,10 @@ export function useVideoCoordinator() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const saveData = Boolean(navigator?.connection?.saveData);
     if (prefersReducedMotion || saveData) {
-      setPlayingIds(new Set());
+      if (playingIdsRef.current.size > 0) {
+        playingIdsRef.current = new Set();
+        setPlayingIds(new Set());
+      }
       cardsRef.current.forEach(({ video }) => {
         if (video && !video.paused) {
           video.pause();
@@ -77,18 +90,22 @@ export function useVideoCoordinator() {
 
     const nextPlayingSet = new Set(selectedIds);
 
-    // Apply playback directly to video elements to minimize React re-render lag
+    // Apply playback directly to video elements to minimize latency and redundant operations
     cardsRef.current.forEach((data, id) => {
       const shouldPlay = nextPlayingSet.has(id);
       data.isPlaying = shouldPlay;
       if (data.video) {
         if (shouldPlay) {
-          data.video.muted = true;
-          const playPromise = data.video.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(() => {});
+          // Do not call play() if already playing
+          if (data.video.paused) {
+            data.video.muted = true;
+            const playPromise = data.video.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(() => {});
+            }
           }
         } else {
+          // Do not call pause() if already paused
           if (!data.video.paused) {
             data.video.pause();
           }
@@ -96,7 +113,16 @@ export function useVideoCoordinator() {
       }
     });
 
-    setPlayingIds(nextPlayingSet);
+    // Throttled React state update: only trigger re-render if the active ID set actually changed!
+    const current = playingIdsRef.current;
+    const hasChanged =
+      current.size !== nextPlayingSet.size ||
+      [...nextPlayingSet].some((id) => !current.has(id));
+
+    if (hasChanged) {
+      playingIdsRef.current = nextPlayingSet;
+      setPlayingIds(nextPlayingSet);
+    }
   }, []);
 
   useEffect(() => {
@@ -104,19 +130,40 @@ export function useVideoCoordinator() {
 
     observerRef.current = new IntersectionObserver(
       (entries) => {
+        let nearChanged = false;
+        const nextNear = new Set(nearViewportIdsRef.current);
+
         entries.forEach((entry) => {
           const id = entry.target.dataset.videoId;
           if (id && cardsRef.current.has(id)) {
             const data = cardsRef.current.get(id);
             data.ratio = entry.intersectionRatio;
             data.isIntersecting = entry.isIntersecting;
+
+            // Reset manual pause once card has completely scrolled out of the viewport
+            if (entry.intersectionRatio === 0) {
+              data.manualPause = false;
+            }
+
+            if (entry.isIntersecting || entry.intersectionRatio > 0) {
+              if (!nextNear.has(id)) {
+                nextNear.add(id);
+                nearChanged = true;
+              }
+            }
           }
         });
+
+        if (nearChanged) {
+          nearViewportIdsRef.current = nextNear;
+          setNearViewportIds(nextNear);
+        }
+
         updatePlayback();
       },
       {
         threshold: [0, 0.15, 0.3, 0.5, 0.7, 0.85, 1.0],
-        rootMargin: "-20px 0px -20px 0px",
+        rootMargin: "300px 0px 300px 0px", // Preload metadata when within 300px of viewport
       }
     );
 
@@ -192,12 +239,13 @@ export function useVideoCoordinator() {
       data.manualPause = !data.manualPause;
       if (data.manualPause) {
         data.isPlaying = false;
-        if (data.video) data.video.pause();
-        setPlayingIds((prev) => {
-          const next = new Set(prev);
-          next.delete(sid);
-          return next;
-        });
+        if (data.video && !data.video.paused) {
+          data.video.pause();
+        }
+        const next = new Set(playingIdsRef.current);
+        next.delete(sid);
+        playingIdsRef.current = next;
+        setPlayingIds(next);
       } else {
         updatePlayback();
       }
@@ -210,5 +258,6 @@ export function useVideoCoordinator() {
     unregisterCard,
     togglePlay,
     playingIds,
+    nearViewportIds,
   };
 }

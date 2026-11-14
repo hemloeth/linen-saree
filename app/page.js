@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,8 +11,9 @@ import ProductCarousel from "@/components/ProductCarousel";
 import ProductCard from "@/components/ProductCard";
 import VideoCollectionSection from "@/components/video/VideoCollectionSection";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
-import { services } from "@/lib/data";
+import { services, products as fallbackProducts } from "@/lib/data";
 import { useStore } from "@/components/StoreProvider";
+import { fetchPaginatedProducts } from "@/lib/api/products";
 
 function getBestsellers(products) {
   const explicit = products.filter((p) => p.isBestSeller);
@@ -33,10 +35,34 @@ function getTrending(products, bestsellers) {
 }
 
 export default function HomePage() {
-  const { catalog: products, catalogError } = useStore();
+  const { catalog: storeProducts, catalogError } = useStore();
+  const initialPool = storeProducts.length > 0 ? storeProducts : fallbackProducts;
 
-  const bestsellers = getBestsellers(products);
-  const trending = getTrending(products, bestsellers);
+  const [bestsellers, setBestsellers] = useState(() => getBestsellers(initialPool));
+  const [trending, setTrending] = useState(() => getTrending(initialPool, getBestsellers(initialPool)));
+
+  // Use case-specific paginated fetching with bounded caching: only fetches what homepage needs!
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetchPaginatedProducts({ isBestSeller: true, limit: 8 }).catch(() => ({ products: [] })),
+      fetchPaginatedProducts({ sortBy: "featured", limit: 12 }).catch(() => ({ products: [] })),
+    ]).then(([bestRes, trendRes]) => {
+      if (!active) return;
+      if (bestRes.products?.length > 0) {
+        setBestsellers(bestRes.products.slice(0, 8));
+      }
+      if (trendRes.products?.length > 0) {
+        const bestIds = new Set((bestRes.products || []).map((p) => p.id));
+        const filteredTrend = trendRes.products.filter((p) => !bestIds.has(p.id));
+        setTrending(filteredTrend.slice(0, 8));
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <>

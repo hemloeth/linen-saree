@@ -53,6 +53,11 @@ export function StoreProvider({ children }) {
   const [restored, setRestored] = useState(false);
   const toastTimer = useRef(null);
 
+  // Authoritative refs to eliminate stale closures across concurrent operations
+  const itemsRef = useRef([]);
+  const catalogRef = useRef([]);
+  const isFetchingCatalogRef = useRef(false);
+
   // Concurrency guard refs to prevent duplicate synchronization operations
   const isSyncingCartRef = useRef(false);
   const isSyncingWishlistRef = useRef(false);
@@ -217,44 +222,28 @@ export function StoreProvider({ children }) {
     };
   }, [user, authInitialized]);
 
-  // 3. Real Product Catalog Loading: Fetch all products without demo fallbacks
-  useEffect(() => {
-    if (!apiConfigured) {
-      setCatalogLoading(false);
-      setCatalogError("API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL.");
-      return;
+  // 3. On-Demand Product Catalog Loading: Fetches only when explicitly requested by listing components
+  const loadCatalog = useCallback(async () => {
+    if (catalogRef.current.length > 0) {
+      return catalogRef.current;
     }
-
-    let active = true;
-
-    fetchAllProducts()
-      .then((prods) => {
-        if (!active) return;
-        setCatalog(prods || []);
-        setCatalogError(null);
-      })
-      .catch((error) => {
-        if (!active) return;
-        // Fallback to paginated endpoint if batch fails
-        fetchPaginatedProducts({ page: 1, limit: 100, sortBy: "newest" })
-          .then((res) => {
-            if (!active) return;
-            setCatalog(res.products || []);
-            setCatalogError(null);
-          })
-          .catch((err2) => {
-            if (!active) return;
-            setCatalog([]);
-            setCatalogError(err2.message || error.message || "Failed to load product catalog.");
-          });
-      })
-      .finally(() => {
-        if (active) setCatalogLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
+    if (isFetchingCatalogRef.current) return [];
+    isFetchingCatalogRef.current = true;
+    setCatalogLoading(true);
+    try {
+      const res = await fetchPaginatedProducts({ page: 1, limit: 100, sortBy: "newest" });
+      const prods = res.products || [];
+      catalogRef.current = prods;
+      setCatalog(prods);
+      setCatalogError(null);
+      return prods;
+    } catch (err) {
+      setCatalogError(err.message || "Failed to load product catalog.");
+      return [];
+    } finally {
+      setCatalogLoading(false);
+      isFetchingCatalogRef.current = false;
+    }
   }, []);
 
   // 4. Merchandising (Categories & Collections)
@@ -419,7 +408,21 @@ export function StoreProvider({ children }) {
     }
   }, [user]);
 
-  // Cart Operation: Add with Request Serialization & Guaranteed Result
+  // Synchronous guest cart persistence helper
+  const persistGuestCart = useCallback((newLines) => {
+    if (!user && typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(
+          CART_KEY,
+          JSON.stringify(newLines.map((l) => ({ id: l.product.id, qty: l.qty })))
+        );
+      } catch {
+        /* storage unavailable */
+      }
+    }
+  }, [user]);
+
+  // Cart Operation: Add with Functional State & Delta Rollback
   const add = useCallback(
     async (product, quantity = 1, message = "Added to bag") => {
       if (!product) {
@@ -431,35 +434,26 @@ export function StoreProvider({ children }) {
       }
 
       const pid = String(product.id);
-      const previousItems = items;
-      let nextItems = [];
+      let calculatedCount = 0;
 
-      const existing = items.find((line) => String(line.product.id) === pid);
-      if (existing) {
-        nextItems = items.map((line) =>
-          String(line.product.id) === pid ? { ...line, qty: line.qty + quantity } : line
-        );
-      } else {
-        nextItems = [...items, { product, qty: quantity }];
-      }
+      // Functional state update: completely eliminates stale closure bugs
+      setItems((current) => {
+        const existing = current.find((line) => String(line.product.id) === pid);
+        const next = existing
+          ? current.map((line) =>
+              String(line.product.id) === pid ? { ...line, qty: line.qty + quantity } : line
+            )
+          : [...current, { product, qty: quantity }];
 
-      setItems(nextItems);
-
-      // Immediately synchronize to localStorage for guests to guarantee zero checkout race conditions
-      if (!user && typeof window !== "undefined") {
-        try {
-          window.localStorage.setItem(
-            CART_KEY,
-            JSON.stringify(nextItems.map((l) => ({ id: l.product.id, qty: l.qty })))
-          );
-        } catch {
-          /* storage unavailable */
-        }
-      }
+        itemsRef.current = next;
+        calculatedCount = next.length;
+        persistGuestCart(next);
+        return next;
+      });
 
       if (message) notify(message, product.name);
 
-      // Authenticated backend mutation serialized via queue
+      // Authenticated backend mutation serialized via queue with isolated delta rollback
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
         return new Promise((resolve) => {
           cartQueueRef.current = cartQueueRef.current
@@ -467,15 +461,31 @@ export function StoreProvider({ children }) {
               try {
                 const res = await cartApi.add(pid, quantity);
                 if (res?.cart) {
-                  setItems(
-                    res.cart
-                      .filter((l) => l.productId)
-                      .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
-                  );
+                  const serverItems = res.cart
+                    .filter((l) => l.productId)
+                    .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
+                  setItems((_) => {
+                    itemsRef.current = serverItems;
+                    return serverItems;
+                  });
                 }
-                resolve({ success: true, count: nextItems.length });
+                resolve({ success: true, count: calculatedCount });
               } catch (err) {
-                setItems(previousItems);
+                // DELTA ROLLBACK: only subtract this mutation's quantity so subsequent additions are NOT lost!
+                setItems((current) => {
+                  const reverted = current
+                    .map((line) => {
+                      if (String(line.product.id) === pid) {
+                        const remaining = line.qty - quantity;
+                        return remaining > 0 ? { ...line, qty: remaining } : null;
+                      }
+                      return line;
+                    })
+                    .filter(Boolean);
+                  itemsRef.current = reverted;
+                  persistGuestCart(reverted);
+                  return reverted;
+                });
                 notify(err.message || "Could not add item to bag. Please try again.");
                 await refetchServerCart();
                 resolve({ success: false, error: err.message || "Failed to add to bag" });
@@ -487,34 +497,28 @@ export function StoreProvider({ children }) {
         });
       }
 
-      return { success: true, count: nextItems.length };
+      return { success: true, count: calculatedCount };
     },
-    [user, items, notify, refetchServerCart]
+    [user, notify, persistGuestCart, refetchServerCart]
   );
 
-  // Cart Operation: Set Quantity with Serialized Mutation
+  // Cart Operation: Set Quantity with Functional State & Delta Rollback
   const setQty = useCallback(
     async (id, qty) => {
       const pid = String(id);
-      const previousItems = items;
+      let previousQty = 0;
 
-      const nextItems =
-        qty <= 0
-          ? items.filter((line) => String(line.product.id) !== pid)
-          : items.map((line) => (String(line.product.id) === pid ? { ...line, qty } : line));
-
-      setItems(nextItems);
-
-      if (!user && typeof window !== "undefined") {
-        try {
-          window.localStorage.setItem(
-            CART_KEY,
-            JSON.stringify(nextItems.map((l) => ({ id: l.product.id, qty: l.qty })))
-          );
-        } catch {
-          /* storage unavailable */
-        }
-      }
+      setItems((current) => {
+        const target = current.find((l) => String(l.product.id) === pid);
+        if (target) previousQty = target.qty;
+        const next =
+          qty <= 0
+            ? current.filter((line) => String(line.product.id) !== pid)
+            : current.map((line) => (String(line.product.id) === pid ? { ...line, qty } : line));
+        itemsRef.current = next;
+        persistGuestCart(next);
+        return next;
+      });
 
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
         return new Promise((resolve) => {
@@ -523,15 +527,25 @@ export function StoreProvider({ children }) {
               try {
                 const res = qty <= 0 ? await cartApi.remove(pid) : await cartApi.update(pid, qty);
                 if (res?.cart) {
-                  setItems(
-                    res.cart
-                      .filter((l) => l.productId)
-                      .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
-                  );
+                  const serverItems = res.cart
+                    .filter((l) => l.productId)
+                    .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
+                  setItems((_) => {
+                    itemsRef.current = serverItems;
+                    return serverItems;
+                  });
                 }
                 resolve({ success: true });
               } catch (err) {
-                setItems(previousItems);
+                // Revert to previous quantity for this specific item
+                setItems((current) => {
+                  const reverted = current.map((line) =>
+                    String(line.product.id) === pid ? { ...line, qty: previousQty } : line
+                  );
+                  itemsRef.current = reverted;
+                  persistGuestCart(reverted);
+                  return reverted;
+                });
                 notify(err.message || "Failed to update quantity. Please try again.");
                 await refetchServerCart();
                 resolve({ success: false, error: err.message });
@@ -545,28 +559,22 @@ export function StoreProvider({ children }) {
 
       return { success: true };
     },
-    [user, items, notify, refetchServerCart]
+    [user, notify, persistGuestCart, refetchServerCart]
   );
 
-  // Cart Operation: Remove with Serialized Mutation
+  // Cart Operation: Remove with Functional State & Delta Rollback
   const remove = useCallback(
     async (id) => {
       const pid = String(id);
-      const previousItems = items;
-      const nextItems = items.filter((line) => String(line.product.id) !== pid);
+      let removedLine = null;
 
-      setItems(nextItems);
-
-      if (!user && typeof window !== "undefined") {
-        try {
-          window.localStorage.setItem(
-            CART_KEY,
-            JSON.stringify(nextItems.map((l) => ({ id: l.product.id, qty: l.qty })))
-          );
-        } catch {
-          /* storage unavailable */
-        }
-      }
+      setItems((current) => {
+        removedLine = current.find((line) => String(line.product.id) === pid) || null;
+        const next = current.filter((line) => String(line.product.id) !== pid);
+        itemsRef.current = next;
+        persistGuestCart(next);
+        return next;
+      });
 
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
         return new Promise((resolve) => {
@@ -575,15 +583,25 @@ export function StoreProvider({ children }) {
               try {
                 const res = await cartApi.remove(pid);
                 if (res?.cart) {
-                  setItems(
-                    res.cart
-                      .filter((l) => l.productId)
-                      .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
-                  );
+                  const serverItems = res.cart
+                    .filter((l) => l.productId)
+                    .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
+                  setItems((_) => {
+                    itemsRef.current = serverItems;
+                    return serverItems;
+                  });
                 }
                 resolve({ success: true });
               } catch (err) {
-                setItems(previousItems);
+                // Reinsert removed line on failure
+                if (removedLine) {
+                  setItems((current) => {
+                    const reverted = [...current, removedLine];
+                    itemsRef.current = reverted;
+                    persistGuestCart(reverted);
+                    return reverted;
+                  });
+                }
                 notify(err.message || "Failed to remove item. Please try again.");
                 await refetchServerCart();
                 resolve({ success: false, error: err.message });
@@ -597,13 +615,13 @@ export function StoreProvider({ children }) {
 
       return { success: true };
     },
-    [user, items, notify, refetchServerCart]
+    [user, notify, persistGuestCart, refetchServerCart]
   );
 
   // Cart Operation: Clear
   const clear = useCallback(async () => {
-    const previousItems = items;
     setItems([]);
+    itemsRef.current = [];
 
     if (!user && typeof window !== "undefined") {
       try {
@@ -617,11 +635,11 @@ export function StoreProvider({ children }) {
       try {
         await cartApi.clear();
       } catch (err) {
-        setItems(previousItems);
         notify("Failed to clear shopping bag.");
+        await refetchServerCart();
       }
     }
-  }, [user, items, notify]);
+  }, [user, notify, refetchServerCart]);
 
   // Wishlist Operation: Toggle with Concurrency In-Flight Guard & Optimistic Rollback
   const toggleWishlist = useCallback(
@@ -715,6 +733,7 @@ export function StoreProvider({ children }) {
     return {
       items,
       catalog,
+      loadCatalog,
       catalogLoading,
       catalogError,
       categories,
@@ -750,6 +769,7 @@ export function StoreProvider({ children }) {
   }, [
     items,
     catalog,
+    loadCatalog,
     catalogLoading,
     catalogError,
     categories,

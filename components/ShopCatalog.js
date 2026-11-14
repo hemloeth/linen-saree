@@ -104,10 +104,16 @@ function Check({ label, checked, onChange, count }) {
 const ITEMS_PER_PAGE = 32;
 
 export default function ShopCatalog() {
-  const { catalog: products, catalogLoading, catalogError } = useStore();
+  const { catalog: products, loadCatalog, catalogLoading, catalogError } = useStore();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof loadCatalog === "function" && products.length === 0) {
+      loadCatalog();
+    }
+  }, [loadCatalog, products.length]);
 
   const [bands, setBands] = useState([]);
   const [fabrics, setFabrics] = useState([]);
