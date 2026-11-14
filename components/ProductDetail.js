@@ -125,7 +125,7 @@ export default function ProductDetail({ product }) {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 md:gap-10 lg:gap-16">
-        <div className="min-w-0 md:sticky md:top-6 md:self-start">
+        <div className="min-w-0 md:sticky md:top-20 md:self-start">
           <ProductGallery images={mediaItems} index={index} onSelect={setIndex} />
         </div>
 

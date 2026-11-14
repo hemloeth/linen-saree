@@ -82,10 +82,10 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
   if (!count || !active) return null;
 
   return (
-    <div className="lg:flex lg:items-start lg:gap-4">
+    <div className="lg:flex lg:items-start lg:gap-3.5 lg:max-w-[480px]">
       {/* Desktop vertical thumbnail rail */}
       <div
-        className="no-scrollbar hidden lg:flex lg:max-h-[calc(100vh-3rem)] lg:w-20 lg:shrink-0 lg:flex-col lg:gap-2 lg:overflow-y-auto"
+        className="no-scrollbar hidden lg:flex lg:max-h-[500px] lg:w-18 lg:shrink-0 lg:flex-col lg:gap-2 lg:overflow-y-auto"
         role="tablist"
         aria-label="Product media"
       >
@@ -137,9 +137,9 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
         })}
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 max-w-[390px]">
         {/* Desktop stage */}
-        <div className="relative hidden aspect-[3/4] w-full overflow-hidden rounded-lg bg-[#fbfaf8] lg:block">
+        <div className="relative hidden aspect-[3/4] max-h-[500px] w-full overflow-hidden rounded-lg bg-[#fbfaf8] lg:block">
           {active.type === "video" ? (
             <div className="h-full w-full bg-black">
               <video

@@ -64,6 +64,8 @@ export default function Header() {
   const { openSearch, categories, collectionsData } = useStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState(null);
+  const [visible, setVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
   const headerRef = useRef(null);
 
   const categoryLinks = useMemo(
@@ -75,6 +77,38 @@ export default function Header() {
     () => buildCollectionLinks(collectionsData),
     [collectionsData]
   );
+
+  // Smart sticky scroll behavior: hide on scroll down, reveal on scroll up
+  useEffect(() => {
+    let ticking = false;
+
+    function handleScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const currentY = window.scrollY || 0;
+        const diff = currentY - lastScrollYRef.current;
+
+        // If at the top or dropdown/menu open, keep visible
+        if (currentY <= 60 || openMenu || menuOpen) {
+          setVisible(true);
+        } else if (diff > 8 && currentY > 100) {
+          // Scrolling down past threshold -> slide out
+          setVisible(false);
+          setOpenMenu(null);
+        } else if (diff < -4) {
+          // Scrolling up even slightly -> slide back in
+          setVisible(true);
+        }
+
+        lastScrollYRef.current = currentY;
+        ticking = false;
+      });
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [openMenu, menuOpen]);
 
   // Publish the header height so pages can offset anchors/scrolls (--header-offset).
   useEffect(() => {
@@ -113,11 +147,17 @@ export default function Header() {
 
   return (
     <>
-      <header id="main-header" ref={headerRef} className="sticky top-0 z-50 w-full shadow-xs">
+      <header
+        id="main-header"
+        ref={headerRef}
+        className={`sticky top-0 z-50 w-full shadow-xs transition-transform duration-300 ease-in-out ${
+          visible ? "translate-y-0" : "-translate-y-full"
+        }`}
+      >
         <AnnouncementBar />
 
         <div className="border-b border-pine-950/10 bg-sage">
-          <div className="mx-auto flex h-14 max-w-[1240px] items-center justify-between gap-3 px-3 sm:px-4 lg:h-20 lg:px-6 xl:px-10">
+          <div className="mx-auto flex h-14 max-w-[1240px] items-center justify-between gap-3 px-3 sm:px-4 lg:h-16 lg:px-6 xl:px-10">
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
