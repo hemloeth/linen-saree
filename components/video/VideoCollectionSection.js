@@ -39,14 +39,15 @@ function HeartIcon({ filled = false, size = 15 }) {
 }
 
 /**
- * Viewport-Aware Auto-Play Video Product Card for Home Section
- * Plays when on screen (including multiple side-by-side); pauses when scrolled out
+ * Strict Viewport-Boundary Auto-Play Video Product Card for Home Section
+ * - Plays strictly when fully on screen
+ * - Stops immediately if cut off at top (under header) or bottom
+ * - Starts immediately when entering from bottom once fully visible
  */
 function VideoProductCard({ product }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
   const [inView, setInView] = useState(false);
-  const [nearScreen, setNearScreen] = useState(false);
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
   const [manualPause, setManualPause] = useState(false);
   const { isWished, toggleWishlist } = useStore();
@@ -57,33 +58,48 @@ function VideoProductCard({ product }) {
     const el = containerRef.current;
     if (!el) return;
 
-    // 1. Mount/preload metadata near viewport
-    const mountObserver = new IntersectionObserver(
-      ([entry]) => {
-        setNearScreen(entry.isIntersecting);
-      },
-      { rootMargin: "300px 0px" }
-    );
-    mountObserver.observe(el);
+    function evaluateVisibility() {
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight || 800;
+      const headerHeight = 55; // Sticky topbar offset
 
-    // 2. Play when visible on screen, stop immediately when scrolled out
-    const viewObserver = new IntersectionObserver(
-      ([entry]) => {
-        const isVisible = entry.isIntersecting && entry.intersectionRatio >= 0.2;
-        setInView(isVisible);
-        if (!isVisible) {
-          setManualPause(false);
+      // Fully visible on screen: top is not past header (top >= 40) and bottom is not past screen (bottom <= vh + 10)
+      const isFullyVisible =
+        rect.top >= (headerHeight - 15) &&
+        rect.bottom <= (vh + 15) &&
+        rect.height > 0;
+
+      setInView((prev) => {
+        if (prev !== isFullyVisible) {
+          if (!isFullyVisible) {
+            setManualPause(false);
+          }
+          return isFullyVisible;
         }
+        return prev;
+      });
+    }
+
+    const observer = new IntersectionObserver(
+      () => {
+        evaluateVisibility();
       },
       {
-        threshold: [0, 0.2, 0.5, 0.8],
+        threshold: [0, 0.1, 0.25, 0.5, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0],
+        rootMargin: "-50px 0px 0px 0px",
       }
     );
-    viewObserver.observe(el);
+    observer.observe(el);
+
+    window.addEventListener("scroll", evaluateVisibility, { passive: true });
+    window.addEventListener("resize", evaluateVisibility, { passive: true });
+
+    evaluateVisibility();
 
     return () => {
-      mountObserver.disconnect();
-      viewObserver.disconnect();
+      observer.disconnect();
+      window.removeEventListener("scroll", evaluateVisibility);
+      window.removeEventListener("resize", evaluateVisibility);
     };
   }, []);
 
@@ -96,6 +112,7 @@ function VideoProductCard({ product }) {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (inView && !manualPause && !prefersReducedMotion) {
+      video.muted = true;
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
@@ -116,6 +133,7 @@ function VideoProductCard({ product }) {
 
     if (video.paused) {
       setManualPause(false);
+      video.muted = true;
       video.play().then(() => setHasStartedPlaying(true)).catch(() => {});
     } else {
       setManualPause(true);
@@ -157,7 +175,7 @@ function VideoProductCard({ product }) {
         />
 
         {/* Video rendered near screen, plays when in view */}
-        {nearScreen && product.video && (
+        {product.video && (
           <video
             ref={videoRef}
             src={product.video}
@@ -165,9 +183,10 @@ function VideoProductCard({ product }) {
             loop
             muted
             playsInline
-            preload={inView ? "auto" : "metadata"}
+            preload="metadata"
             disablePictureInPicture
             disableRemotePlayback
+            onPlay={() => setHasStartedPlaying(true)}
             className={`h-full w-full object-cover object-top transition-opacity duration-300 group-hover:scale-105 ${
               isVideoVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
