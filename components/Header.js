@@ -113,7 +113,7 @@ export default function Header() {
 
   return (
     <>
-      <header id="main-header" ref={headerRef} className="sticky top-0 z-50">
+      <header id="main-header" ref={headerRef} className="sticky top-0 z-50 w-full shadow-xs">
         <AnnouncementBar />
 
         <div className="border-b border-pine-950/10 bg-sage">

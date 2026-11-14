@@ -41,7 +41,7 @@ export default function HomePage() {
   return (
     <>
       <Header />
-      <main className="flex-1 overflow-x-hidden">
+      <main className="flex-1 overflow-x-clip">
         {/* 1. Hero Section */}
         <HeroCarousel />
         {catalogError ? (

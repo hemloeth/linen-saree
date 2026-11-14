@@ -57,7 +57,7 @@ export default function RootLayout({ children }) {
     >
       <body
         suppressHydrationWarning
-        className="min-h-full flex flex-col bg-white overflow-x-hidden w-full max-w-full"
+        className="min-h-full flex flex-col bg-white overflow-x-clip w-full max-w-full"
       >
         <Suspense fallback={null}>
           <TopProgressBar />
