@@ -58,7 +58,7 @@ export default function HeroCarousel() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/shop"
-              className="inline-flex h-11 items-center rounded-md bg-white px-6 font-inter text-[13px] font-semibold text-pine-950 transition-colors hover:bg-aqua"
+              className="inline-flex h-11 items-center rounded-md bg-tomato px-6 font-inter text-[13px] font-semibold text-white shadow-md transition-colors hover:bg-tomato-hover"
             >
               Shop sarees
             </Link>
@@ -126,7 +126,7 @@ export default function HeroCarousel() {
             <div className="mt-4 flex items-center justify-center gap-3">
               <Link
                 href="/shop"
-                className="inline-flex h-10 items-center justify-center rounded-full bg-white px-6 font-inter text-xs font-bold uppercase tracking-wider text-pine-950 shadow-lg transition active:scale-95"
+                className="inline-flex h-10 items-center justify-center rounded-full bg-tomato px-6 font-inter text-xs font-bold uppercase tracking-wider text-white shadow-lg transition hover:bg-tomato-hover active:scale-95"
               >
                 Shop sarees
               </Link>

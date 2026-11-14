@@ -128,7 +128,7 @@ export default function CartDrawer() {
                       <button
                         type="button"
                         onClick={() => remove(line.product.id)}
-                        className="font-inter text-[11px] text-muted underline underline-offset-2 transition-colors hover:text-[#b42318]"
+                        className="font-inter text-[11px] text-muted underline underline-offset-2 transition-colors hover:text-tomato"
                       >
                         Remove
                       </button>
@@ -144,7 +144,7 @@ export default function CartDrawer() {
                 <span className="font-inter text-lg font-semibold text-pine-950">{formatINR(subtotal)}</span>
               </div>
               <p className="mt-1 text-[11px] text-muted">Taxes included. Shipping calculated at checkout.</p>
-              <Link href="/checkout" onClick={closeCart} className="mt-3 flex h-11 w-full items-center justify-center rounded-md bg-pine-900 font-inter text-[13px] font-semibold text-white transition-colors hover:bg-pine-950">Continue to checkout</Link>
+              <Link href="/checkout" onClick={closeCart} className="mt-3 flex h-11 w-full items-center justify-center rounded-md bg-tomato font-inter text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-tomato-hover">Continue to checkout</Link>
             </footer>
           </>
         )}

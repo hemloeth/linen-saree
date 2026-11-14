@@ -17,7 +17,7 @@ export default function BagButton() {
         <path d="M9 11V6.5a3 3 0 0 1 6 0V11" />
       </svg>
       {count > 0 ? (
-        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-pine-900 px-1 font-inter text-[9px] font-semibold text-white">
+        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-tomato px-1 font-inter text-[9px] font-bold text-white shadow-xs">
           {count}
         </span>
       ) : null}

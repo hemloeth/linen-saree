@@ -89,7 +89,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
               aria-label={`View ${isVideo ? "video" : `photo ${i + 1}`}: ${item.label || ""}`}
               onClick={() => onSelect(i)}
               className={`relative aspect-[3/4] w-full overflow-hidden rounded transition cursor-pointer ${
-                i === index ? "border-2 border-neutral-900" : "border border-neutral-200 hover:border-neutral-400"
+                i === index ? "border-2 border-spruce" : "border border-cream-border hover:border-spruce/40"
               }`}
             >
               {thumbSrc ? (
@@ -268,8 +268,8 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                       onClick={() => goTo(i)}
                       className={`relative aspect-[3/4] w-full overflow-hidden rounded-md transition-all duration-150 cursor-pointer ${
                         isSelected
-                          ? "border-2 border-neutral-900 scale-[1.02] shadow-sm z-10 opacity-100"
-                          : "border border-neutral-200 opacity-60 hover:opacity-100 hover:border-neutral-400"
+                          ? "border-2 border-spruce scale-[1.02] shadow-sm z-10 opacity-100"
+                          : "border border-cream-border opacity-70 hover:opacity-100 hover:border-spruce/40"
                       }`}
                     >
                       {thumbSrc ? (

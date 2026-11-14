@@ -28,7 +28,7 @@ function Stars({ rating }) {
 
 function TestimonialCard({ testimonial: t, className = "" }) {
   return (
-    <figure className={`flex h-full flex-col rounded-lg bg-white p-4 shadow-[0_1px_10px_rgba(9,43,43,0.08)] ring-1 ring-pine-950/5 lg:p-6 ${className}`}>
+    <figure className={`flex h-full flex-col rounded-lg bg-cream-surface p-4 shadow-[0_1px_10px_rgba(25,71,53,0.06)] border border-cream-border/70 lg:p-6 ${className}`}>
       <Stars rating={t.rating} />
       <blockquote className="mt-2 text-[13px] leading-relaxed text-black lg:text-sm">
         &ldquo;{t.quote}&rdquo;

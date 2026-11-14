@@ -56,7 +56,7 @@ function getColorStyles(colorName) {
   }
 
   // Fallback brand linen tint
-  return { bg: "#eef5f1", text: "#0c3c3c", border: "#c7dcce" };
+  return { bg: "#F5EFE1", text: "#194735", border: "#D8CEB4" };
 }
 
 export default function ProductDetail({ product }) {
@@ -160,7 +160,7 @@ export default function ProductDetail({ product }) {
               {formatINR(product.price)}
             </span>
             <span className="text-sm text-muted line-through">{formatINR(product.mrp)}</span>
-            <span className="rounded-sm bg-[#fef3f2] px-1.5 py-0.5 font-inter text-[10px] font-semibold text-[#b42318]">
+            <span className="rounded-sm bg-tomato-light px-1.5 py-0.5 font-inter text-[10px] font-semibold text-tomato">
               {product.mrp > 0 ? Math.max(0, Math.round(((product.mrp - product.price) / product.mrp) * 100)) : 0}% OFF
             </span>
           </div>
@@ -224,7 +224,7 @@ export default function ProductDetail({ product }) {
             </AddToBagButton>
             <BuyNowButton
               product={product}
-              className="flex-1 min-h-[52px] sm:min-h-[56px] rounded-xl bg-pine-900 px-6 py-3.5 font-inter text-xs sm:text-[13px] font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-pine-950 active:scale-[0.99] disabled:opacity-50"
+              className="flex-1 min-h-[52px] sm:min-h-[56px] rounded-xl bg-tomato hover:bg-tomato-hover px-6 py-3.5 font-inter text-xs sm:text-[13px] font-bold uppercase tracking-wider text-white shadow-sm transition active:scale-[0.99] disabled:opacity-50"
             />
           </div>
 
@@ -351,7 +351,7 @@ export default function ProductDetail({ product }) {
           </AddToBagButton>
           <BuyNowButton
             product={product}
-            className="min-h-[48px] flex-1 rounded-xl bg-pine-900 px-3 font-inter text-xs font-bold uppercase tracking-wider text-white shadow-xs transition hover:bg-pine-950 active:scale-[0.98]"
+            className="min-h-[48px] flex-1 rounded-xl bg-tomato hover:bg-tomato-hover px-3 font-inter text-xs font-bold uppercase tracking-wider text-white shadow-xs transition active:scale-[0.98]"
           />
         </div>
       </div>

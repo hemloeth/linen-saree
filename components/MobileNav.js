@@ -170,7 +170,7 @@ export default function MobileNav({ open, onClose }) {
                 onClick={onClose}
                 className={`block px-2 py-2.5 font-inter text-[13px] transition-colors hover:bg-linen rounded ${
                   item.isHighlight
-                    ? "font-semibold text-[#b42318]"
+                    ? "font-semibold text-tomato"
                     : "font-medium text-pine-900"
                 }`}
               >

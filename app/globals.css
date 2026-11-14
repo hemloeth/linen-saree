@@ -3,6 +3,32 @@
 :root {
   /* Set by <Header> via ResizeObserver — anchors clear the sticky bar. */
   --header-offset: 104px;
+
+  /* ══════════════════════════════════════════════════════════════════
+     PREMIUM 60–30–10 DESIGN SYSTEM PALETTE
+     1. Clotted Cream (60% Primary): #E8DFC8 (Dominant surfaces & backgrounds)
+     2. Spruce Velvet (30% Secondary): #194735 (Structure, nav, headings, borders)
+     3. Heirloom Tomato (10% Accent): #EE4129 (Primary CTAs, sale tags, indicators)
+     ══════════════════════════════════════════════════════════════════ */
+  --color-cream: #E8DFC8;
+  --color-cream-surface: #FAF7F0;
+  --color-cream-card: #F5EFE1;
+  --color-cream-light: #F7F3EA;
+  --color-cream-border: #D8CEB4;
+  --color-cream-dark: #C9BC9F;
+
+  --color-spruce: #194735;
+  --color-spruce-950: #123527;
+  --color-spruce-900: #194735;
+  --color-spruce-800: #245E47;
+  --color-spruce-700: #2E7357;
+  --color-spruce-50: #EBF3EF;
+
+  --color-tomato: #EE4129;
+  --color-tomato-hover: #D6351F;
+  --color-tomato-dark: #B82A17;
+  --color-tomato-light: #FEECE9;
+  --color-tomato-tint: #FFF4F2;
 }
 
 html {
@@ -12,20 +38,42 @@ html {
 }
 
 @theme {
-  /* Brand palette — extracted from Figma (House of Qalakari) */
-  --color-pine-950: #092b2b;
-  --color-pine-900: #0c3c3c;
-  --color-pine-800: #104d4d;
-  --color-sage: #c7dcce;
-  --color-linen: #e3eee7;
-  --color-aqua: #b0efef;
-  --color-gold: #f9a000;
+  /* 60–30–10 Centralized Palette Tokens */
+  --color-cream: #E8DFC8;
+  --color-cream-surface: #FAF7F0;
+  --color-cream-card: #F5EFE1;
+  --color-cream-light: #F7F3EA;
+  --color-cream-border: #D8CEB4;
+  --color-cream-dark: #C9BC9F;
 
-  --color-ink: #404040;
-  --color-muted: #525252;
-  --color-faint: #737373;
-  --color-hairline: #d4d4d4;
-  --color-chip: #f5f5f5;
+  --color-spruce: #194735;
+  --color-spruce-950: #123527;
+  --color-spruce-900: #194735;
+  --color-spruce-800: #245E47;
+  --color-spruce-700: #2E7357;
+  --color-spruce-50: #EBF3EF;
+
+  --color-tomato: #EE4129;
+  --color-tomato-hover: #D6351F;
+  --color-tomato-dark: #B82A17;
+  --color-tomato-light: #FEECE9;
+  --color-tomato-tint: #FFF4F2;
+
+  /* Seamless token mapping for all existing utility classes */
+  --color-pine-950: #123527;
+  --color-pine-900: #194735;
+  --color-pine-800: #245E47;
+  --color-pine-700: #2E7357;
+  --color-sage: #D8CEB4;
+  --color-linen: #E8DFC8;
+  --color-chip: #F5EFE1;
+  --color-aqua: #D8CEB4;
+  --color-sand-50: #FAF7F0;
+
+  --color-ink: #194735;
+  --color-muted: #546B5F;
+  --color-faint: #7A8E83;
+  --color-hairline: #D8CEB4;
 
   --font-display: var(--font-cinzel), Georgia, serif;
   --font-sans: Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
@@ -33,8 +81,8 @@ html {
 }
 
 body {
-  background: #ffffff;
-  color: var(--color-ink);
+  background: var(--color-cream-surface);
+  color: var(--color-spruce-950);
   font-family: var(--font-sans);
   overflow-x: hidden;
   max-width: 100vw;

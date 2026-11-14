@@ -157,7 +157,7 @@ function VideoProductCard({ product }) {
         {/* Badges */}
         {off > 0 && (
           <div className="pointer-events-none absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
-            <span className="rounded bg-[#b42318] px-1.5 py-[3px] font-inter text-[9px] font-bold text-white shadow-sm">
+            <span className="rounded bg-tomato px-1.5 py-[3px] font-inter text-[9px] font-bold text-white shadow-sm">
               {off}% OFF
             </span>
           </div>
@@ -173,7 +173,7 @@ function VideoProductCard({ product }) {
           }}
           aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
           className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:h-8 sm:w-8 ${
-            wished ? "text-[#b42318]" : "text-pine-950"
+            wished ? "text-tomato" : "text-pine-950"
           }`}
         >
           <HeartIcon filled={wished} size={14} />

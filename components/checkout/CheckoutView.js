@@ -1152,7 +1152,7 @@ export default function CheckoutView() {
                   <button
                     type="button"
                     onClick={proceedToPayment}
-                    className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-pine-900 px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-pine-950 shrink-0"
+                    className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-tomato px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-tomato-hover shrink-0"
                   >
                     <span>Continue to Payment</span>
                     <span>→</span>
@@ -1536,7 +1536,7 @@ export default function CheckoutView() {
                 type="button"
                 onClick={submit}
                 disabled={!isCheckoutEnabled || placing}
-                className="mt-6 w-full cursor-pointer rounded-lg bg-pine-900 px-4 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow transition-all hover:bg-pine-950 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="mt-6 w-full cursor-pointer rounded-lg bg-tomato px-4 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow transition-all hover:bg-tomato-hover disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {!isCheckoutEnabled
                   ? "Checkout Paused"

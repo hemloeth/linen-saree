@@ -133,7 +133,7 @@ export default function ProductCard({ product, variant = "default" }) {
   return (
     <article
       id={`product-card-${product.id}`}
-      className={`group relative flex h-full w-full flex-col justify-between rounded-lg border border-pine-950/[0.07] bg-white shadow-[0_1px_3px_rgba(9,43,43,0.03)] transition-all duration-200 active:scale-[0.985] hover:border-pine-950/20 hover:shadow-[0_8px_22px_-8px_rgba(9,43,43,0.12)] ${
+      className={`group relative flex h-full w-full flex-col justify-between rounded-lg border border-cream-border/70 bg-cream-surface shadow-[0_1px_3px_rgba(25,71,53,0.04)] transition-all duration-200 active:scale-[0.985] hover:border-spruce/30 hover:shadow-[0_8px_22px_-8px_rgba(25,71,53,0.12)] ${
         isCompact ? "text-[11px]" : ""
       }`}
       onMouseEnter={startCycle}
@@ -141,7 +141,7 @@ export default function ProductCard({ product, variant = "default" }) {
       onMouseLeave={stopCycle}
     >
       {/* ── Image Stage ── */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-lg bg-[#fbfaf8]">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-lg bg-cream-card/60">
         <Link
           href={`/product/${product.id}`}
           prefetch={true}
@@ -252,7 +252,7 @@ export default function ProductCard({ product, variant = "default" }) {
               : `Add ${product.name} to wishlist`
           }
           className={`absolute right-1.5 top-1.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-white sm:right-2 sm:top-2 sm:h-7.5 sm:w-7.5 cursor-pointer ${
-            wished ? "text-[#b42318]" : "text-pine-950/60 hover:text-pine-950"
+            wished ? "text-tomato" : "text-pine-950/60 hover:text-pine-950"
           }`}
         >
           <HeartIcon filled={wished} size={13} />
@@ -294,7 +294,7 @@ export default function ProductCard({ product, variant = "default" }) {
                 <span className="text-[9.5px] text-muted line-through sm:text-[10px]">
                   {formatINR(product.mrp)}
                 </span>
-                <span className="rounded bg-[#ecfdf3] px-1.5 py-[1px] font-inter text-[8px] font-bold text-[#027a48] sm:text-[8.5px]">
+                <span className="rounded bg-tomato-light px-1.5 py-[1px] font-inter text-[8px] font-bold text-tomato sm:text-[8.5px]">
                   {off}% off
                 </span>
               </>
@@ -306,18 +306,18 @@ export default function ProductCard({ product, variant = "default" }) {
         <div className="mt-2 flex items-stretch gap-1 sm:mt-2.5 sm:gap-1.5">
           {product.inStock ? (
             <>
-              {/* Add to Cart — Compact icon button with loading/added feedback */}
+              {/* Add to Cart — Secondary CTA: Spruce Velvet icon button */}
               <AddToBagButton
                 product={product}
-                className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-md bg-pine-900 text-white shadow-sm transition-all duration-200 hover:bg-pine-950 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:h-[36px] sm:w-[36px]"
+                className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-md border border-pine-900 bg-white text-pine-900 shadow-sm transition-all duration-200 hover:bg-pine-900 hover:text-white active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:h-[36px] sm:w-[36px]"
               >
                 <BagIcon size={13} />
               </AddToBagButton>
 
-              {/* Buy Now — Fills remaining row width */}
+              {/* Buy Now — Primary CTA: Tomato Red button */}
               <BuyNowButton
                 product={product}
-                className="flex h-[34px] flex-1 items-center justify-center gap-1 rounded-md border border-pine-900 bg-white font-inter text-[10px] font-semibold uppercase tracking-wider text-pine-900 shadow-sm transition-all duration-200 hover:bg-pine-900 hover:text-white active:scale-[0.98] sm:h-[36px] sm:text-[10.5px]"
+                className="flex h-[34px] flex-1 items-center justify-center gap-1 rounded-md bg-tomato text-white font-inter text-[10px] font-semibold uppercase tracking-wider shadow-sm transition-all duration-200 hover:bg-tomato-hover active:scale-[0.98] sm:h-[36px] sm:text-[10.5px]"
               >
                 <BoltIcon size={10} />
                 Buy Now

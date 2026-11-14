@@ -198,7 +198,7 @@ export default function Header() {
                   href={item.href}
                   className={`font-inter text-[13px] underline-offset-4 hover:underline ${
                     item.isHighlight
-                      ? "font-semibold text-[#b42318]"
+                      ? "font-semibold text-tomato"
                       : "font-medium text-pine-900"
                   }`}
                 >
