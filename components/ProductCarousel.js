@@ -76,10 +76,10 @@ export default function ProductCarousel({
           </div>
         </div>
 
-        {/* Carousel / Grid Track - Exact left margin alignment with px-4 and -mx-4 */}
+        {/* Carousel / Grid Track - Exactly aligned with container left & right padding */}
         <div
           ref={trackRef}
-          className={`no-scrollbar -mx-4 flex items-stretch snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth px-4 pt-1 pb-1 lg:mx-0 lg:grid ${colClass} lg:gap-6 lg:overflow-visible lg:px-0 lg:pt-0`}
+          className={`no-scrollbar flex items-stretch snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth pt-1 pb-1 lg:grid ${colClass} lg:gap-6 lg:overflow-visible lg:pt-0`}
         >
           {/* Product cards */}
           {Array.isArray(children)
@@ -98,7 +98,7 @@ export default function ProductCarousel({
             <div className="flex w-[44vw] min-w-[150px] max-w-[200px] shrink-0 snap-start sm:w-[42vw] sm:max-w-[220px] lg:hidden">
               <Link
                 href={viewAllHref}
-                className="group flex h-full w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-pine-900/30 bg-white/80 p-4 text-center shadow-xs transition-all duration-300 hover:border-pine-900 hover:bg-pine-900 hover:text-white"
+                className="group flex h-full min-h-[240px] w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-pine-900/30 bg-white/90 p-4 text-center shadow-xs transition-all duration-300 hover:border-pine-900 hover:bg-pine-900 hover:text-white"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pine-900 text-white shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:bg-white group-hover:text-pine-900">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -108,8 +108,8 @@ export default function ProductCarousel({
                 <span className="mt-3 font-display text-xs font-semibold tracking-wider uppercase text-pine-950 group-hover:text-white transition-colors">
                   {viewAllLabel}
                 </span>
-                <span className="mt-1 font-inter text-[10px] text-muted group-hover:text-white/80 transition-colors">
-                  Explore all &rarr;
+                <span className="mt-1 font-inter text-[11px] font-medium text-pine-900 group-hover:text-white/90 transition-colors">
+                  View All &rarr;
                 </span>
               </Link>
             </div>
@@ -118,10 +118,10 @@ export default function ProductCarousel({
 
         {/* Bottom View All CTA Link when both sections end */}
         {viewAllHref && (
-          <div className="mt-5 flex justify-center sm:mt-8">
+          <div className="mt-6 flex justify-center sm:mt-8">
             <Link
               href={viewAllHref}
-              className="inline-flex items-center gap-2 rounded-full border border-pine-900/30 bg-white px-5 py-2 font-inter text-xs font-semibold text-pine-900 shadow-xs transition-all duration-200 hover:bg-pine-900 hover:text-white cursor-pointer"
+              className="group inline-flex cursor-pointer items-center gap-2 rounded-full border border-pine-950/20 bg-white px-7 py-2.5 font-inter text-xs font-semibold uppercase tracking-wider text-pine-950 shadow-sm transition-all hover:border-pine-900 hover:bg-pine-900 hover:text-white"
             >
               <span>{viewAllLabel}</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
