@@ -35,9 +35,15 @@ export default function WhatsAppFloat() {
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
+  const isProductPage = Boolean(pathname?.startsWith("/product/"));
+
   return (
     <div
-      className={`fixed bottom-5 right-4 z-50 transition-all duration-300 sm:bottom-6 sm:right-6 ${
+      className={`fixed z-50 transition-all duration-300 ${
+        isProductPage
+          ? "bottom-[88px] sm:bottom-[92px] lg:bottom-6 right-4 sm:right-6"
+          : "bottom-5 sm:bottom-6 right-4 sm:right-6"
+      } ${
         visible
           ? "pointer-events-auto translate-y-0 opacity-100 scale-100"
           : "pointer-events-none translate-y-4 opacity-0 scale-90"
