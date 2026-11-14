@@ -30,6 +30,43 @@ export function useStore() {
 /** @deprecated use useStore() — kept for backwards compatibility */
 export const useCart = useStore;
 
+// Pure, deterministic cart transition functions
+function pureAdd(current, product, qty) {
+  const pid = String(product.id);
+  const exists = current.find((l) => String(l.product.id) === pid);
+  if (exists) {
+    return current.map((l) =>
+      String(l.product.id) === pid ? { ...l, qty: l.qty + qty } : l
+    );
+  }
+  return [...current, { product, qty }];
+}
+
+function pureSetQty(current, pid, qty) {
+  if (qty <= 0) {
+    return current.filter((l) => String(l.product.id) !== String(pid));
+  }
+  return current.map((l) =>
+    String(l.product.id) === String(pid) ? { ...l, qty } : l
+  );
+}
+
+function pureRemove(current, pid) {
+  return current.filter((l) => String(l.product.id) !== String(pid));
+}
+
+function pureDeltaRollback(current, pid, quantity) {
+  return current
+    .map((line) => {
+      if (String(line.product.id) === String(pid)) {
+        const remaining = line.qty - quantity;
+        return remaining > 0 ? { ...line, qty: remaining } : null;
+      }
+      return line;
+    })
+    .filter(Boolean);
+}
+
 export function StoreProvider({ children }) {
   // Real product catalog without mock demo-product fallback in production
   const [catalog, setCatalog] = useState([]);
@@ -423,6 +460,7 @@ export function StoreProvider({ children }) {
   }, [user]);
 
   const pendingCartMutationsRef = useRef(0);
+  const cartRef = useRef(items);
 
   // Synchronous guest cart persistence helper
   const persistGuestCart = useCallback((newLines) => {
@@ -438,9 +476,22 @@ export function StoreProvider({ children }) {
     }
   }, [user]);
 
+  // Centralized synchronous cart state commit
+  const updateCartState = useCallback(
+    (nextCart) => {
+      cartRef.current = nextCart;
+      itemsRef.current = nextCart;
+      persistGuestCart(nextCart);
+      setItems((current) => nextCart);
+      return nextCart;
+    },
+    [persistGuestCart]
+  );
+
   // Synchronize itemsRef without mutating state in render/updaters
   useEffect(() => {
     itemsRef.current = items;
+    cartRef.current = items;
   }, [items]);
 
   // Await in-flight cart mutations to complete (essential for checkout navigation)
@@ -452,7 +503,7 @@ export function StoreProvider({ children }) {
     }
   }, []);
 
-  // Cart Operation: Add with Pure Functional State & Delta Rollback
+  // Cart Operation: Add with Pure Deterministic Transitions & Delta Rollback
   const add = useCallback(
     async (product, quantity = 1, message = "Added to bag") => {
       if (!product) {
@@ -464,26 +515,11 @@ export function StoreProvider({ children }) {
       }
 
       const pid = String(product.id);
-      let calculatedCount = 0;
-      let nextLines = [];
 
-      // Pure functional state update
-      setItems((current) => {
-        const existing = current.find((line) => String(line.product.id) === pid);
-        const next = existing
-          ? current.map((line) =>
-              String(line.product.id) === pid ? { ...line, qty: line.qty + quantity } : line
-            )
-          : [...current, { product, qty: quantity }];
-        calculatedCount = next.length;
-        nextLines = next;
-        return next;
-      });
-
-      // Synchronous guest persistence outside state updater
-      persistGuestCart(nextLines);
-
-      if (message) notify(message, product.name);
+      // Synchronously compute next state and commit
+      const nextCart = pureAdd(cartRef.current, product, quantity);
+      updateCartState(nextCart);
+      const calculatedCount = nextCart.length;
 
       // Authenticated backend mutation serialized via queue with isolated delta rollback
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
@@ -499,26 +535,15 @@ export function StoreProvider({ children }) {
                   const serverItems = res.cart
                     .filter((l) => l.productId)
                     .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
-                  setItems(serverItems);
+                  updateCartState(serverItems);
                 }
+                if (message) notify(message, product.name);
                 resolve({ success: true, count: calculatedCount });
               } catch (err) {
                 pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
                 // DELTA ROLLBACK: only subtract this mutation's quantity so subsequent additions are NOT lost!
-                let revertedLines = [];
-                setItems((current) => {
-                  revertedLines = current
-                    .map((line) => {
-                      if (String(line.product.id) === pid) {
-                        const remaining = line.qty - quantity;
-                        return remaining > 0 ? { ...line, qty: remaining } : null;
-                      }
-                      return line;
-                    })
-                    .filter(Boolean);
-                  return revertedLines;
-                });
-                persistGuestCart(revertedLines);
+                const rolledBack = pureDeltaRollback(cartRef.current, pid, quantity);
+                updateCartState(rolledBack);
                 notify(err.message || "Could not add item to bag. Please try again.");
                 if (pendingCartMutationsRef.current === 0) {
                   await refetchServerCart();
@@ -533,29 +558,22 @@ export function StoreProvider({ children }) {
         });
       }
 
+      // Guest flow: operation is immediately committed and confirmed
+      if (message) notify(message, product.name);
       return { success: true, count: calculatedCount };
     },
-    [user, notify, persistGuestCart, refetchServerCart]
+    [user, notify, updateCartState, refetchServerCart]
   );
 
-  // Cart Operation: Set Quantity with Pure Functional State & Delta Rollback
+  // Cart Operation: Set Quantity with Pure Deterministic Transitions & Delta Rollback
   const setQty = useCallback(
     async (id, qty) => {
       const pid = String(id);
-      let previousQty = 0;
-      let nextLines = [];
+      const target = cartRef.current.find((l) => String(l.product.id) === pid);
+      const previousQty = target?.qty || 0;
 
-      setItems((current) => {
-        const target = current.find((l) => String(l.product.id) === pid);
-        if (target) previousQty = target.qty;
-        const next = qty <= 0
-          ? current.filter((line) => String(line.product.id) !== pid)
-          : current.map((line) => (String(line.product.id) === pid ? { ...line, qty } : line));
-        nextLines = next;
-        return next;
-      });
-
-      persistGuestCart(nextLines);
+      const nextCart = pureSetQty(cartRef.current, pid, qty);
+      updateCartState(nextCart);
 
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
         pendingCartMutationsRef.current++;
@@ -569,20 +587,14 @@ export function StoreProvider({ children }) {
                   const serverItems = res.cart
                     .filter((l) => l.productId)
                     .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
-                  setItems(serverItems);
+                  updateCartState(serverItems);
                 }
                 resolve({ success: true });
               } catch (err) {
                 pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
                 // Revert to previous quantity for this specific item
-                let revertedLines = [];
-                setItems((current) => {
-                  revertedLines = current.map((line) =>
-                    String(line.product.id) === pid ? { ...line, qty: previousQty } : line
-                  );
-                  return revertedLines;
-                });
-                persistGuestCart(revertedLines);
+                const reverted = pureSetQty(cartRef.current, pid, previousQty);
+                updateCartState(reverted);
                 notify(err.message || "Failed to update quantity. Please try again.");
                 if (pendingCartMutationsRef.current === 0) {
                   await refetchServerCart();
@@ -599,24 +611,17 @@ export function StoreProvider({ children }) {
 
       return { success: true };
     },
-    [user, notify, persistGuestCart, refetchServerCart]
+    [user, notify, updateCartState, refetchServerCart]
   );
 
-  // Cart Operation: Remove with Pure Functional State & Delta Rollback
+  // Cart Operation: Remove with Pure Deterministic Transitions & Delta Rollback
   const remove = useCallback(
     async (id) => {
       const pid = String(id);
-      let removedLine = null;
-      let nextLines = [];
+      const removedLine = cartRef.current.find((line) => String(line.product.id) === pid) || null;
 
-      setItems((current) => {
-        removedLine = current.find((line) => String(line.product.id) === pid) || null;
-        const next = current.filter((line) => String(line.product.id) !== pid);
-        nextLines = next;
-        return next;
-      });
-
-      persistGuestCart(nextLines);
+      const nextCart = pureRemove(cartRef.current, pid);
+      updateCartState(nextCart);
 
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
         pendingCartMutationsRef.current++;
@@ -630,19 +635,15 @@ export function StoreProvider({ children }) {
                   const serverItems = res.cart
                     .filter((l) => l.productId)
                     .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
-                  setItems(serverItems);
+                  updateCartState(serverItems);
                 }
                 resolve({ success: true });
               } catch (err) {
                 pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
                 // Reinsert removed line on failure
-                let revertedLines = [];
                 if (removedLine) {
-                  setItems((current) => {
-                    revertedLines = [...current, removedLine];
-                    return revertedLines;
-                  });
-                  persistGuestCart(revertedLines);
+                  const reverted = [...cartRef.current, removedLine];
+                  updateCartState(reverted);
                 }
                 notify(err.message || "Failed to remove item. Please try again.");
                 if (pendingCartMutationsRef.current === 0) {
@@ -660,22 +661,25 @@ export function StoreProvider({ children }) {
 
       return { success: true };
     },
-    [user, notify, persistGuestCart, refetchServerCart]
+    [user, notify, updateCartState, refetchServerCart]
   );
 
-  // Cart Operation: Clear
+  // Cart Operation: Clear with recovery on server failure
   const clear = useCallback(async () => {
-    setItems([]);
+    const prevCart = [...cartRef.current];
+    updateCartState([]);
 
     if (user) {
       try {
         await cartApi.clear();
       } catch (err) {
-        notify("Failed to clear shopping bag.");
+        // Recover user data on failed clear
+        updateCartState(prevCart);
+        notify("Failed to clear shopping bag. Your items were restored.");
         await refetchServerCart();
       }
     }
-  }, [user, notify, refetchServerCart]);
+  }, [user, notify, updateCartState, refetchServerCart]);
 
   // Wishlist Operation: Toggle with Concurrency In-Flight Guard & Optimistic Rollback
   const toggleWishlist = useCallback(

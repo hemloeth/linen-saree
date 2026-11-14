@@ -12,16 +12,20 @@ export default function WishlistPage() {
   const { wishlist } = useStore();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(wishlist.length > 0);
+  const [error, setError] = useState(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     if (!wishlist || wishlist.length === 0) {
       setProducts([]);
+      setError(null);
       setLoading(false);
       return;
     }
 
     let active = true;
     setLoading(true);
+    setError(null);
 
     fetchProductCardsByIds(wishlist)
       .then((items) => {
@@ -32,14 +36,14 @@ export default function WishlistPage() {
       .catch((err) => {
         if (!active) return;
         console.error("Failed to load wishlist items:", err);
-        setProducts([]);
+        setError("Unable to load wishlist pieces. Please check your network connection and try again.");
         setLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, [wishlist]);
+  }, [wishlist, retryNonce]);
 
   // Keep locally filtered if an item was removed
   const saved = products.filter((p) => wishlist.includes(String(p.id)));
@@ -56,6 +60,8 @@ export default function WishlistPage() {
             <p className="mt-1 text-xs text-muted">
               {loading
                 ? "Loading saved pieces…"
+                : error
+                ? "Could not load saved pieces."
                 : saved.length === 0
                 ? "Nothing saved yet."
                 : `${saved.length} piece${saved.length === 1 ? "" : "s"} saved`}
@@ -63,7 +69,18 @@ export default function WishlistPage() {
             <span aria-hidden="true" className="mt-3 block h-px w-16 bg-pine-950/40" />
           </div>
 
-          {loading ? (
+          {error && !loading ? (
+            <div className="rounded-lg border border-red-200 bg-red-50/50 px-6 py-10 text-center">
+              <p className="text-sm font-medium text-red-700">{error}</p>
+              <button
+                type="button"
+                onClick={() => setRetryNonce((c) => c + 1)}
+                className="mt-3 inline-flex h-9 items-center rounded-md bg-pine-900 px-4 font-inter text-xs font-semibold text-white transition hover:bg-pine-950 cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          ) : loading ? (
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
               {Array.from({ length: Math.min(wishlist.length, 4) }).map((_, i) => (
                 <div key={i} className="animate-pulse flex flex-col gap-2">

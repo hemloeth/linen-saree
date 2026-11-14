@@ -59,3 +59,4 @@ test("Catalog Regression & Video Coordinator Test Suite", async (t) => {
     assert.doesNotMatch(reelContent, /function Arrow/, "ReelCarousel has no desktop Arrow buttons");
   });
 });
+

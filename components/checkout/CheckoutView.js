@@ -538,6 +538,11 @@ export default function CheckoutView() {
     if (e) e.preventDefault();
     setError("");
 
+    // Await any pending cart mutations to ensure order payload matches server state
+    if (typeof awaitCartSettled === "function") {
+      await awaitCartSettled();
+    }
+
     // Feature Flag Enforcement
     if (!isCheckoutEnabled) {
       setError("Online checkout is temporarily paused for scheduled system readiness. Your shopping bag and saved details are preserved.");

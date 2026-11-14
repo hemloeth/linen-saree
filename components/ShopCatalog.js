@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { formatINR } from "@/lib/data";
-import { useStore } from "@/components/StoreProvider";
 import { useScrollLock } from "@/lib/useScrollLock";
+import { fetchPaginatedProducts, fetchFilters } from "@/lib/api/products";
 
 const PRICE_BANDS = [
-  { key: "under-2000", label: "Under Rs. 2,000", test: (p) => p < 2000 },
-  { key: "2000-4000", label: "Rs. 2,000 – 4,000", test: (p) => p >= 2000 && p < 4000 },
-  { key: "4000-7000", label: "Rs. 4,000 – 7,000", test: (p) => p >= 4000 && p < 7000 },
-  { key: "above-7000", label: "Above Rs. 7,000", test: (p) => p >= 7000 },
+  { key: "under-2000", label: "Under Rs. 2,000", min: 0, max: 2000 },
+  { key: "2000-4000", label: "Rs. 2,000 – 4,000", min: 2000, max: 4000 },
+  { key: "4000-7000", label: "Rs. 4,000 – 7,000", min: 4000, max: 7000 },
+  { key: "above-7000", label: "Above Rs. 7,000", min: 7000, max: 100000 },
 ];
 
 const STANDARD_COLORS = [
@@ -41,34 +41,12 @@ const STANDARD_FABRICS = [
   { key: "muslin", label: "Muslin", regex: /muslin/i },
 ];
 
-function getProductColors(product) {
-  const text = `${product.colour || product.color || ""} ${product.title || product.name || ""}`.toLowerCase();
-  const matched = [];
-  for (const c of STANDARD_COLORS) {
-    if (c.regex.test(text)) {
-      matched.push(c.key);
-    }
-  }
-  return matched.length ? matched : ["multicolor"];
-}
-
-function getProductFabrics(product) {
-  const text = `${product.fabric || product.material || ""} ${product.title || product.name || ""}`.toLowerCase();
-  const matched = [];
-  for (const f of STANDARD_FABRICS) {
-    if (f.regex.test(text)) {
-      matched.push(f.key);
-    }
-  }
-  return matched;
-}
-
 const SORTS = [
-  { key: "featured", label: "Featured" },
-  { key: "price-asc", label: "Price: low to high" },
-  { key: "price-desc", label: "Price: high to low" },
-  { key: "rating", label: "Customer rating" },
-  { key: "new", label: "Newest first" },
+  { key: "featured", label: "Featured", backendSort: "featured" },
+  { key: "price-asc", label: "Price: low to high", backendSort: "price-low" },
+  { key: "price-desc", label: "Price: high to low", backendSort: "price-high" },
+  { key: "rating", label: "Customer rating", backendSort: "featured" },
+  { key: "new", label: "Newest first", backendSort: "newest" },
 ];
 
 function FilterGroup({ title, children }) {
@@ -104,17 +82,11 @@ function Check({ label, checked, onChange, count }) {
 const ITEMS_PER_PAGE = 32;
 
 export default function ShopCatalog() {
-  const { catalog: products, loadCatalog, catalogLoading, catalogError } = useStore();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (typeof loadCatalog === "function" && products.length === 0) {
-      loadCatalog();
-    }
-  }, [loadCatalog, products.length]);
-
+  // Active filter states
   const [bands, setBands] = useState([]);
   const [fabrics, setFabrics] = useState([]);
   const [colours, setColours] = useState([]);
@@ -126,104 +98,172 @@ export default function ShopCatalog() {
   const [showAllFabrics, setShowAllFabrics] = useState(false);
   useScrollLock(filtersOpen);
 
+  // Server data state
+  const [products, setProducts] = useState([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filterMeta, setFilterMeta] = useState(null);
+  const activeRequestId = useRef(0);
+  const isFirstRender = useRef(true);
+
+  // 1. Fetch Global Filter Metadata (Color and Fabric aggregations from database)
+  useEffect(() => {
+    let active = true;
+    fetchFilters()
+      .then((data) => {
+        if (!active) return;
+        setFilterMeta(data);
+      })
+      .catch((err) => {
+        console.warn("Filters metadata failed to load:", err.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const toggle = (list, setList, value) =>
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
-  // Compute product counts for each standard color
+  // Compute accurate global counts for each standard color
   const colorOptions = useMemo(() => {
-    const counts = {};
-    STANDARD_COLORS.forEach((c) => (counts[c.key] = 0));
-    products.forEach((p) => {
-      const keys = getProductColors(p);
-      keys.forEach((k) => {
-        if (counts[k] !== undefined) counts[k]++;
+    const rawCounts = filterMeta?.counts?.colors || {};
+    return STANDARD_COLORS.map((c) => {
+      let count = 0;
+      const matchedRaw = [];
+      Object.entries(rawCounts).forEach(([rawColor, cnt]) => {
+        if (c.regex.test(rawColor)) {
+          count += cnt;
+          matchedRaw.push(rawColor);
+        }
       });
-    });
-
-    return STANDARD_COLORS.map((c) => ({
-      ...c,
-      count: counts[c.key] || 0,
-    }))
+      return {
+        ...c,
+        count,
+        matchedRaw,
+      };
+    })
       .filter((c) => c.count > 0 || colours.includes(c.key))
       .sort((a, b) => b.count - a.count);
-  }, [products, colours]);
+  }, [filterMeta, colours]);
 
-  // Compute product counts for each standard fabric
+  // Compute accurate global counts for each standard fabric
   const fabricOptions = useMemo(() => {
-    const counts = {};
-    STANDARD_FABRICS.forEach((f) => (counts[f.key] = 0));
-    products.forEach((p) => {
-      const keys = getProductFabrics(p);
-      keys.forEach((k) => {
-        if (counts[k] !== undefined) counts[k]++;
+    const rawCounts = filterMeta?.counts?.fabrics || {};
+    return STANDARD_FABRICS.map((f) => {
+      let count = 0;
+      const matchedRaw = [];
+      Object.entries(rawCounts).forEach(([rawFabric, cnt]) => {
+        if (f.regex.test(rawFabric)) {
+          count += cnt;
+          matchedRaw.push(rawFabric);
+        }
       });
-    });
-
-    return STANDARD_FABRICS.map((f) => ({
-      ...f,
-      count: counts[f.key] || 0,
-    }))
+      return {
+        ...f,
+        count,
+        matchedRaw,
+      };
+    })
       .filter((f) => f.count > 0 || fabrics.includes(f.key))
       .sort((a, b) => b.count - a.count);
-  }, [products, fabrics]);
+  }, [filterMeta, fabrics]);
 
-  const results = useMemo(() => {
-    const activeBands = PRICE_BANDS.filter((band) => bands.includes(band.key));
-    const filtered = products.filter((product) => {
-      if (activeBands.length && !activeBands.some((band) => band.test(product.price))) return false;
-      if (fabrics.length) {
-        const prodFabrics = getProductFabrics(product);
-        if (!fabrics.some((f) => prodFabrics.includes(f))) return false;
-      }
-      if (colours.length) {
-        const prodColors = getProductColors(product);
-        if (!colours.some((c) => prodColors.includes(c))) return false;
-      }
-      if (inStockOnly && !product.inStock) return false;
-      return true;
-    });
-
-    const sorted = [...filtered];
-    switch (sort) {
-      case "price-asc":
-        sorted.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      case "rating":
-        sorted.sort((a, b) => b.rating - a.rating);
-        break;
-      case "new":
-        sorted.sort((a, b) => Number(b.isNew) - Number(a.isNew));
-        break;
-      default:
-        break;
-    }
-    return sorted;
-  }, [products, bands, fabrics, colours, inStockOnly, sort]);
-
-  // Total pages and pagination bounds
-  const totalPages = Math.max(1, Math.ceil(results.length / ITEMS_PER_PAGE));
-
-  // Sync page from URL query parameter on initial load or popstate
+  // Sync initial page from URL query parameter
   useEffect(() => {
     const p = parseInt(searchParams.get("page"), 10);
-    if (!isNaN(p) && p >= 1 && p <= totalPages) {
+    if (!isNaN(p) && p >= 1) {
       setCurrentPage(p);
     }
-  }, [searchParams, totalPages]);
+  }, [searchParams]);
 
-  // Reset to page 1 whenever any filter or sort option changes
+  // Reset to page 1 whenever any filter changes (after initial mount)
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     setCurrentPage(1);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
+    const query = params.toString();
+    router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
   }, [bands, fabrics, colours, inStockOnly, sort]);
 
+  // 2. Fetch server-paginated and server-filtered products
+  useEffect(() => {
+    const requestId = ++activeRequestId.current;
+    setLoading(true);
+    setError(null);
+
+    // Calculate price bounds from selected bands
+    let priceMin, priceMax;
+    if (bands.length > 0) {
+      const selectedBands = PRICE_BANDS.filter((b) => bands.includes(b.key));
+      priceMin = Math.min(...selectedBands.map((b) => b.min));
+      const maxes = selectedBands.map((b) => b.max);
+      if (!maxes.includes(100000)) {
+        priceMax = Math.max(...maxes);
+      }
+    }
+
+    // Map selected colors to backend raw color tokens
+    let rawColors = [];
+    colours.forEach((k) => {
+      const opt = colorOptions.find((o) => o.key === k);
+      if (opt?.matchedRaw?.length) {
+        rawColors.push(...opt.matchedRaw);
+      } else {
+        rawColors.push(k);
+      }
+    });
+    const colorParam = rawColors.length ? [...new Set(rawColors)].slice(0, 30).join(",") : undefined;
+
+    // Map selected fabrics to backend raw material tokens
+    let rawFabrics = [];
+    fabrics.forEach((k) => {
+      const opt = fabricOptions.find((o) => o.key === k);
+      if (opt?.matchedRaw?.length) {
+        rawFabrics.push(...opt.matchedRaw);
+      } else {
+        rawFabrics.push(k);
+      }
+    });
+    const materialParam = rawFabrics.length ? [...new Set(rawFabrics)].slice(0, 30).join(",") : undefined;
+
+    const mappedSort = SORTS.find((s) => s.key === sort)?.backendSort || "featured";
+
+    fetchPaginatedProducts({
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      sortBy: mappedSort,
+      priceMin,
+      priceMax,
+      color: colorParam,
+      material: materialParam,
+    })
+      .then((res) => {
+        if (requestId !== activeRequestId.current) return;
+        setProducts(res.products || []);
+        setTotalPages(res.pagination?.totalPages || 1);
+        setTotalProducts(res.pagination?.totalProducts ?? (res.products?.length || 0));
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (requestId !== activeRequestId.current) return;
+        console.error("Shop products load error:", err);
+        setError("Unable to load sarees. Please try again.");
+        setLoading(false);
+      });
+  }, [currentPage, bands, colours, fabrics, sort, colorOptions, fabricOptions]);
+
+  // In-stock filtering on client for responsive instant toggle
+  const displayedProducts = inStockOnly ? products.filter((p) => p.inStock) : products;
+
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, results.length);
-  const paginatedResults = useMemo(() => {
-    return results.slice(startIndex, endIndex);
-  }, [results, startIndex, endIndex]);
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalProducts);
 
   const goToPage = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > totalPages || pageNumber === currentPage) return;
@@ -418,13 +458,32 @@ export default function ShopCatalog() {
       </aside>
 
       <div id="catalog-content-top" className="min-w-0 flex-1 scroll-mt-24">
-        {catalogError && <p role="alert" className="mb-4 text-sm text-red-700">Unable to load products: {catalogError}</p>}
-        {catalogLoading && <p className="mb-4 text-sm text-muted">Loading products…</p>}
+        {error && (
+          <div className="mb-6 rounded-md bg-red-50 p-4 border border-red-200 text-center">
+            <p className="text-sm font-medium text-red-700">{error}</p>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => p)}
+              className="mt-2 inline-block rounded-full bg-pine-900 px-4 py-1 text-xs font-semibold text-white transition hover:bg-pine-950 cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         <div className="mb-4 flex items-center justify-between gap-3">
           <p className="text-xs text-muted">
-            Showing <span className="font-medium text-pine-950">{results.length === 0 ? 0 : startIndex + 1}</span>–<span className="font-medium text-pine-950">{endIndex}</span> of <span className="font-medium text-pine-950">{results.length}</span> sarees
-            {activeCount > 0 ? ` · ${activeCount} filter${activeCount === 1 ? "" : "s"}` : ""}
-            {totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}
+            {loading ? (
+              "Loading sarees…"
+            ) : (
+              <>
+                Showing <span className="font-medium text-pine-950">{totalProducts === 0 ? 0 : startIndex + 1}</span>–
+                <span className="font-medium text-pine-950">{endIndex}</span> of{" "}
+                <span className="font-medium text-pine-950">{totalProducts}</span> sarees
+                {activeCount > 0 ? ` · ${activeCount} filter${activeCount === 1 ? "" : "s"}` : ""}
+                {totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}
+              </>
+            )}
           </p>
 
           <div className="flex items-center gap-2">
@@ -526,28 +585,47 @@ export default function ShopCatalog() {
           </div>
         )}
 
-        {results.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-pine-950/20 px-6 py-14 text-center text-sm text-muted">
-            No sarees match these filters.{" "}
-            <button type="button" onClick={clearAll} className="underline underline-offset-2">
-              Clear filters
-            </button>
-          </p>
-        ) : (
+        {/* Loading Skeletons */}
+        {loading && (
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-6">
-            {paginatedResults.map((product) => (
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="animate-pulse flex flex-col gap-2">
+                <div className="aspect-[3/4] w-full rounded-md bg-pine-950/5" />
+                <div className="h-4 w-3/4 rounded bg-pine-950/10" />
+                <div className="h-4 w-1/3 rounded bg-pine-950/10" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && displayedProducts.length === 0 && (
+          <div className="rounded-lg border border-dashed border-pine-950/20 px-6 py-14 text-center">
+            <p className="text-sm text-muted">
+              No sarees match these filters.{" "}
+              <button type="button" onClick={clearAll} className="underline underline-offset-2 cursor-pointer font-medium text-pine-900">
+                Clear filters
+              </button>
+            </p>
+          </div>
+        )}
+
+        {/* Product Grid */}
+        {!loading && !error && displayedProducts.length > 0 && (
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-6">
+            {displayedProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
 
         {/* Pagination Bar */}
-        {totalPages > 1 && (
+        {!loading && totalPages > 1 && (
           <nav aria-label="Catalog pagination" className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-pine-950/10 pt-6 sm:flex-row">
             <p className="font-inter text-xs text-muted">
               Page <span className="font-semibold text-pine-950">{currentPage}</span> of{" "}
               <span className="font-semibold text-pine-950">{totalPages}</span>{" "}
-              <span className="text-faint">({results.length} sarees total)</span>
+              <span className="text-faint">({totalProducts} sarees total)</span>
             </p>
 
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -608,10 +686,11 @@ export default function ShopCatalog() {
           </nav>
         )}
 
-        <p className="mt-6 text-[11px] text-muted">
-          Showing {results.length === 0 ? 0 : startIndex + 1}–{endIndex} of {results.length} piece{results.length === 1 ? "" : "s"}
-          {results.length ? ` · from ${formatINR(Math.min(...results.map((p) => p.price)))}` : ""}
-        </p>
+        {!loading && totalProducts > 0 && (
+          <p className="mt-6 text-[11px] text-muted">
+            Showing {startIndex + 1}–{endIndex} of {totalProducts} pieces
+          </p>
+        )}
       </div>
 
       {/* Mobile filter drawer */}
@@ -647,7 +726,7 @@ export default function ShopCatalog() {
                 onClick={() => setFiltersOpen(false)}
                 className="h-10 w-full rounded-md bg-pine-900 font-inter text-xs font-semibold text-white cursor-pointer"
               >
-                Show {results.length} saree{results.length === 1 ? "" : "s"}
+                Show {totalProducts} saree{totalProducts === 1 ? "" : "s"}
               </button>
             </div>
           </div>
