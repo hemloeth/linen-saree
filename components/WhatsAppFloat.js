@@ -8,15 +8,11 @@ export default function WhatsAppFloat() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // If not homepage (e.g. shop, product detail), show immediately.
-    // On homepage, only show after user scrolls past the hero section (e.g. > 350px).
+    // Hide across all pages within the initial hero / top fold;
+    // appear only after user scrolls down past 260px.
     function handleScroll() {
-      if (pathname === "/") {
-        const scrolledPastHero = window.scrollY > 320;
-        setVisible(scrolledPastHero);
-      } else {
-        setVisible(true);
-      }
+      const scrolled = window.scrollY > 260;
+      setVisible(scrolled);
     }
 
     handleScroll();
