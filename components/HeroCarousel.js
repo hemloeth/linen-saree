@@ -42,7 +42,7 @@ export default function HeroCarousel() {
     <section aria-label="Featured saree collection">
       <h1 className="sr-only">Linen Saree — Authentic handcrafted pure linen sarees delivered PAN India</h1>
 
-      <div className="bg-pine-950 lg:grid lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
+      <div className="bg-pine-950 min-h-[calc(100dvh-var(--header-offset,84px))] lg:min-h-[calc(100vh-var(--header-offset,104px))] lg:grid lg:grid-cols-[1fr_1.05fr] lg:items-stretch">
         {/* Desktop copy panel */}
         <div className="relative z-10 hidden flex-col justify-center px-14 py-16 lg:flex xl:px-20">
           <p className="font-inter text-[11px] font-medium uppercase tracking-[0.45em] text-aqua">
@@ -89,8 +89,8 @@ export default function HeroCarousel() {
           </div>
         </div>
 
-        {/* Slides */}
-        <div className="relative h-[calc(100svh-var(--header-offset,104px))] min-h-[500px] w-full overflow-hidden sm:h-[540px] lg:h-[600px]">
+        {/* Slides - Full height edge-to-edge on mobile and desktop without white gaps */}
+        <div className="relative h-[calc(100dvh-var(--header-offset,84px))] min-h-[520px] w-full overflow-hidden sm:h-[calc(100vh-var(--header-offset,88px))] lg:h-full lg:min-h-[calc(100vh-var(--header-offset,104px))]">
           {heroSlides.map((slide, i) => (
             <div
               key={slide.id}
