@@ -1,0 +1,34 @@
+# Dependency directories
+node_modules/
+
+# Build output
+.next/
+out/
+build/
+dist/
+
+# Environment files
+.env
+.env.*
+.envexample
+.env.local
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Design reference files
+.design-ref/
+
+# Other generated files
+*.log
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
