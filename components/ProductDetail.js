@@ -77,6 +77,23 @@ export default function ProductDetail({ product }) {
             {product.name}
           </h1>
 
+          {/* Color & Fabric line right below product title */}
+          {(product.colour || product.fabric || product.material) && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {product.colour && (
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-linen/80 px-2.5 py-1 font-inter text-xs font-semibold text-pine-950">
+                  <span className="h-2 w-2 rounded-full border border-pine-950/20 bg-pine-900" aria-hidden="true" />
+                  Color: <span className="font-medium text-pine-900">{product.colour}</span>
+                </span>
+              )}
+              {(product.fabric || product.material) && (
+                <span className="inline-flex items-center rounded-md border border-pine-950/15 bg-white px-2.5 py-1 font-inter text-xs font-medium text-muted">
+                  Material: <span className="ml-1 font-semibold text-pine-950 capitalize">{product.fabric || product.material}</span>
+                </span>
+              )}
+            </div>
+          )}
+
           {hasVideo && (
             <div className="mt-2.5">
               <button
@@ -116,21 +133,26 @@ export default function ProductDetail({ product }) {
             </div>
           ) : null}
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-1">
-            <p className="font-inter text-[12px] font-semibold text-pine-950">
-              Fabric: <span className="font-normal text-muted">{product.fabric || product.material || "Pure Linen"}</span>
-            </p>
-            <p className="font-inter text-[12px] font-semibold text-pine-950">
-              Length: <span className="font-normal text-muted">{product.sareeSize || product.size || "5.5 mtr"}</span>
-            </p>
-            {product.blouseSize && (
-              <p className="font-inter text-[12px] font-semibold text-pine-950">
-                Blouse: <span className="font-normal text-muted">{product.blouseSize}</span>
+          {/* Quick specs line: Color, Saree Size, Blouse, Fabric */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-pine-950/10 py-3">
+            {product.colour && (
+              <p className="font-inter text-xs text-pine-950">
+                <span className="font-semibold text-pine-900">Color:</span> {product.colour}
               </p>
             )}
-            {product.colour && (
-              <p className="font-inter text-[12px] font-semibold text-pine-950">
-                Color: <span className="font-normal text-muted">{product.colour}</span>
+            {product.sareeSize && (
+              <p className="font-inter text-xs text-pine-950">
+                <span className="font-semibold text-pine-900">Saree Size:</span> {product.sareeSize}
+              </p>
+            )}
+            {product.blouseSize && (
+              <p className="font-inter text-xs text-pine-950">
+                <span className="font-semibold text-pine-900">Blouse:</span> {product.blouseSize}
+              </p>
+            )}
+            {product.fabric && (
+              <p className="font-inter text-xs text-pine-950">
+                <span className="font-semibold text-pine-900">Fabric:</span> <span className="capitalize">{product.fabric}</span>
               </p>
             )}
           </div>
@@ -182,74 +204,91 @@ export default function ProductDetail({ product }) {
 
           {/* Product Specifications & Details Card */}
           <div id="product-details" className="mt-8 space-y-6">
-            {/* Description Section */}
-            <div className="rounded-xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
-              <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
-                Product Description
-              </h2>
-              <p className="font-sans text-[13.5px] leading-relaxed text-ink/80 whitespace-pre-line">
-                {product.description ||
-                  `Crafted from authentic handwoven ${product.fabric || "pure linen"}, this drape features a breathable, lightweight texture finished with intricate hand-detailed borders. Perfect for festive celebrations, formal gatherings and comfortable all-day wear.`}
-              </p>
-            </div>
+            {/* Description Section — strictly from backend shortDescription */}
+            {product.description && (
+              <div className="rounded-xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
+                <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
+                  Product Description
+                </h2>
+                <p className="font-sans text-[13.5px] leading-relaxed text-ink/85 whitespace-pre-line">
+                  {product.description}
+                </p>
+              </div>
+            )}
 
-            {/* Structured Specifications Grid */}
+            {/* Structured Specifications Grid — strictly from backend fields */}
             <div className="rounded-xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
               <h2 className="mb-3.5 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
-                Product Specifications
+                Product Details & Specifications
               </h2>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
-                  <dt className="font-inter text-xs font-semibold text-pine-950">Material / Fabric</dt>
-                  <dd className="font-inter text-xs text-muted capitalize">{product.fabric || product.material || "Pure Linen"}</dd>
-                </div>
-                <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
-                  <dt className="font-inter text-xs font-semibold text-pine-950">Saree Length</dt>
-                  <dd className="font-inter text-xs text-muted">{product.sareeSize || "5.5 meters"}</dd>
-                </div>
-                {product.blouseSize && (
-                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
-                    <dt className="font-inter text-xs font-semibold text-pine-950">Blouse Piece</dt>
-                    <dd className="font-inter text-xs text-muted">{product.blouseSize}</dd>
-                  </div>
-                )}
                 {product.colour && (
                   <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
                     <dt className="font-inter text-xs font-semibold text-pine-950">Color</dt>
-                    <dd className="font-inter text-xs text-muted">{product.colour}</dd>
+                    <dd className="font-inter text-xs text-muted font-medium">{product.colour}</dd>
                   </div>
                 )}
-                <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
-                  <dt className="font-inter text-xs font-semibold text-pine-950">Wash & Care</dt>
-                  <dd className="font-inter text-xs text-muted">{product.washCare || "Dry clean recommended"}</dd>
-                </div>
-                <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
-                  <dt className="font-inter text-xs font-semibold text-pine-950">Dispatch Time</dt>
-                  <dd className="font-inter text-xs text-muted">{product.dispatch || "2-3 business days"}</dd>
-                </div>
+                {product.fabric && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">Material / Fabric</dt>
+                    <dd className="font-inter text-xs text-muted capitalize">{product.fabric}</dd>
+                  </div>
+                )}
+                {product.sareeSize && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">Saree Size / Length</dt>
+                    <dd className="font-inter text-xs text-muted">{product.sareeSize}</dd>
+                  </div>
+                )}
+                {product.blouseSize && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">Blouse Size</dt>
+                    <dd className="font-inter text-xs text-muted">{product.blouseSize}</dd>
+                  </div>
+                )}
+                {product.washCare && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">Wash & Care</dt>
+                    <dd className="font-inter text-xs text-muted">{product.washCare}</dd>
+                  </div>
+                )}
+                {product.dispatch && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">Dispatch Time</dt>
+                    <dd className="font-inter text-xs text-muted">{product.dispatch}</dd>
+                  </div>
+                )}
                 {product.sku && (
                   <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
-                    <dt className="font-inter text-xs font-semibold text-pine-950">SKU Code</dt>
+                    <dt className="font-inter text-xs font-semibold text-pine-950">SKU</dt>
                     <dd className="font-inter text-xs font-mono text-muted">{product.sku}</dd>
+                  </div>
+                )}
+                {product.tags && (
+                  <div className="flex items-center justify-between border-b border-pine-950/5 pb-2">
+                    <dt className="font-inter text-xs font-semibold text-pine-950">Tags</dt>
+                    <dd className="font-inter text-xs text-muted capitalize">{product.tags}</dd>
                   </div>
                 )}
               </dl>
 
               {product.disclaimer && (
                 <div className="mt-4 rounded-lg bg-linen/50 p-3 text-[11px] leading-relaxed text-muted">
-                  <span className="font-semibold text-pine-950">Note: </span>
+                  <span className="font-semibold text-pine-950">Disclaimer: </span>
                   {product.disclaimer}
                 </div>
               )}
             </div>
 
-            {/* Accordion for Delivery & Shipping details */}
-            <div className="rounded-xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
-              <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
-                Shipping & Returns
-              </h2>
-              <Accordion items={product.details} />
-            </div>
+            {/* Accordion for Delivery, Care & Saree details */}
+            {product.details?.length > 0 && (
+              <div className="rounded-xl border border-pine-950/10 bg-white p-4 sm:p-5 shadow-xs">
+                <h2 className="mb-2 font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950">
+                  Shipping, Care & FAQs
+                </h2>
+                <Accordion items={product.details} />
+              </div>
+            )}
           </div>
         </div>
       </div>
