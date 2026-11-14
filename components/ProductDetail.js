@@ -9,7 +9,50 @@ import Stars from "@/components/Stars";
 import { AddToBagButton, BuyNowButton } from "@/components/ProductActions";
 import { formatINR, trustPoints } from "@/lib/data";
 
-const STOCK_LABEL = { true: "In stock", false: "Sold out" };
+// Map common saree color names to background and text styling for dynamic color pill
+function getColorStyles(colorName) {
+  const c = String(colorName || "").toLowerCase().trim();
+
+  if (c.includes("black")) {
+    return { bg: "#18181b", text: "#ffffff", border: "#27272a" };
+  }
+  if (c.includes("off white") || c.includes("offwhite") || c.includes("ivory") || c.includes("pearl")) {
+    return { bg: "#fbf8f2", text: "#422006", border: "#e7e0d3" };
+  }
+  if (c.includes("beige")) {
+    return { bg: "#f5ece1", text: "#451a03", border: "#e5d5c5" };
+  }
+  if (c.includes("red") || c.includes("maroon") || c.includes("crimson")) {
+    return { bg: "#fee2e2", text: "#991b1b", border: "#fca5a5" };
+  }
+  if (c.includes("pink") || c.includes("rose")) {
+    return { bg: "#fce7f3", text: "#9d174d", border: "#fbcfe8" };
+  }
+  if (c.includes("blue") || c.includes("navy") || c.includes("indigo")) {
+    return { bg: "#dbeafe", text: "#1e40af", border: "#bfdbfe" };
+  }
+  if (c.includes("green") || c.includes("olive") || c.includes("mint") || c.includes("emerald")) {
+    return { bg: "#dcfce7", text: "#166534", border: "#bbf7d0" };
+  }
+  if (c.includes("yellow") || c.includes("mustard")) {
+    return { bg: "#fef9c3", text: "#854d0e", border: "#fef08a" };
+  }
+  if (c.includes("purple") || c.includes("lavender") || c.includes("violet")) {
+    return { bg: "#f3e8ff", text: "#6b21a8", border: "#e9d5ff" };
+  }
+  if (c.includes("gold") || c.includes("golden")) {
+    return { bg: "#fef3c7", text: "#78350f", border: "#fde68a" };
+  }
+  if (c.includes("orange") || c.includes("rust") || c.includes("peach")) {
+    return { bg: "#ffedd5", text: "#9a3412", border: "#fed7aa" };
+  }
+  if (c.includes("grey") || c.includes("gray") || c.includes("silver")) {
+    return { bg: "#f3f4f6", text: "#1f2937", border: "#e5e7eb" };
+  }
+
+  // Fallback brand linen tint
+  return { bg: "#eef5f1", text: "#0c3c3c", border: "#c7dcce" };
+}
 
 export default function ProductDetail({ product }) {
   const [index, setIndex] = useState(0);
@@ -80,12 +123,21 @@ export default function ProductDetail({ product }) {
 
           {/* Color & Material badge directly under Product Name */}
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
-            {product.colour && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-pine-900/20 bg-linen/90 px-3 py-1 font-inter text-xs font-semibold text-pine-950 shadow-xs">
-                <span className="h-2 w-2 rounded-full bg-pine-900" aria-hidden="true" />
-                Color: <span className="font-bold text-pine-900">{product.colour}</span>
-              </span>
-            )}
+            {product.colour && (() => {
+              const style = getColorStyles(product.colour);
+              return (
+                <span
+                  style={{
+                    backgroundColor: style.bg,
+                    color: style.text,
+                    borderColor: style.border,
+                  }}
+                  className="inline-flex items-center rounded-full border px-3 py-1 font-inter text-xs font-semibold shadow-xs"
+                >
+                  Color: <span className="ml-1 font-bold">{product.colour}</span>
+                </span>
+              );
+            })()}
             {product.fabric && (
               <span className="inline-flex items-center rounded-full border border-pine-950/15 bg-white px-3 py-1 font-inter text-xs font-medium text-muted">
                 Material: <span className="ml-1 font-semibold text-pine-950 capitalize">{product.fabric}</span>
@@ -98,27 +150,7 @@ export default function ProductDetail({ product }) {
             )}
           </div>
 
-          {hasVideo && (
-            <div className="mt-2.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setIndex(videoIndex);
-                  if (typeof window !== "undefined") {
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-pine-900/30 bg-linen/70 px-3 py-1 font-inter text-[11px] font-semibold text-pine-950 transition hover:bg-pine-900 hover:text-white"
-              >
-                <svg className="h-3 w-3 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M8 5v14l11-7L8 5Z" />
-                </svg>
-                Watch Saree in Motion
-              </button>
-            </div>
-          )}
-
-          <div className="mt-2 flex flex-wrap items-baseline gap-2">
+          <div className="mt-3 flex flex-wrap items-baseline gap-2">
             <span className="font-inter text-xl font-semibold text-pine-900 lg:text-2xl">
               {formatINR(product.price)}
             </span>
