@@ -261,23 +261,30 @@ export default function ShippingAddressForm({ value, onChange, error, onContinue
               </span>
               <span className="text-[10px] text-muted font-normal">Select or Auto</span>
             </label>
-            <select
-              id="state"
-              required
-              value={value.state || ""}
-              onChange={(e) => onChange((prev) => ({ ...prev, state: e.target.value }))}
-              className="mt-1.5 block w-full rounded-md border border-pine-950/20 bg-white px-3 py-2.5 font-inter text-sm text-ink outline-none transition-colors focus:border-pine-900 focus:ring-1 focus:ring-pine-900 cursor-pointer"
-            >
-              <option value="" disabled>Select State</option>
-              {INDIAN_STATES.map((st) => (
-                <option key={st} value={st}>
-                  {st}
-                </option>
-              ))}
-              {value.state && !INDIAN_STATES.includes(value.state) && (
-                <option value={value.state}>{value.state}</option>
-              )}
-            </select>
+            <div className="relative mt-1.5">
+              <select
+                id="state"
+                required
+                value={value.state || ""}
+                onChange={(e) => onChange((prev) => ({ ...prev, state: e.target.value }))}
+                className="block w-full appearance-none rounded-md border border-pine-950/20 bg-white pl-3.5 pr-10 py-2.5 font-inter text-sm text-ink outline-none transition-colors focus:border-pine-900 focus:ring-1 focus:ring-pine-900 cursor-pointer"
+              >
+                <option value="" disabled>Select State</option>
+                {INDIAN_STATES.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+                {value.state && !INDIAN_STATES.includes(value.state) && (
+                  <option value={value.state}>{value.state}</option>
+                )}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-pine-900">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
