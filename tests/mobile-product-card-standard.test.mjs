@@ -90,3 +90,4 @@ test("Mobile Product Card Standard Suite", async (t) => {
     assert.match(carousel, /w-\[44vw\] min-w-\[150px\] max-w-\[200px\]/, "Carousel uses fluid mobile width wrappers");
   });
 });
+
