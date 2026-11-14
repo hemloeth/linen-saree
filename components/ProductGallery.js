@@ -22,10 +22,11 @@ function PlayIcon({ className = "h-3.5 w-3.5" }) {
 /**
  * Product gallery with Image & Video media support.
  * Desktop: vertical thumbnail rail + large stage with video playback.
- * Mobile: swipeable stage with image/video slides, dots and counter.
+ * Mobile: swipeable stage with full thumbnail strip underneath for instant switching.
  */
 export default function ProductGallery({ images = [], index = 0, onSelect, sizes = "(max-width: 1024px) 100vw, 45vw" }) {
   const trackRef = useRef(null);
+  const thumbTrackRef = useRef(null);
   const lockRef = useRef(0);
   const settleRef = useRef(null);
   const count = images.length;
@@ -39,6 +40,16 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
     if (Math.abs(track.scrollLeft - target) > 4) {
       lockRef.current = Date.now() + 700;
       track.scrollTo({ left: target, behavior: "smooth" });
+    }
+  }, [index]);
+
+  // Keep active mobile thumbnail centered in viewport
+  useEffect(() => {
+    const thumbTrack = thumbTrackRef.current;
+    if (!thumbTrack) return;
+    const activeThumb = thumbTrack.children[index];
+    if (activeThumb) {
+      activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     }
   }, [index]);
 
@@ -58,6 +69,11 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
   function goTo(next) {
     lockRef.current = Date.now() + 700;
     onSelect(next);
+    const track = trackRef.current;
+    if (track) {
+      const target = next * track.clientWidth;
+      track.scrollTo({ left: target, behavior: "smooth" });
+    }
   }
 
   function step(direction) {
@@ -68,7 +84,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
 
   return (
     <div className="lg:flex lg:items-start lg:gap-4">
-      {/* Desktop thumbnail rail */}
+      {/* Desktop vertical thumbnail rail */}
       <div
         className="no-scrollbar hidden lg:flex lg:max-h-[calc(100vh-3rem)] lg:w-20 lg:shrink-0 lg:flex-col lg:gap-2 lg:overflow-y-auto"
         role="tablist"
@@ -86,7 +102,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
               aria-selected={i === index}
               aria-label={`View ${isVideo ? "video" : `photo ${i + 1}`}: ${item.label || ""}`}
               onClick={() => onSelect(i)}
-              className={`relative aspect-[4/5] w-full overflow-hidden rounded ring-2 transition ${
+              className={`relative aspect-[3/4] w-full overflow-hidden rounded ring-2 transition cursor-pointer ${
                 i === index ? "ring-pine-900" : "ring-transparent hover:ring-pine-900/30"
               }`}
             >
@@ -96,9 +112,9 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                   src={thumbSrc}
                   alt=""
                   fill
-                  quality={100}
+                  quality={90}
                   sizes="80px"
-                  className="object-cover"
+                  className="object-cover object-top"
                 />
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center bg-pine-950/5 text-pine-900">
@@ -124,7 +140,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
 
       <div className="min-w-0 flex-1">
         {/* Desktop stage */}
-        <div className="relative hidden aspect-[4/5] w-full overflow-hidden rounded-lg bg-chip lg:block">
+        <div className="relative hidden aspect-[3/4] w-full overflow-hidden rounded-lg bg-[#fbfaf8] lg:block">
           {active.type === "video" ? (
             <div className="h-full w-full bg-black">
               <video
@@ -145,10 +161,10 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
               unoptimized={/^https?:\/\//.test(active.src)}
               alt={active.alt || "Product image"}
               fill
-              quality={100}
+              quality={90}
               preload
               sizes={sizes}
-              className="object-cover"
+              className="object-cover object-top"
             />
           )}
 
@@ -158,7 +174,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                 type="button"
                 onClick={() => step(-1)}
                 aria-label="Previous media"
-                className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-pine-950 shadow transition-colors hover:bg-white"
+                className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-pine-950 shadow transition-colors hover:bg-white cursor-pointer"
               >
                 <Chevron direction="left" />
               </button>
@@ -166,7 +182,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                 type="button"
                 onClick={() => step(1)}
                 aria-label="Next media"
-                className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-pine-950 shadow transition-colors hover:bg-white"
+                className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-pine-950 shadow transition-colors hover:bg-white cursor-pointer"
               >
                 <Chevron direction="right" />
               </button>
@@ -183,13 +199,13 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
           <div
             ref={trackRef}
             onScroll={handleScroll}
-            className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-lg"
+            className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain rounded-lg bg-[#fbfaf8]"
             aria-label="Product media — swipe to browse"
           >
             {images.map((item, i) => {
               const isVideo = item.type === "video";
               return (
-                <div key={(item.src || "") + i} className="relative aspect-[4/5] w-full shrink-0 snap-center snap-always bg-chip">
+                <div key={(item.src || "") + i} className="relative aspect-[3/4] w-full shrink-0 snap-center snap-always bg-[#fbfaf8]">
                   {isVideo ? (
                     <div className="h-full w-full bg-black">
                       <video
@@ -207,10 +223,10 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                       unoptimized={/^https?:\/\//.test(item.src)}
                       alt={item.alt || ""}
                       fill
-                      quality={100}
+                      quality={90}
                       preload={i === 0}
                       sizes="100vw"
-                      className="object-cover"
+                      className="h-full w-full object-cover object-top"
                     />
                   )}
                 </div>
@@ -218,36 +234,78 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
             })}
           </div>
 
-          <div className="mt-2 flex items-center justify-center gap-1.5">
-            {images.map((item, i) => (
-              <button
-                key={(item.src || "") + i}
-                type="button"
-                onClick={() => goTo(i)}
-                aria-label={`Go to ${item.type === "video" ? "video" : `photo ${i + 1}`}`}
-                aria-current={i === index}
-                className={`flex items-center justify-center transition-all ${
-                  item.type === "video"
-                    ? i === index
-                      ? "rounded-full bg-pine-900 px-2 py-0.5 text-[9px] font-bold text-white"
-                      : "rounded-full bg-pine-900/20 px-1.5 py-0.5 text-[9px] text-pine-900"
-                    : i === index
-                    ? "h-1.5 w-6 rounded-full bg-pine-900"
-                    : "h-1.5 w-1.5 rounded-full bg-pine-900/30"
-                }`}
+          {/* Mobile Thumbnail Carousel / Rail below the big image */}
+          {count > 1 && (
+            <div className="mt-3">
+              <div
+                ref={thumbTrackRef}
+                className="no-scrollbar flex items-center gap-2 overflow-x-auto scroll-smooth py-1 px-1"
+                role="tablist"
+                aria-label="Product media thumbnails"
               >
-                {item.type === "video" && (
-                  <span className="flex items-center gap-0.5">
-                    <PlayIcon className="h-2 w-2" />
-                    Video
-                  </span>
-                )}
-              </button>
-            ))}
-            <span className="ml-1.5 font-inter text-[11px] tabular-nums text-muted">
-              {index + 1}/{count}
-            </span>
-          </div>
+                {images.map((item, i) => {
+                  const isVideo = item.type === "video";
+                  const thumbSrc =
+                    item.poster ||
+                    (!isVideo && item.src && !/\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(item.src) ? item.src : "");
+                  const isSelected = i === index;
+
+                  return (
+                    <button
+                      key={"mobile-thumb-" + (item.src || "") + i}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      aria-label={`View ${isVideo ? "video" : `photo ${i + 1}`}`}
+                      onClick={() => goTo(i)}
+                      className={`relative aspect-[3/4] w-[62px] shrink-0 overflow-hidden rounded-md border-2 transition-all duration-200 cursor-pointer ${
+                        isSelected
+                          ? "border-pine-900 ring-2 ring-pine-900/30 scale-[1.04] shadow-md z-10"
+                          : "border-pine-950/15 opacity-70 hover:opacity-100 hover:border-pine-950/40"
+                      }`}
+                    >
+                      {thumbSrc ? (
+                        <Image
+                          unoptimized={/^https?:\/\//.test(thumbSrc)}
+                          src={thumbSrc}
+                          alt=""
+                          fill
+                          sizes="65px"
+                          className="object-cover object-top"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full flex-col items-center justify-center bg-pine-950/10 text-pine-900">
+                          <PlayIcon className="h-4 w-4" />
+                          <span className="mt-0.5 font-inter text-[8px] font-bold">VIDEO</span>
+                        </div>
+                      )}
+
+                      {isVideo && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-pine-900/90 text-white shadow">
+                            <PlayIcon className="h-2.5 w-2.5 ml-0.5" />
+                          </span>
+                          <span className="mt-0.5 font-inter text-[7.5px] font-bold uppercase tracking-wider">
+                            Video
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Progress counter + swipe hint */}
+              <div className="mt-2 flex items-center justify-between px-1">
+                <span className="font-inter text-[11px] text-muted">
+                  Tap thumbnail or swipe image
+                </span>
+                <span className="font-inter text-[11px] font-semibold tabular-nums text-pine-900">
+                  {index + 1} / {count}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

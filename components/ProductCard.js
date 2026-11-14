@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AddToBagButton, BuyNowButton } from "@/components/ProductActions";
 import { useStore } from "@/components/StoreProvider";
@@ -60,19 +61,35 @@ function BoltIcon({ size = 10 }) {
 }
 
 export default function ProductCard({ product, variant = "default" }) {
+  const router = useRouter();
   const { isWished, toggleWishlist } = useStore();
   const gallery = useMemo(
     () => (product.gallery?.length ? product.gallery : [product.image]),
     [product.gallery, product.image]
   );
   const [frame, setFrame] = useState(0);
+  const [isOpening, setIsOpening] = useState(false);
   const timerRef = useRef(null);
   const wished = isWished(product.id);
   const off = discountPercent(product);
   const isCompact = variant === "compact";
 
+  // Pre-warm route bundle on hover or touch so navigation is instant
+  const prefetchProduct = useCallback(() => {
+    try {
+      router.prefetch(`/product/${product.id}`);
+    } catch {
+      // safe fallback
+    }
+  }, [router, product.id]);
+
+  const handleOpenProduct = useCallback(() => {
+    setIsOpening(true);
+  }, []);
+
   // Start image cycling only on desktop hover (intent-based pre-warming)
   const startCycle = useCallback(() => {
+    prefetchProduct();
     if (gallery.length < 2) return;
     if (typeof window !== "undefined") {
       // Touch-only screens do not support hover intent cycling
@@ -94,7 +111,7 @@ export default function ProductCard({ product, variant = "default" }) {
       next = (next + 1) % gallery.length;
       setFrame(next);
     }, HOVER_INTERVAL);
-  }, [gallery]);
+  }, [gallery, prefetchProduct]);
 
   const stopCycle = useCallback(() => {
     clearInterval(timerRef.current);
@@ -107,18 +124,21 @@ export default function ProductCard({ product, variant = "default" }) {
 
   return (
     <article
-      className={`group relative flex h-full w-full flex-col justify-between rounded-lg border border-pine-950/[0.07] bg-white shadow-[0_1px_3px_rgba(9,43,43,0.03)] transition-all duration-300 hover:border-pine-950/20 hover:shadow-[0_8px_22px_-8px_rgba(9,43,43,0.12)] ${
+      className={`group relative flex h-full w-full flex-col justify-between rounded-lg border border-pine-950/[0.07] bg-white shadow-[0_1px_3px_rgba(9,43,43,0.03)] transition-all duration-200 active:scale-[0.985] hover:border-pine-950/20 hover:shadow-[0_8px_22px_-8px_rgba(9,43,43,0.12)] ${
         isCompact ? "text-[11px]" : ""
       }`}
       onMouseEnter={startCycle}
+      onTouchStart={prefetchProduct}
       onMouseLeave={stopCycle}
     >
       {/* ── Image Stage ── */}
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-lg bg-[#fbfaf8]">
         <Link
           href={`/product/${product.id}`}
+          prefetch={true}
+          onClick={handleOpenProduct}
           aria-label={product.name}
-          className="absolute inset-0 block"
+          className="absolute inset-0 block cursor-pointer"
         >
           {/* Base image — edge-to-edge full width with object-top */}
           {gallery[0] && (
@@ -160,6 +180,19 @@ export default function ProductCard({ product, variant = "default" }) {
             );
           })}
         </Link>
+
+        {/* Instant click navigation feedback */}
+        {isOpening && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/50 backdrop-blur-[1.5px] transition-all animate-in fade-in duration-150 pointer-events-none">
+            <span className="flex items-center gap-1.5 rounded-full bg-pine-900 px-3 py-1 font-inter text-[10px] font-semibold tracking-wide text-white shadow-md">
+              <svg className="h-3 w-3 animate-spin text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+              Opening…
+            </span>
+          </div>
+        )}
 
         {/* Desktop hover scrim + affordance */}
         <div
@@ -209,7 +242,7 @@ export default function ProductCard({ product, variant = "default" }) {
               ? `Remove ${product.name} from wishlist`
               : `Add ${product.name} to wishlist`
           }
-          className={`absolute right-1.5 top-1.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-white sm:right-2 sm:top-2 sm:h-7.5 sm:w-7.5 ${
+          className={`absolute right-1.5 top-1.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-white sm:right-2 sm:top-2 sm:h-7.5 sm:w-7.5 cursor-pointer ${
             wished ? "text-[#b42318]" : "text-pine-950/60 hover:text-pine-950"
           }`}
         >
@@ -234,7 +267,9 @@ export default function ProductCard({ product, variant = "default" }) {
           >
             <Link
               href={`/product/${product.id}`}
-              className="hover:underline underline-offset-2"
+              prefetch={true}
+              onClick={handleOpenProduct}
+              className="hover:underline underline-offset-2 cursor-pointer"
             >
               {product.name}
             </Link>

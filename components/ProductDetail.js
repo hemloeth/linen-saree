@@ -17,7 +17,16 @@ export default function ProductDetail({ product }) {
 
   // Combine product gallery images and product video into unified media items
   const mediaItems = useMemo(() => {
-    const list = (product.images || []).map((img, i) => ({
+    let rawImages = [];
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      rawImages = product.images;
+    } else if (Array.isArray(product.gallery) && product.gallery.length > 0) {
+      rawImages = product.gallery;
+    } else if (product.image) {
+      rawImages = [product.image];
+    }
+
+    const list = rawImages.map((img, i) => ({
       type: "image",
       src: typeof img === "string" ? img : img.src,
       alt: (typeof img === "object" && img.alt) || `${product.name} — photo ${i + 1}`,

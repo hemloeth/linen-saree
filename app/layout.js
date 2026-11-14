@@ -1,8 +1,10 @@
 import { Cinzel, Inter } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import StoreProvider from "@/components/StoreProvider";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import JsonLd from "@/components/JsonLd";
+import TopProgressBar from "@/components/TopProgressBar";
 
 const organizationSchema = {
   "@context": "https://schema.org",
@@ -56,6 +58,9 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-white overflow-x-hidden w-full max-w-full"
       >
+        <Suspense fallback={null}>
+          <TopProgressBar />
+        </Suspense>
         <StoreProvider>
           {children}
           <WhatsAppFloat />
