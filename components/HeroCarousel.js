@@ -91,7 +91,7 @@ export default function HeroCarousel() {
         </div>
 
         {/* Slides */}
-        <div className="relative h-[440px] w-full overflow-hidden sm:h-[520px] lg:h-[600px]">
+        <div className="relative h-[calc(100svh-var(--header-offset,104px))] min-h-[500px] w-full overflow-hidden sm:h-[540px] lg:h-[600px]">
           {heroSlides.map((slide, i) => (
             <div
               key={slide.id}
@@ -108,18 +108,38 @@ export default function HeroCarousel() {
                 preload={i === 0}
                 className="object-cover object-top"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-black/25 lg:bg-gradient-to-r lg:from-pine-950/70 lg:via-transparent lg:to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/30 lg:bg-gradient-to-r lg:from-pine-950/70 lg:via-transparent lg:to-transparent" />
             </div>
           ))}
 
-          {/* Mobile overlay copy */}
-          <div className="absolute inset-x-0 bottom-10 px-6 text-center lg:hidden">
-            <p className="font-display text-[22px] font-medium uppercase leading-tight tracking-[0.22em] text-white drop-shadow-sm">
+          {/* Mobile overlay copy with CTA */}
+          <div className="absolute inset-x-0 bottom-14 z-10 px-6 text-center lg:hidden">
+            <p className="font-inter text-[10px] font-semibold uppercase tracking-[0.35em] text-aqua">
+              House of Qalakari
+            </p>
+            <p className="mt-2 font-display text-[22px] font-medium uppercase leading-tight tracking-[0.16em] text-white drop-shadow-md sm:text-2xl">
               Celebrate the elegance
               <br />
               of tradition
             </p>
-            <span className="mx-auto mt-4 block h-px w-16 bg-white/70" />
+            <span className="mx-auto mt-3 block h-px w-14 bg-white/60" />
+            <p className="mx-auto mt-2.5 max-w-xs font-inter text-[11px] leading-relaxed text-white/80">
+              Handcrafted pure linen & Banarasi sarees delivered across India.
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <Link
+                href="/shop"
+                className="inline-flex h-10 items-center justify-center rounded-full bg-white px-6 font-inter text-xs font-bold uppercase tracking-wider text-pine-950 shadow-lg transition active:scale-95"
+              >
+                Shop sarees
+              </Link>
+              <Link
+                href="/collections"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-white/60 bg-black/20 px-5 font-inter text-xs font-semibold uppercase tracking-wider text-white backdrop-blur-xs transition active:scale-95"
+              >
+                Explore
+              </Link>
+            </div>
           </div>
 
           <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-3 lg:px-5">
