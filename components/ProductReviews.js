@@ -149,14 +149,16 @@ export default function ProductReviews({ product }) {
             {product.reviews} ratings · {reviews.length} written reviews
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setFormOpen((open) => !open)}
-          aria-expanded={formOpen}
-          className="h-9 rounded-md border border-pine-900 px-3.5 font-inter text-[11px] font-semibold text-pine-900 transition-colors hover:bg-linen"
-        >
-          {formOpen ? "Close" : "Write a review"}
-        </button>
+        {!formOpen ? (
+          <button
+            type="button"
+            onClick={() => setFormOpen(true)}
+            aria-expanded={false}
+            className="h-9 cursor-pointer rounded-md border border-pine-900 bg-white px-4 font-inter text-xs font-semibold text-pine-900 shadow-2xs transition-colors hover:bg-cream-card hover:border-pine-950"
+          >
+            Write a review
+          </button>
+        ) : null}
       </div>
 
       <div className="mt-5 grid gap-8 lg:grid-cols-[240px_1fr] lg:gap-12">
@@ -181,9 +183,26 @@ export default function ProductReviews({ product }) {
 
         <div>
           {formOpen ? (
-            <form onSubmit={submit} className="mb-6 rounded-lg border border-pine-950/15 p-4">
-              <p className="font-inter text-[12px] font-semibold text-pine-950">Your review</p>
-              <div className="mt-2 flex items-center gap-3">
+            <form onSubmit={submit} className="mb-6 rounded-xl border border-pine-950/15 bg-white p-4 sm:p-5 shadow-xs animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="flex items-center justify-between border-b border-pine-950/10 pb-3">
+                <div>
+                  <h3 className="font-inter text-sm font-semibold text-pine-950">Your review</h3>
+                  <p className="text-[11px] text-muted">Share your experience with this handcrafted saree</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormOpen(false)}
+                  aria-label="Close review form"
+                  className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-pine-950/15 bg-cream-surface px-2.5 font-inter text-xs font-medium text-pine-900 transition-colors hover:bg-linen hover:border-pine-950"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                  <span>Close</span>
+                </button>
+              </div>
+
+              <div className="mt-3 flex items-center gap-3">
                 <RatingInput value={draft.rating} onChange={(rating) => setDraft({ ...draft, rating })} />
                 <span className="text-[11px] text-muted">{draft.rating} / 5</span>
               </div>
@@ -225,27 +244,38 @@ export default function ProductReviews({ product }) {
                 </div>
               ) : null}
 
-              <button
-                type="submit"
-                disabled={sending}
-                className={`mt-3 flex h-10 items-center justify-center gap-2 rounded-md px-5 font-inter text-xs font-semibold text-white shadow-xs transition-all ${
-                  sending
-                    ? "cursor-not-allowed bg-tomato/80 opacity-80"
-                    : "cursor-pointer bg-tomato hover:bg-tomato-hover active:scale-[0.98]"
-                }`}
-              >
-                {sending ? (
-                  <>
-                    <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    <span>Submitting review…</span>
-                  </>
-                ) : (
-                  <span>Submit review</span>
-                )}
-              </button>
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className={`flex h-10 items-center justify-center gap-2 rounded-md px-5 font-inter text-xs font-semibold text-white shadow-xs transition-all ${
+                    sending
+                      ? "cursor-not-allowed bg-tomato/80 opacity-80"
+                      : "cursor-pointer bg-tomato hover:bg-tomato-hover active:scale-[0.98]"
+                  }`}
+                >
+                  {sending ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                      <span>Submitting review…</span>
+                    </>
+                  ) : (
+                    <span>Submit review</span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormOpen(false)}
+                  disabled={sending}
+                  className="h-10 cursor-pointer rounded-md border border-pine-950/20 bg-white px-4 font-inter text-xs font-medium text-pine-900 transition-colors hover:bg-cream-card hover:border-pine-950"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           ) : null}
 
