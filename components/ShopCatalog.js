@@ -170,40 +170,69 @@ export default function ShopCatalog() {
       .sort((a, b) => b.count - a.count);
   }, [filterMeta, fabrics]);
 
-  // Sync initial page and price from URL query parameter
+  // Sync initial page, filters and sort from URL query parameter (and on browser back/forward)
   useEffect(() => {
     const p = parseInt(searchParams.get("page"), 10);
     if (!isNaN(p) && p >= 1) {
       setCurrentPage(p);
+    } else {
+      setCurrentPage(1);
     }
     const priceParam = searchParams.get("price");
     if (priceParam && PRICE_BANDS.some((b) => b.key === priceParam)) {
       setSelectedBand(priceParam);
+    } else if (!priceParam) {
+      setSelectedBand("");
     }
     const inStockParam = searchParams.get("inStock");
-    if (inStockParam === "true" || inStockParam === "1") {
-      setInStockOnly(true);
+    setInStockOnly(inStockParam === "true" || inStockParam === "1");
+
+    const colorParam = searchParams.get("color");
+    if (colorParam) {
+      const tokens = colorParam.split(",").filter((k) => STANDARD_COLORS.some((c) => c.key === k));
+      setColours(tokens);
+    } else {
+      setColours([]);
+    }
+
+    const fabricParam = searchParams.get("fabric") || searchParams.get("material");
+    if (fabricParam) {
+      const tokens = fabricParam.split(",").filter((k) => STANDARD_FABRICS.some((f) => f.key === k));
+      setFabrics(tokens);
+    } else {
+      setFabrics([]);
+    }
+
+    const sortParam = searchParams.get("sort") || searchParams.get("sortBy");
+    if (sortParam && SORTS.some((s) => s.key === sortParam)) {
+      setSort(sortParam);
+    } else {
+      setSort("featured");
     }
   }, [searchParams]);
 
-  // Reset to page 1 whenever any filter changes (after initial mount)
+  // Reset to page 1 and synchronize URL query parameters whenever any filter changes
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
     setCurrentPage(1);
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("page");
+    const params = new URLSearchParams();
     if (selectedBand) {
       params.set("price", selectedBand);
-    } else {
-      params.delete("price");
     }
     if (inStockOnly) {
       params.set("inStock", "true");
-    } else {
-      params.delete("inStock");
+    }
+    if (colours.length > 0) {
+      params.set("color", colours.join(","));
+    }
+    if (fabrics.length > 0) {
+      params.set("fabric", fabrics.join(","));
+    }
+    if (sort && sort !== "featured") {
+      params.set("sort", sort);
     }
     const query = params.toString();
     router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
