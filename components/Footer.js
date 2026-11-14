@@ -60,12 +60,16 @@ export default function Footer() {
         {/* Top Header Row: Brand Identity & Back to Top (from linen-saree) */}
         <div className="mt-12 flex flex-col gap-4 border-b border-pine-950/10 pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <Link href="/" className="inline-block cursor-pointer">
-              <span className="font-display text-2xl font-semibold uppercase tracking-[0.16em] text-pine-900 transition-colors hover:text-pine-700 sm:text-3xl">
-                Linen Saree
-              </span>
+            <Link href="/" className="inline-flex items-center gap-2 cursor-pointer">
+              <Image
+                src="/linen-saree-logo.png"
+                alt="Linen Saree"
+                width={150}
+                height={45}
+                className="h-9 sm:h-10 w-auto object-contain"
+              />
             </Link>
-            <p className="mt-1 text-xs font-light tracking-wide text-muted sm:text-sm">
+            <p className="mt-2 text-xs font-light tracking-wide text-muted sm:text-sm">
               Authentic Handcrafted Pure Linen Sarees
             </p>
           </div>
