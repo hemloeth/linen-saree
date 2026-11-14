@@ -187,9 +187,10 @@ export default function ProductPageView({ productId }) {
               </h2>
               <Link
                 href="/shop"
-                className="font-inter text-[11px] text-pine-900 underline underline-offset-2"
+                scroll={true}
+                className="font-inter text-xs font-semibold text-pine-900 underline underline-offset-4 hover:text-pine-950 transition-colors"
               >
-                View all
+                View all &rarr;
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">

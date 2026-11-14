@@ -79,10 +79,13 @@ export default function ScrollRestorer() {
 
     return () => {
       // ONLY save if scrollY is non-zero so we NEVER overwrite a real position with 0 during navigation!
+      // Guard: never save a product detail scroll position as a catalog fallback scroll position!
       if (window.scrollY > 0) {
         try {
           sessionStorage.setItem(`${SCROLL_STORAGE_KEY_PREFIX}${pathname}`, String(window.scrollY));
-          sessionStorage.setItem(FALLBACK_SCROLL_KEY, String(window.scrollY));
+          if (!pathname.startsWith("/product/")) {
+            sessionStorage.setItem(FALLBACK_SCROLL_KEY, String(window.scrollY));
+          }
         } catch {}
       }
       window.removeEventListener("scroll", handleScroll);
@@ -95,6 +98,17 @@ export default function ScrollRestorer() {
 
     const isBackNavigation = isPopStateRef.current;
     isPopStateRef.current = false;
+
+    // Normal forward navigation via Link (e.g. clicking "View all" to /shop, or any link):
+    // ALWAYS start at the top (top: 0)! Never restore previous scroll on forward links.
+    if (!isBackNavigation) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      sessionStorage.removeItem(TARGET_ID_KEY);
+      sessionStorage.removeItem(LEGACY_PRODUCT_ID_KEY);
+      sessionStorage.removeItem(FALLBACK_SCROLL_KEY);
+      prevPathnameRef.current = pathname;
+      return;
+    }
 
     const savedPosRaw = sessionStorage.getItem(`${SCROLL_STORAGE_KEY_PREFIX}${pathname}`);
     const fallbackScrollRaw = sessionStorage.getItem(FALLBACK_SCROLL_KEY);
@@ -112,9 +126,7 @@ export default function ScrollRestorer() {
     }
 
     // Determine if returning to any catalog/listing page (Home, Shop, Best-Sellers, Categories, Collections, Search)
-    const isReturningToCatalog =
-      !pathname.startsWith("/product/") &&
-      (isBackNavigation || Boolean(targetElementId) || Boolean(savedPos));
+    const isReturningToCatalog = !pathname.startsWith("/product/");
 
     if (isReturningToCatalog && (savedPos !== null || targetElementId)) {
       // Step 0: Synchronous instant pre-paint jump (stops Hero section flash dead in its tracks!)
