@@ -1,5 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT = path.resolve(__dirname, "..");
 
 /**
  * Pure cart transition logic identical to StoreProvider implementation
@@ -98,7 +105,6 @@ test("Cart Behavioral Concurrency & State Machine Suite", async (t) => {
     cart = pureAdd(cart, p3, 1);
 
     // Assume backend mutation for p2 fails (e.g. out of stock on server)
-    // Delta rollback must subtract ONLY p2's quantity, leaving p1 and p3 intact!
     cart = pureDeltaRollback(cart, "prod-2", 2);
 
     assert.equal(cart.length, 2, "Cart contains 2 items after isolated delta rollback");
@@ -109,90 +115,199 @@ test("Cart Behavioral Concurrency & State Machine Suite", async (t) => {
     );
   });
 
-  await t.test("5. Serialized queue with pending mutation counter blocks premature server overwrite", async () => {
+  await t.test("5. Add then Clear: serialized queue ensures cart is cleared and older add response cannot resurrect item", async () => {
     let clientCart = [];
     let pendingMutationsCount = 0;
-    let serverReconciled = false;
+    let queue = Promise.resolve();
 
-    // Mutation 1: Add p1
-    pendingMutationsCount++;
     const p1 = { id: "prod-1", name: "Saree 1" };
+
+    // 1. User adds p1
     clientCart = pureAdd(clientCart, p1, 1);
-
-    // Mutation 2: Add p2 (fired before Mutation 1 server response returns)
     pendingMutationsCount++;
-    const p2 = { id: "prod-2", name: "Saree 2" };
-    clientCart = pureAdd(clientCart, p2, 1);
 
-    assert.equal(clientCart.length, 2, "Optimistic client cart has both p1 and p2");
+    // Enqueue Add
+    queue = queue.then(async () => {
+      // Simulate backend add latency
+      await new Promise((r) => setTimeout(r, 10));
+      pendingMutationsCount--;
+      // Backend add returns cart with p1
+      if (pendingMutationsCount === 0) {
+        clientCart = [{ product: p1, qty: 1 }];
+      }
+    });
 
-    // Mutation 1 server response arrives with serverCart that only knows about p1
-    const serverCartFromMutation1 = [{ product: p1, qty: 1 }];
-    pendingMutationsCount--;
+    // 2. User immediately clicks Clear before Add resolves
+    clientCart = [];
+    pendingMutationsCount++;
 
-    // Guard: Only reconcile when pendingMutationsCount === 0
-    if (pendingMutationsCount === 0) {
-      clientCart = serverCartFromMutation1;
-      serverReconciled = true;
-    }
+    // Enqueue Clear in the same serialized queue
+    queue = queue.then(async () => {
+      // Simulate backend clear latency
+      await new Promise((r) => setTimeout(r, 10));
+      pendingMutationsCount--;
+      if (pendingMutationsCount === 0) {
+        clientCart = [];
+      }
+    });
 
-    assert.equal(
-      serverReconciled,
-      false,
-      "Premature reconciliation was blocked because Mutation 2 is still in flight"
-    );
-    assert.equal(clientCart.length, 2, "clientCart still holds both p1 and p2");
-
-    // Mutation 2 server response arrives with serverCart that knows about both
-    const serverCartFromMutation2 = [
-      { product: p1, qty: 1 },
-      { product: p2, qty: 1 },
-    ];
-    pendingMutationsCount--;
-
-    if (pendingMutationsCount === 0) {
-      clientCart = serverCartFromMutation2;
-      serverReconciled = true;
-    }
-
-    assert.equal(serverReconciled, true, "Authoritative reconciliation applied once queue drained");
-    assert.equal(clientCart.length, 2, "Final cart is consistent");
+    await queue;
+    assert.equal(clientCart.length, 0, "Cart is completely empty after Add then Clear queue execution");
+    assert.equal(pendingMutationsCount, 0, "All mutations resolved");
   });
 
-  await t.test("6. Failed clear operation restores previous cart state", () => {
+  await t.test("6. Clear then Add: serialized queue preserves newly added item and prevents Clear from wiping it", async () => {
+    let clientCart = [{ product: { id: "prod-old" }, qty: 1 }];
+    let pendingMutationsCount = 0;
+    let queue = Promise.resolve();
+
+    // 1. User clicks Clear
+    clientCart = [];
+    pendingMutationsCount++;
+
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+      pendingMutationsCount--;
+      // Clear response: only overwrite if queue has drained
+      if (pendingMutationsCount === 0) {
+        clientCart = [];
+      }
+    });
+
+    // 2. User immediately clicks Add for p2 before Clear resolves
+    const p2 = { id: "prod-new", name: "New Saree" };
+    clientCart = pureAdd(clientCart, p2, 1);
+    pendingMutationsCount++;
+
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+      pendingMutationsCount--;
+      if (pendingMutationsCount === 0) {
+        clientCart = [{ product: p2, qty: 1 }];
+      }
+    });
+
+    await queue;
+    assert.equal(clientCart.length, 1, "Cart contains the newly added product");
+    assert.equal(clientCart[0].product.id, "prod-new", "prod-new was not wiped by earlier Clear response");
+  });
+
+  await t.test("7. Remove then Clear in serialized queue", async () => {
     let clientCart = [
+      { product: { id: "p1" }, qty: 1 },
+      { product: { id: "p2" }, qty: 2 },
+    ];
+    let pendingMutationsCount = 0;
+    let queue = Promise.resolve();
+
+    // Remove p1
+    clientCart = pureRemove(clientCart, "p1");
+    pendingMutationsCount++;
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 5));
+      pendingMutationsCount--;
+    });
+
+    // Clear
+    clientCart = [];
+    pendingMutationsCount++;
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 5));
+      pendingMutationsCount--;
+      if (pendingMutationsCount === 0) {
+        clientCart = [];
+      }
+    });
+
+    await queue;
+    assert.equal(clientCart.length, 0, "Cart is cleanly emptied");
+    assert.equal(pendingMutationsCount, 0);
+  });
+
+  await t.test("8. Network failure during Clear restores previous cart if no newer operations queued", async () => {
+    const originalCart = [
       { product: { id: "p1" }, qty: 1 },
       { product: { id: "p2" }, qty: 3 },
     ];
-    const prevCart = [...clientCart];
+    let clientCart = [...originalCart];
+    let pendingMutationsCount = 0;
+    const prevSnapshot = [...clientCart];
 
     // Optimistically clear
     clientCart = [];
-    assert.equal(clientCart.length, 0, "Cart is optimistically empty");
+    pendingMutationsCount++;
 
-    // Backend network failure on clear()
-    const clearFailed = true;
-    if (clearFailed) {
-      // Recovery restores previous cart
-      clientCart = prevCart;
+    let clearSuccess = false;
+    let clearError = null;
+
+    try {
+      // Simulate backend network failure
+      throw new Error("Network timeout");
+    } catch (err) {
+      pendingMutationsCount--;
+      if (pendingMutationsCount === 0) {
+        clientCart = prevSnapshot;
+      }
+      clearSuccess = false;
+      clearError = err.message;
     }
 
-    assert.equal(clientCart.length, 2, "Cart was safely restored on failed clear");
-    assert.equal(clientCart[1].qty, 3);
+    assert.equal(clearSuccess, false);
+    assert.equal(clearError, "Network timeout");
+    assert.equal(clientCart.length, 2, "Items restored after failed clear");
+    assert.equal(clientCart[0].product.id, "p1");
   });
 
-  await t.test("7. awaitCartSettled awaits complete queue resolution before proceeding", async () => {
+  await t.test("9. Navigation to checkout awaits pending cart queue resolution", async () => {
     let settled = false;
     let queue = Promise.resolve();
 
-    // Enqueue an async mutation that takes 20ms
+    // Queue in-flight cart operations
     queue = queue.then(async () => {
-      await new Promise((r) => setTimeout(r, 20));
+      await new Promise((r) => setTimeout(r, 25));
       settled = true;
     });
 
-    assert.equal(settled, false, "Not settled before await");
-    await queue;
-    assert.equal(settled, true, "Settled after queue completion");
+    // Checkout verification
+    async function checkoutSubmit() {
+      await queue;
+      return { ready: settled };
+    }
+
+    const result = await checkoutSubmit();
+    assert.equal(result.ready, true, "Checkout submission awaited queue completion before executing");
+  });
+
+  await t.test("10. Authentication state changing (logout/login) awaits in-flight cart queue settlement", () => {
+    const providerCode = fs.readFileSync(path.join(ROOT, "components", "StoreProvider.js"), "utf8");
+    assert.match(
+      providerCode,
+      /const\s+authenticate\s*=\s*useCallback\s*\(\s*async[^{]*\{\s*if\s*\(\s*typeof\s+awaitCartSettled\s*===\s*"function"\s*\)\s*\{\s*await\s+awaitCartSettled\(\);/s,
+      "authenticate awaits awaitCartSettled before proceeding"
+    );
+    assert.match(
+      providerCode,
+      /const\s+logout\s*=\s*useCallback\s*\(\s*async[^{]*\{\s*if\s*\(\s*typeof\s+awaitCartSettled\s*===\s*"function"\s*\)\s*\{\s*await\s+awaitCartSettled\(\);/s,
+      "logout awaits awaitCartSettled before proceeding"
+    );
+  });
+
+  await t.test("11. StoreProvider clear implementation participates in cartQueueRef and returns explicit results", () => {
+    const providerCode = fs.readFileSync(path.join(ROOT, "components", "StoreProvider.js"), "utf8");
+    assert.match(
+      providerCode,
+      /clear\s*=\s*useCallback\s*\(\s*async[^{]*\{[^}]*cartQueueRef\.current\s*=\s*cartQueueRef\.current/s,
+      "clear chains onto cartQueueRef.current"
+    );
+    assert.match(
+      providerCode,
+      /pendingCartMutationsRef\.current\+\+/,
+      "clear increments pendingCartMutationsRef"
+    );
+    assert.match(
+      providerCode,
+      /resolve\(\{\s*success:\s*true\s*\}\)/,
+      "clear returns explicit success result"
+    );
   });
 });

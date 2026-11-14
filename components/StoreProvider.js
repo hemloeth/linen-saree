@@ -354,8 +354,55 @@ export function StoreProvider({ children }) {
     }
   }, [wishlist, restored, user]);
 
+  const pendingCartMutationsRef = useRef(0);
+  const cartRef = useRef(items);
+
+  // Synchronous guest cart persistence helper
+  const persistGuestCart = useCallback((newLines) => {
+    if (!user && typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(
+          CART_KEY,
+          JSON.stringify(newLines.map((l) => ({ id: l.product.id, qty: l.qty })))
+        );
+      } catch {
+        /* storage unavailable */
+      }
+    }
+  }, [user]);
+
+  // Centralized synchronous cart state commit
+  const updateCartState = useCallback(
+    (nextCart) => {
+      cartRef.current = nextCart;
+      itemsRef.current = nextCart;
+      persistGuestCart(nextCart);
+      setItems((current) => nextCart);
+      return nextCart;
+    },
+    [persistGuestCart]
+  );
+
+  // Synchronize itemsRef without mutating state in render/updaters
+  useEffect(() => {
+    itemsRef.current = items;
+    cartRef.current = items;
+  }, [items]);
+
+  // Await in-flight cart mutations to complete (essential for checkout navigation)
+  const awaitCartSettled = useCallback(async () => {
+    try {
+      await cartQueueRef.current;
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   // Authenticate (Login / Register) with Safe Data Migration
   const authenticate = useCallback(async (mode, fields) => {
+    if (typeof awaitCartSettled === "function") {
+      await awaitCartSettled();
+    }
     setAuthBusy(true);
     try {
       const response =
@@ -400,7 +447,7 @@ export function StoreProvider({ children }) {
 
         const serverCart = await cartApi.get();
         if (serverCart?.cart) {
-          setItems(
+          updateCartState(
             serverCart.cart
               .filter((l) => l.productId)
               .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
@@ -414,10 +461,13 @@ export function StoreProvider({ children }) {
     } finally {
       setAuthBusy(false);
     }
-  }, []);
+  }, [awaitCartSettled, updateCartState]);
 
   // Logout
   const logout = useCallback(async () => {
+    if (typeof awaitCartSettled === "function") {
+      await awaitCartSettled();
+    }
     try {
       await accountApi.logout();
     } catch {
@@ -425,10 +475,10 @@ export function StoreProvider({ children }) {
     }
     setUser(null);
     setWishlist([]);
-    setItems([]);
+    updateCartState([]);
     window.localStorage.removeItem(WISHLIST_KEY);
     window.localStorage.removeItem(CART_KEY);
-  }, []);
+  }, [awaitCartSettled, updateCartState]);
 
   // Refresh user profile
   const refreshProfile = useCallback(async () => {
@@ -448,7 +498,7 @@ export function StoreProvider({ children }) {
     try {
       const res = await cartApi.get();
       if (res?.success && res.cart) {
-        setItems(
+        updateCartState(
           res.cart
             .filter((l) => l.productId)
             .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }))
@@ -457,51 +507,7 @@ export function StoreProvider({ children }) {
     } catch (e) {
       console.warn("Failed to refetch server cart:", e.message);
     }
-  }, [user]);
-
-  const pendingCartMutationsRef = useRef(0);
-  const cartRef = useRef(items);
-
-  // Synchronous guest cart persistence helper
-  const persistGuestCart = useCallback((newLines) => {
-    if (!user && typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem(
-          CART_KEY,
-          JSON.stringify(newLines.map((l) => ({ id: l.product.id, qty: l.qty })))
-        );
-      } catch {
-        /* storage unavailable */
-      }
-    }
-  }, [user]);
-
-  // Centralized synchronous cart state commit
-  const updateCartState = useCallback(
-    (nextCart) => {
-      cartRef.current = nextCart;
-      itemsRef.current = nextCart;
-      persistGuestCart(nextCart);
-      setItems((current) => nextCart);
-      return nextCart;
-    },
-    [persistGuestCart]
-  );
-
-  // Synchronize itemsRef without mutating state in render/updaters
-  useEffect(() => {
-    itemsRef.current = items;
-    cartRef.current = items;
-  }, [items]);
-
-  // Await in-flight cart mutations to complete (essential for checkout navigation)
-  const awaitCartSettled = useCallback(async () => {
-    try {
-      await cartQueueRef.current;
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  }, [user, updateCartState]);
 
   // Cart Operation: Add with Pure Deterministic Transitions & Delta Rollback
   const add = useCallback(
@@ -664,21 +670,52 @@ export function StoreProvider({ children }) {
     [user, notify, updateCartState, refetchServerCart]
   );
 
-  // Cart Operation: Clear with recovery on server failure
+  // Cart Operation: Clear with Mutex Queue, Delta Safety & Server Authorization
   const clear = useCallback(async () => {
     const prevCart = [...cartRef.current];
     updateCartState([]);
 
     if (user) {
-      try {
-        await cartApi.clear();
-      } catch (err) {
-        // Recover user data on failed clear
-        updateCartState(prevCart);
-        notify("Failed to clear shopping bag. Your items were restored.");
-        await refetchServerCart();
-      }
+      pendingCartMutationsRef.current++;
+      return new Promise((resolve) => {
+        cartQueueRef.current = cartQueueRef.current
+          .then(async () => {
+            try {
+              const res = await cartApi.clear();
+              pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
+              // Only overwrite with empty array if no subsequent mutations were queued in the meantime
+              if (pendingCartMutationsRef.current === 0) {
+                if (res?.cart) {
+                  const serverItems = res.cart
+                    .filter((l) => l.productId)
+                    .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
+                  updateCartState(serverItems);
+                } else {
+                  updateCartState([]);
+                }
+              }
+              resolve({ success: true });
+            } catch (err) {
+              pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
+              // Recover user data on failed clear only if no newer operations were queued
+              if (pendingCartMutationsRef.current === 0) {
+                updateCartState(prevCart);
+                notify("Failed to clear shopping bag. Your items were restored.");
+                await refetchServerCart();
+              } else {
+                notify("Failed to clear shopping bag.");
+              }
+              resolve({ success: false, error: err.message || "Failed to clear bag" });
+            }
+          })
+          .catch((err) => {
+            pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
+            resolve({ success: false, error: err?.message || "Network error" });
+          });
+      });
     }
+
+    return { success: true };
   }, [user, notify, updateCartState, refetchServerCart]);
 
   // Wishlist Operation: Toggle with Concurrency In-Flight Guard & Optimistic Rollback

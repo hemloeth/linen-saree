@@ -43,10 +43,9 @@ const STANDARD_FABRICS = [
 
 const SORTS = [
   { key: "featured", label: "Featured", backendSort: "featured" },
+  { key: "new", label: "Newest first", backendSort: "newest" },
   { key: "price-asc", label: "Price: low to high", backendSort: "price-low" },
   { key: "price-desc", label: "Price: high to low", backendSort: "price-high" },
-  { key: "rating", label: "Customer rating", backendSort: "featured" },
-  { key: "new", label: "Newest first", backendSort: "newest" },
 ];
 
 function FilterGroup({ title, children }) {
@@ -87,7 +86,7 @@ export default function ShopCatalog() {
   const pathname = usePathname();
 
   // Active filter states
-  const [bands, setBands] = useState([]);
+  const [selectedBand, setSelectedBand] = useState("");
   const [fabrics, setFabrics] = useState([]);
   const [colours, setColours] = useState([]);
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -171,11 +170,19 @@ export default function ShopCatalog() {
       .sort((a, b) => b.count - a.count);
   }, [filterMeta, fabrics]);
 
-  // Sync initial page from URL query parameter
+  // Sync initial page and price from URL query parameter
   useEffect(() => {
     const p = parseInt(searchParams.get("page"), 10);
     if (!isNaN(p) && p >= 1) {
       setCurrentPage(p);
+    }
+    const priceParam = searchParams.get("price");
+    if (priceParam && PRICE_BANDS.some((b) => b.key === priceParam)) {
+      setSelectedBand(priceParam);
+    }
+    const inStockParam = searchParams.get("inStock");
+    if (inStockParam === "true" || inStockParam === "1") {
+      setInStockOnly(true);
     }
   }, [searchParams]);
 
@@ -188,9 +195,19 @@ export default function ShopCatalog() {
     setCurrentPage(1);
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
+    if (selectedBand) {
+      params.set("price", selectedBand);
+    } else {
+      params.delete("price");
+    }
+    if (inStockOnly) {
+      params.set("inStock", "true");
+    } else {
+      params.delete("inStock");
+    }
     const query = params.toString();
     router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
-  }, [bands, fabrics, colours, inStockOnly, sort]);
+  }, [selectedBand, fabrics, colours, inStockOnly, sort]);
 
   // 2. Fetch server-paginated and server-filtered products
   useEffect(() => {
@@ -198,14 +215,15 @@ export default function ShopCatalog() {
     setLoading(true);
     setError(null);
 
-    // Calculate price bounds from selected bands
+    // Calculate exact price bounds from single selected band
     let priceMin, priceMax;
-    if (bands.length > 0) {
-      const selectedBands = PRICE_BANDS.filter((b) => bands.includes(b.key));
-      priceMin = Math.min(...selectedBands.map((b) => b.min));
-      const maxes = selectedBands.map((b) => b.max);
-      if (!maxes.includes(100000)) {
-        priceMax = Math.max(...maxes);
+    if (selectedBand) {
+      const b = PRICE_BANDS.find((x) => x.key === selectedBand);
+      if (b) {
+        priceMin = b.min;
+        if (b.max < 100000) {
+          priceMax = b.max;
+        }
       }
     }
 
@@ -241,6 +259,7 @@ export default function ShopCatalog() {
       sortBy: mappedSort,
       priceMin,
       priceMax,
+      inStock: inStockOnly ? "true" : undefined,
       color: colorParam,
       material: materialParam,
     })
@@ -257,10 +276,7 @@ export default function ShopCatalog() {
         setError("Unable to load sarees. Please try again.");
         setLoading(false);
       });
-  }, [currentPage, bands, colours, fabrics, sort, colorOptions, fabricOptions]);
-
-  // In-stock filtering on client for responsive instant toggle
-  const displayedProducts = inStockOnly ? products.filter((p) => p.inStock) : products;
+  }, [currentPage, selectedBand, colours, fabrics, inStockOnly, sort, colorOptions, fabricOptions]);
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, totalProducts);
@@ -287,10 +303,10 @@ export default function ShopCatalog() {
     }
   };
 
-  const activeCount = bands.length + fabrics.length + colours.length + (inStockOnly ? 1 : 0);
+  const activeCount = (selectedBand ? 1 : 0) + fabrics.length + colours.length + (inStockOnly ? 1 : 0);
 
   function clearAll() {
-    setBands([]);
+    setSelectedBand("");
     setFabrics([]);
     setColours([]);
     setInStockOnly(false);
@@ -302,14 +318,29 @@ export default function ShopCatalog() {
   const filterPanel = (
     <>
       <FilterGroup title="Price">
-        {PRICE_BANDS.map((band) => (
-          <Check
-            key={band.key}
-            label={band.label}
-            checked={bands.includes(band.key)}
-            onChange={() => toggle(bands, setBands, band.key)}
-          />
-        ))}
+        {PRICE_BANDS.map((band) => {
+          const isSelected = selectedBand === band.key;
+          return (
+            <label
+              key={band.key}
+              className="flex cursor-pointer items-center justify-between text-[13px] text-ink hover:text-pine-950"
+            >
+              <span className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="shop-price-band"
+                  checked={isSelected}
+                  onChange={() => setSelectedBand(isSelected ? "" : band.key)}
+                  onClick={() => {
+                    if (isSelected) setSelectedBand("");
+                  }}
+                  className="h-3.5 w-3.5 accent-[#0c3c3c]"
+                />
+                <span>{band.label}</span>
+              </span>
+            </label>
+          );
+        })}
       </FilterGroup>
 
       {/* Modern Standard Color Palette */}
@@ -519,20 +550,16 @@ export default function ShopCatalog() {
         {/* Active Filter Chips */}
         {activeCount > 0 && (
           <div className="mb-4 flex flex-wrap items-center gap-1.5">
-            {bands.map((k) => {
-              const b = PRICE_BANDS.find((x) => x.key === k);
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => toggle(bands, setBands, k)}
-                  className="inline-flex items-center gap-1 rounded-full border border-pine-950/15 bg-white px-2.5 py-1 text-[11px] font-medium text-pine-950 hover:bg-cream-card cursor-pointer"
-                >
-                  <span>{b?.label || k}</span>
-                  <span className="text-muted hover:text-pine-950">&times;</span>
-                </button>
-              );
-            })}
+            {selectedBand && (
+              <button
+                type="button"
+                onClick={() => setSelectedBand("")}
+                className="inline-flex items-center gap-1 rounded-full border border-pine-950/15 bg-white px-2.5 py-1 text-[11px] font-medium text-pine-950 hover:bg-cream-card cursor-pointer"
+              >
+                <span>{PRICE_BANDS.find((x) => x.key === selectedBand)?.label || selectedBand}</span>
+                <span className="text-muted hover:text-pine-950">&times;</span>
+              </button>
+            )}
             {colours.map((k) => {
               const c = STANDARD_COLORS.find((x) => x.key === k);
               return (
@@ -599,7 +626,7 @@ export default function ShopCatalog() {
         )}
 
         {/* Empty State */}
-        {!loading && !error && displayedProducts.length === 0 && (
+        {!loading && !error && products.length === 0 && (
           <div className="rounded-lg border border-dashed border-pine-950/20 px-6 py-14 text-center">
             <p className="text-sm text-muted">
               No sarees match these filters.{" "}
@@ -611,9 +638,9 @@ export default function ShopCatalog() {
         )}
 
         {/* Product Grid */}
-        {!loading && !error && displayedProducts.length > 0 && (
+        {!loading && !error && products.length > 0 && (
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-6">
-            {displayedProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
