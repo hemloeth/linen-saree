@@ -4,21 +4,6 @@ import { useRef } from "react";
 import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
 
-function Arrow({ direction, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={direction === "left" ? "Previous items" : "Next items"}
-      className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-pine-900 text-white transition-colors hover:bg-pine-950"
-    >
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        {direction === "left" ? <path d="m14 6-6 6 6 6" /> : <path d="m10 6 6 6-6 6" />}
-      </svg>
-    </button>
-  );
-}
-
 export default function ProductCarousel({
   title,
   id,
@@ -29,12 +14,6 @@ export default function ProductCarousel({
   children,
 }) {
   const trackRef = useRef(null);
-
-  function scrollByPage(direction) {
-    const track = trackRef.current;
-    if (!track) return;
-    track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: "smooth" });
-  }
 
   const colClass = columns === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4";
 
@@ -59,7 +38,7 @@ export default function ProductCarousel({
             </div>
           </div>
 
-          {/* Right side: View All text + desktop arrows */}
+          {/* Right side: View All text */}
           <div className="flex items-center gap-3 shrink-0">
             {viewAllHref && (
               <Link
@@ -69,10 +48,6 @@ export default function ProductCarousel({
                 {viewAllLabel} &rarr;
               </Link>
             )}
-            <div className="hidden sm:flex items-center gap-1.5">
-              <Arrow direction="left" onClick={() => scrollByPage(-1)} />
-              <Arrow direction="right" onClick={() => scrollByPage(1)} />
-            </div>
           </div>
         </div>
 

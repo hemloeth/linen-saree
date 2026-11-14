@@ -14,6 +14,54 @@ const PRICE_BANDS = [
   { key: "above-7000", label: "Above Rs. 7,000", test: (p) => p >= 7000 },
 ];
 
+const STANDARD_COLORS = [
+  { key: "beige", label: "Beige & Cream", swatch: "#D8C7B5", regex: /beige|cream|off[\s-]?white|ivory/i },
+  { key: "black", label: "Black", swatch: "#1F2421", regex: /black/i },
+  { key: "blue", label: "Blue", swatch: "#2563EB", regex: /blue|sky|powder/i },
+  { key: "brown", label: "Brown", swatch: "#78350F", regex: /brown/i },
+  { key: "green", label: "Green", swatch: "#059669", regex: /green|olive|sage|mint/i },
+  { key: "maroon", label: "Maroon & Wine", swatch: "#881337", regex: /maroon|marron|wine/i },
+  { key: "multicolor", label: "Multicolor", swatch: "linear-gradient(135deg, #EF4444 0%, #F59E0B 33%, #10B981 66%, #3B82F6 100%)", regex: /multicolor|rainbow|printed|half and half|ikkat/i },
+  { key: "pink", label: "Pink", swatch: "#EC4899", regex: /pink|rani/i },
+  { key: "purple", label: "Purple & Lavender", swatch: "#9333EA", regex: /purple|lavender/i },
+  { key: "red", label: "Red", swatch: "#DC2626", regex: /\bred\b/i },
+  { key: "teal", label: "Teal", swatch: "#0D9488", regex: /teal/i },
+  { key: "white", label: "White", swatch: "#FFFFFF", regex: /\bwhite\b/i },
+  { key: "yellow", label: "Yellow & Mustard", swatch: "#EAB308", regex: /yellow|mustard|gold/i },
+];
+
+const STANDARD_FABRICS = [
+  { key: "pure-linen", label: "Pure Linen", regex: /pure linen|handloomer|linen/i },
+  { key: "tissue-linen", label: "Tissue Linen", regex: /tissue/i },
+  { key: "banana-silk", label: "Banana Silk", regex: /banana/i },
+  { key: "silk", label: "Silk", regex: /\bsilk\b/i },
+  { key: "cotton", label: "Cotton", regex: /cotton/i },
+  { key: "organza", label: "Organza", regex: /organza/i },
+  { key: "georgette", label: "Georgette", regex: /georgette/i },
+  { key: "muslin", label: "Muslin", regex: /muslin/i },
+];
+
+function getProductColors(product) {
+  const text = `${product.colour || product.color || ""} ${product.title || product.name || ""}`.toLowerCase();
+  const matched = [];
+  for (const c of STANDARD_COLORS) {
+    if (c.regex.test(text)) {
+      matched.push(c.key);
+    }
+  }
+  return matched.length ? matched : ["multicolor"];
+}
+
+function getProductFabrics(product) {
+  const text = `${product.fabric || product.material || ""} ${product.title || product.name || ""}`.toLowerCase();
+  const matched = [];
+  for (const f of STANDARD_FABRICS) {
+    if (f.regex.test(text)) {
+      matched.push(f.key);
+    }
+  }
+  return matched;
+}
 
 const SORTS = [
   { key: "featured", label: "Featured" },
@@ -34,16 +82,21 @@ function FilterGroup({ title, children }) {
   );
 }
 
-function Check({ label, checked, onChange }) {
+function Check({ label, checked, onChange, count }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        className="h-3.5 w-3.5 accent-[#0c3c3c]"
-      />
-      {label}
+    <label className="flex cursor-pointer items-center justify-between text-[13px] text-ink hover:text-pine-950">
+      <span className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={onChange}
+          className="h-3.5 w-3.5 rounded-sm accent-[#0c3c3c]"
+        />
+        <span>{label}</span>
+      </span>
+      {typeof count === "number" && (
+        <span className="text-[11px] font-mono text-muted/70">{count}</span>
+      )}
     </label>
   );
 }
@@ -56,8 +109,6 @@ export default function ShopCatalog() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const FABRICS = [...new Set(products.map((p) => p.fabric).filter(Boolean))].sort();
-  const COLOURS = [...new Set(products.map((p) => p.colour).filter(Boolean))].sort();
   const [bands, setBands] = useState([]);
   const [fabrics, setFabrics] = useState([]);
   const [colours, setColours] = useState([]);
@@ -65,17 +116,63 @@ export default function ShopCatalog() {
   const [sort, setSort] = useState("featured");
   const [currentPage, setCurrentPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showAllColors, setShowAllColors] = useState(false);
+  const [showAllFabrics, setShowAllFabrics] = useState(false);
   useScrollLock(filtersOpen);
 
   const toggle = (list, setList, value) =>
     setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
+  // Compute product counts for each standard color
+  const colorOptions = useMemo(() => {
+    const counts = {};
+    STANDARD_COLORS.forEach((c) => (counts[c.key] = 0));
+    products.forEach((p) => {
+      const keys = getProductColors(p);
+      keys.forEach((k) => {
+        if (counts[k] !== undefined) counts[k]++;
+      });
+    });
+
+    return STANDARD_COLORS.map((c) => ({
+      ...c,
+      count: counts[c.key] || 0,
+    }))
+      .filter((c) => c.count > 0 || colours.includes(c.key))
+      .sort((a, b) => b.count - a.count);
+  }, [products, colours]);
+
+  // Compute product counts for each standard fabric
+  const fabricOptions = useMemo(() => {
+    const counts = {};
+    STANDARD_FABRICS.forEach((f) => (counts[f.key] = 0));
+    products.forEach((p) => {
+      const keys = getProductFabrics(p);
+      keys.forEach((k) => {
+        if (counts[k] !== undefined) counts[k]++;
+      });
+    });
+
+    return STANDARD_FABRICS.map((f) => ({
+      ...f,
+      count: counts[f.key] || 0,
+    }))
+      .filter((f) => f.count > 0 || fabrics.includes(f.key))
+      .sort((a, b) => b.count - a.count);
+  }, [products, fabrics]);
+
   const results = useMemo(() => {
     const activeBands = PRICE_BANDS.filter((band) => bands.includes(band.key));
     const filtered = products.filter((product) => {
       if (activeBands.length && !activeBands.some((band) => band.test(product.price))) return false;
-      if (fabrics.length && !fabrics.includes(product.fabric)) return false;
-      if (colours.length && !colours.includes(product.colour)) return false;
+      if (fabrics.length) {
+        const prodFabrics = getProductFabrics(product);
+        if (!fabrics.some((f) => prodFabrics.includes(f))) return false;
+      }
+      if (colours.length) {
+        const prodColors = getProductColors(product);
+        if (!colours.some((c) => prodColors.includes(c))) return false;
+      }
       if (inStockOnly && !product.inStock) return false;
       return true;
     });
@@ -153,6 +250,9 @@ export default function ShopCatalog() {
     setInStockOnly(false);
   }
 
+  const displayedColors = showAllColors ? colorOptions : colorOptions.slice(0, 6);
+  const displayedFabrics = showAllFabrics ? fabricOptions : fabricOptions.slice(0, 6);
+
   const filterPanel = (
     <>
       <FilterGroup title="Price">
@@ -166,27 +266,112 @@ export default function ShopCatalog() {
         ))}
       </FilterGroup>
 
-      <FilterGroup title="Fabric">
-        {FABRICS.map((fabric) => (
-          <Check
-            key={fabric}
-            label={fabric}
-            checked={fabrics.includes(fabric)}
-            onChange={() => toggle(fabrics, setFabrics, fabric)}
-          />
-        ))}
+      {/* Modern Standard Color Palette */}
+      <FilterGroup title="Color Palette">
+        {/* Quick Visual Swatch Bar */}
+        <div className="flex flex-wrap gap-2 pt-0.5 pb-2">
+          {colorOptions.map((opt) => {
+            const isChecked = colours.includes(opt.key);
+            const isLight = ["white", "beige", "yellow"].includes(opt.key);
+            return (
+              <button
+                key={`swatch-${opt.key}`}
+                type="button"
+                onClick={() => toggle(colours, setColours, opt.key)}
+                className={`relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border transition-all hover:scale-110 ${
+                  isChecked
+                    ? "ring-2 ring-pine-900 ring-offset-2 border-pine-900"
+                    : "border-pine-950/20"
+                }`}
+                style={{ background: opt.swatch }}
+                title={`${opt.label} (${opt.count})`}
+                aria-label={`${opt.label} (${opt.count} items)`}
+              >
+                {isChecked && (
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={isLight ? "#111827" : "#FFFFFF"}
+                    strokeWidth="3.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Color List with Dot and Counts */}
+        <div className="space-y-1.5 pt-1">
+          {displayedColors.map((opt) => {
+            const isChecked = colours.includes(opt.key);
+            return (
+              <label
+                key={`col-${opt.key}`}
+                className="flex cursor-pointer items-center justify-between text-[13px] text-ink hover:text-pine-950"
+              >
+                <span className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggle(colours, setColours, opt.key)}
+                    className="h-3.5 w-3.5 rounded-sm accent-[#0c3c3c]"
+                  />
+                  <span
+                    className="inline-block h-3 w-3 rounded-full border border-pine-950/20 shrink-0"
+                    style={{ background: opt.swatch }}
+                  />
+                  <span>{opt.label}</span>
+                </span>
+                <span className="text-[11px] font-mono text-muted/70">{opt.count}</span>
+              </label>
+            );
+          })}
+
+          {colorOptions.length > 6 && (
+            <button
+              type="button"
+              onClick={() => setShowAllColors(!showAllColors)}
+              className="pt-1 font-inter text-[11px] font-medium text-pine-900 hover:underline cursor-pointer"
+            >
+              {showAllColors ? "- Show less" : `+ ${colorOptions.length - 6} more`}
+            </button>
+          )}
+        </div>
       </FilterGroup>
 
-      <FilterGroup title="Colour">
-        {COLOURS.map((colour) => (
-          <Check
-            key={colour}
-            label={colour}
-            checked={colours.includes(colour)}
-            onChange={() => toggle(colours, setColours, colour)}
-          />
-        ))}
-      </FilterGroup>
+      {/* Fabric Weave */}
+      {fabricOptions.length > 0 && (
+        <FilterGroup title="Fabric Weave">
+          <div className="space-y-1.5">
+            {displayedFabrics.map((fabric) => (
+              <Check
+                key={fabric.key}
+                label={fabric.label}
+                checked={fabrics.includes(fabric.key)}
+                onChange={() => toggle(fabrics, setFabrics, fabric.key)}
+                count={fabric.count}
+              />
+            ))}
+
+            {fabricOptions.length > 6 && (
+              <button
+                type="button"
+                onClick={() => setShowAllFabrics(!showAllFabrics)}
+                className="pt-1 font-inter text-[11px] font-medium text-pine-900 hover:underline cursor-pointer"
+              >
+                {showAllFabrics ? "- Show less" : `+ ${fabricOptions.length - 6} more`}
+              </button>
+            )}
+          </div>
+        </FilterGroup>
+      )}
 
       <FilterGroup title="Availability">
         <Check
@@ -200,7 +385,7 @@ export default function ShopCatalog() {
         <button
           type="button"
           onClick={clearAll}
-          className="mt-3 font-inter text-[11px] text-muted underline underline-offset-2 hover:text-pine-900"
+          className="mt-3 font-inter text-[11px] text-muted underline underline-offset-2 hover:text-pine-900 cursor-pointer"
         >
           Clear all filters
         </button>
@@ -240,7 +425,7 @@ export default function ShopCatalog() {
             <button
               type="button"
               onClick={() => setFiltersOpen(true)}
-              className="flex h-9 items-center gap-1.5 rounded-md border border-pine-950/15 px-3 font-inter text-[11px] font-medium text-pine-900 lg:hidden"
+              className="flex h-9 items-center gap-1.5 rounded-md border border-pine-950/15 px-3 font-inter text-[11px] font-medium text-pine-900 lg:hidden cursor-pointer"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <path d="M4 6h16M7 12h10M10 18h4" />
@@ -265,6 +450,75 @@ export default function ShopCatalog() {
             </label>
           </div>
         </div>
+
+        {/* Active Filter Chips */}
+        {activeCount > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-1.5">
+            {bands.map((k) => {
+              const b = PRICE_BANDS.find((x) => x.key === k);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => toggle(bands, setBands, k)}
+                  className="inline-flex items-center gap-1 rounded-full border border-pine-950/15 bg-white px-2.5 py-1 text-[11px] font-medium text-pine-950 hover:bg-cream-card cursor-pointer"
+                >
+                  <span>{b?.label || k}</span>
+                  <span className="text-muted hover:text-pine-950">&times;</span>
+                </button>
+              );
+            })}
+            {colours.map((k) => {
+              const c = STANDARD_COLORS.find((x) => x.key === k);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => toggle(colours, setColours, k)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-pine-950/15 bg-white px-2.5 py-1 text-[11px] font-medium text-pine-950 hover:bg-cream-card cursor-pointer"
+                >
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full border border-pine-950/20"
+                    style={{ background: c?.swatch || "#ccc" }}
+                  />
+                  <span>{c?.label || k}</span>
+                  <span className="text-muted hover:text-pine-950">&times;</span>
+                </button>
+              );
+            })}
+            {fabrics.map((k) => {
+              const f = STANDARD_FABRICS.find((x) => x.key === k);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => toggle(fabrics, setFabrics, k)}
+                  className="inline-flex items-center gap-1 rounded-full border border-pine-950/15 bg-white px-2.5 py-1 text-[11px] font-medium text-pine-950 hover:bg-cream-card cursor-pointer"
+                >
+                  <span>{f?.label || k}</span>
+                  <span className="text-muted hover:text-pine-950">&times;</span>
+                </button>
+              );
+            })}
+            {inStockOnly && (
+              <button
+                type="button"
+                onClick={() => setInStockOnly(false)}
+                className="inline-flex items-center gap-1 rounded-full border border-pine-950/15 bg-white px-2.5 py-1 text-[11px] font-medium text-pine-950 hover:bg-cream-card cursor-pointer"
+              >
+                <span>In stock</span>
+                <span className="text-muted hover:text-pine-950">&times;</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={clearAll}
+              className="text-[11px] font-medium text-pine-900 underline underline-offset-2 hover:text-pine-950 cursor-pointer ml-1"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
 
         {results.length === 0 ? (
           <p className="rounded-lg border border-dashed border-pine-950/20 px-6 py-14 text-center text-sm text-muted">
@@ -373,7 +627,7 @@ export default function ShopCatalog() {
                 type="button"
                 onClick={() => setFiltersOpen(false)}
                 aria-label="Close filters"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-pine-900 hover:bg-linen"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-pine-900 hover:bg-linen cursor-pointer"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
                   <path d="M6 6l12 12M18 6 6 18" />
@@ -385,7 +639,7 @@ export default function ShopCatalog() {
               <button
                 type="button"
                 onClick={() => setFiltersOpen(false)}
-                className="h-10 w-full rounded-md bg-pine-900 font-inter text-xs font-semibold text-white"
+                className="h-10 w-full rounded-md bg-pine-900 font-inter text-xs font-semibold text-white cursor-pointer"
               >
                 Show {results.length} saree{results.length === 1 ? "" : "s"}
               </button>
