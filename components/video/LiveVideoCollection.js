@@ -150,6 +150,7 @@ function LiveVideoCard({ product }) {
         href={`/product/${product.id}?media=video`}
         onClick={() => {
           try {
+            sessionStorage.setItem(`hoq_scroll_pos_${window.location.pathname}`, String(window.scrollY));
             sessionStorage.setItem("hoq_last_clicked_target_id", `video-card-${product.id}`);
             sessionStorage.setItem("hoq_last_clicked_product_id", String(product.id));
           } catch {}

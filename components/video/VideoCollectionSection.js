@@ -154,6 +154,7 @@ function VideoProductCard({ product }) {
         href={`/product/${product.id}?media=video`}
         onClick={() => {
           try {
+            sessionStorage.setItem(`hoq_scroll_pos_${window.location.pathname}`, String(window.scrollY));
             sessionStorage.setItem("hoq_last_clicked_target_id", `video-card-${product.id}`);
             sessionStorage.setItem("hoq_last_clicked_product_id", String(product.id));
           } catch {}
@@ -253,22 +254,35 @@ function VideoProductCard({ product }) {
 }
 
 export default function VideoCollectionSection() {
-  const [videoProducts, setVideoProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { catalog } = useStore();
+  const catalogVideos = (catalog || []).filter((p) => p.video).slice(0, 8);
+
+  // Synchronously initialize with in-memory catalog so cards are in DOM on Frame 0 with ZERO flash
+  const [videoProducts, setVideoProducts] = useState(() => catalogVideos);
+  const [loading, setLoading] = useState(() => catalogVideos.length === 0);
+
+  useEffect(() => {
+    if (catalogVideos.length > 0 && videoProducts.length === 0) {
+      setVideoProducts(catalogVideos);
+      setLoading(false);
+    }
+  }, [catalogVideos, videoProducts.length]);
 
   useEffect(() => {
     let active = true;
     const fetchFn = getFetchVideo();
     if (!fetchFn) {
       Promise.resolve().then(() => {
-        if (active) setLoading(false);
+        if (active && catalogVideos.length === 0) setLoading(false);
       });
       return;
     }
     fetchFn(8)
       .then((data) => {
         if (!active) return;
-        setVideoProducts(data.products || []);
+        if (data.products && data.products.length > 0) {
+          setVideoProducts(data.products);
+        }
       })
       .catch((err) => {
         console.warn("Video collection products unavailable:", err?.message || err);
@@ -280,7 +294,7 @@ export default function VideoCollectionSection() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [catalogVideos.length]);
 
   if (!loading && videoProducts.length === 0) {
     return null;

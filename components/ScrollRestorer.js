@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const SCROLL_STORAGE_KEY_PREFIX = "hoq_scroll_pos_";
 const TARGET_ID_KEY = "hoq_last_clicked_target_id";
@@ -81,8 +83,8 @@ export default function ScrollRestorer() {
     };
   }, [pathname]);
 
-  // 3. Restoration Engine on Route Transition / Back Navigation
-  useEffect(() => {
+  // 3. Restoration Engine on Route Transition / Back Navigation (Pre-Paint Execution)
+  useIsomorphicLayoutEffect(() => {
     if (typeof window === "undefined") return;
 
     const isBackNavigation = isPopStateRef.current;
@@ -103,6 +105,19 @@ export default function ScrollRestorer() {
       !pathname.startsWith("/categories/");
 
     if (isBackNavigation || isReturningToParent) {
+      // Step 0: Synchronous instant pre-paint jump (eliminates Hero section blink completely!)
+      if (savedPos !== null && !isNaN(savedPos) && savedPos > 0) {
+        window.scrollTo({ top: savedPos, behavior: "instant" });
+      }
+
+      // If target anchor is already in DOM, center it before browser paints frame 0
+      if (targetElementId) {
+        const immediateEl = document.getElementById(targetElementId);
+        if (immediateEl && (immediateEl.getBoundingClientRect().height > 0 || immediateEl.offsetParent !== null)) {
+          immediateEl.scrollIntoView({ behavior: "instant", block: "center" });
+        }
+      }
+
       let attempts = 0;
       const maxAttempts = 75; // 75 * 40ms = 3000ms max polling for lazy/hydrating components
 
