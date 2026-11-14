@@ -153,7 +153,7 @@ export default function TrackOrderPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-md bg-pine-900 py-3 font-inter text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-pine-950 disabled:opacity-60"
+            className="mt-6 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-tomato py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition-all duration-200 hover:bg-tomato-hover active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? "Tracking shipment…" : "Track Shipment"}
           </button>
