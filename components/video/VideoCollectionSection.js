@@ -115,102 +115,116 @@ function VideoProductCard({ product }) {
   }, []);
 
   return (
-    <article ref={containerRef} className="group flex flex-col bg-white">
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-pine-950">
-        <Link
-          href={`/product/${product.id}`}
-          className="absolute inset-0 z-0 block"
-          aria-label={`View ${product.name}`}
-        >
-          {/* Always have poster image rendered */}
-          <Image
-            src={product.image}
-            unoptimized={/^https?:\/\//.test(product.image || "")}
-            alt={product.name}
-            fill
-            quality={100}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className={`object-cover transition-opacity duration-500 ${
-              isPlaying ? "opacity-0" : "opacity-100"
-            }`}
+    <article
+      id={`video-card-${product.id}`}
+      ref={containerRef}
+      className="group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-2xl bg-pine-950 shadow-md ring-1 ring-black/10 transition-all duration-300 hover:shadow-2xl"
+    >
+      <Link
+        href={`/product/${product.id}?media=video`}
+        onClick={() => {
+          try {
+            sessionStorage.setItem("hoq_last_clicked_target_id", `video-card-${product.id}`);
+            sessionStorage.setItem("hoq_last_clicked_product_id", String(product.id));
+          } catch {}
+        }}
+        className="absolute inset-0 z-0 block"
+        aria-label={`View ${product.name} video`}
+      >
+        {/* Always have poster image rendered */}
+        <Image
+          src={product.image}
+          unoptimized={/^https?:\/\//.test(product.image || "")}
+          alt={product.name}
+          fill
+          quality={100}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className={`object-cover object-top transition-all duration-700 ease-out group-hover:scale-105 ${
+            isPlaying ? "opacity-0" : "opacity-100"
+          }`}
+        />
+
+        {/* Video rendered when near screen */}
+        {nearScreen && product.video && (
+          <video
+            ref={videoRef}
+            src={product.video}
+            poster={product.image}
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            disablePictureInPicture
+            disableRemotePlayback
+            className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
           />
-
-          {/* Video rendered when near screen */}
-          {nearScreen && product.video && (
-            <video
-              ref={videoRef}
-              src={product.video}
-              poster={product.image}
-              loop
-              muted
-              playsInline
-              preload="metadata"
-              disablePictureInPicture
-              disableRemotePlayback
-              className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            />
-          )}
-        </Link>
-
-        {/* Badges */}
-        {off > 0 && (
-          <div className="pointer-events-none absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
-            <span className="rounded bg-tomato px-1.5 py-[3px] font-inter text-[9px] font-bold text-white shadow-sm">
-              {off}% OFF
-            </span>
-          </div>
         )}
 
-        {/* Wishlist Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleWishlist(product.id);
-          }}
-          aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-          className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:h-8 sm:w-8 ${
-            wished ? "text-tomato" : "text-pine-950"
-          }`}
-        >
-          <HeartIcon filled={wished} size={14} />
-        </button>
-
-        {/* Play / Pause Toggle Button */}
-        <button
-          type="button"
-          onClick={togglePlayback}
-          aria-label={isPlaying ? "Pause video" : "Play video"}
-          className="absolute bottom-2.5 right-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-pine-950/80 text-white shadow-md backdrop-blur-sm transition-all hover:scale-110 hover:bg-pine-900 focus:outline-none"
-        >
-          {isPlaying ? <PauseIcon className="h-3.5 w-3.5" /> : <PlayIcon className="h-3.5 w-3.5 ml-0.5" />}
-        </button>
-
-        {/* Bottom subtle gradient */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
-      </div>
-
-      <div className="pt-2.5">
-        <Link
-          href={`/product/${product.id}`}
-          className="line-clamp-1 font-display text-xs text-pine-950 transition-colors hover:text-pine-900 sm:text-sm"
-        >
-          {product.name}
-        </Link>
-        <div className="mt-1 flex items-baseline gap-1.5">
-          <span className="font-inter text-xs font-semibold text-pine-900 sm:text-sm">
-            {formatINR(product.price)}
-          </span>
-          {off > 0 && (
-            <span className="text-[10px] text-muted line-through sm:text-xs">
-              {formatINR(product.mrp)}
+        {/* Full-card bottom gradient overlay */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent pb-3.5 pt-20 px-3 sm:px-3.5 text-white">
+          <p className="line-clamp-2 font-display text-xs font-semibold tracking-wide text-white drop-shadow-sm group-hover:text-cream sm:text-sm">
+            {product.name}
+          </p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="font-inter text-xs font-bold text-white sm:text-sm">
+              {formatINR(product.price)}
             </span>
-          )}
+            {off > 0 && (
+              <span className="text-[10px] text-white/70 line-through sm:text-xs">
+                {formatINR(product.mrp)}
+              </span>
+            )}
+            {product.fabric && (
+              <span className="ml-auto rounded-full bg-white/20 backdrop-blur-xs px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white">
+                {product.fabric}
+              </span>
+            )}
+          </div>
+          <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-medium text-cream/95 sm:text-[11px]">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-tomato text-white shadow-xs">
+              <PlayIcon className="h-2.5 w-2.5 ml-0.5" />
+            </span>
+            <span>Watch in full video &rarr;</span>
+          </div>
         </div>
-      </div>
+      </Link>
+
+      {/* Badges */}
+      {off > 0 && (
+        <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex flex-col items-start gap-1">
+          <span className="rounded bg-tomato px-1.5 py-[3px] font-inter text-[9px] font-bold text-white shadow-sm">
+            {off}% OFF
+          </span>
+        </div>
+      )}
+
+      {/* Wishlist Button */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleWishlist(product.id);
+        }}
+        aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+        className={`absolute right-2.5 top-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-md transition-all hover:scale-110 hover:bg-black/60 sm:h-8 sm:w-8 ${
+          wished ? "text-tomato" : "text-white"
+        }`}
+      >
+        <HeartIcon filled={wished} size={14} />
+      </button>
+
+      {/* Play / Pause Toggle Button */}
+      <button
+        type="button"
+        onClick={togglePlayback}
+        aria-label={isPlaying ? "Pause video" : "Play video"}
+        className="absolute bottom-2.5 right-2.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white shadow-md backdrop-blur-md transition-all hover:scale-110 hover:bg-pine-900 focus:outline-none sm:h-8 sm:w-8"
+      >
+        {isPlaying ? <PauseIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <PlayIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 ml-0.5" />}
+      </button>
     </article>
   );
 }
@@ -283,7 +297,7 @@ export default function VideoCollectionSection() {
         {loading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-chip" />
+              <div key={i} className="aspect-[3/4] sm:aspect-[4/5] animate-pulse rounded-2xl bg-chip" />
             ))}
           </div>
         ) : (

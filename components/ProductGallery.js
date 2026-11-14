@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 function Chevron({ direction }) {
   return (
@@ -28,8 +28,21 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const isDragging = useRef(false);
+  const desktopVideoRef = useRef(null);
+  const mobileVideoRef = useRef(null);
   const count = images.length;
   const active = images[Math.min(index, count - 1)] || images[0];
+
+  useEffect(() => {
+    if (active?.type === "video") {
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.play().catch(() => {});
+      }
+      if (mobileVideoRef.current) {
+        mobileVideoRef.current.play().catch(() => {});
+      }
+    }
+  }, [active]);
 
   function goTo(next) {
     if (next >= 0 && next < count) {
@@ -130,6 +143,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
           {active.type === "video" ? (
             <div className="h-full w-full bg-black">
               <video
+                ref={desktopVideoRef}
                 key={active.src}
                 src={active.src}
                 poster={active.poster}
@@ -191,10 +205,12 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
             {active.type === "video" ? (
               <div className="h-full w-full bg-black">
                 <video
+                  ref={mobileVideoRef}
                   key={active.src}
                   src={active.src}
                   poster={active.poster}
                   controls
+                  autoPlay
                   playsInline
                   preload="metadata"
                   className="h-full w-full object-contain"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductDetail from "@/components/ProductDetail";
@@ -158,7 +158,9 @@ export default function ProductPageView({ productId }) {
             <span className="text-pine-900 font-medium truncate max-w-[200px] sm:max-w-none">{product.name}</span>
           </nav>
 
-          <ProductDetail product={product} />
+          <Suspense fallback={<div className="h-96 w-full animate-pulse rounded-lg bg-chip" />}>
+            <ProductDetail product={product} />
+          </Suspense>
           <ProductReviews product={product} />
 
           {related.length > 0 && (

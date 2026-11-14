@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ProductGallery from "@/components/ProductGallery";
 import ColorSwatches from "@/components/ColorSwatches";
 import CountdownTimer from "@/components/CountdownTimer";
@@ -60,7 +61,12 @@ function getColorStyles(colorName) {
 }
 
 export default function ProductDetail({ product }) {
-  const [index, setIndex] = useState(0);
+  const searchParams = useSearchParams();
+  const wantsVideo =
+    searchParams?.get("media") === "video" ||
+    searchParams?.get("video") === "1" ||
+    searchParams?.get("video") === "true";
+
   const [color, setColor] = useState(product.swatches?.[0]?.id ?? null);
 
   // Combine product gallery images and product video into unified media items
@@ -98,6 +104,17 @@ export default function ProductDetail({ product }) {
 
   const videoIndex = mediaItems.findIndex((m) => m.type === "video");
   const hasVideo = videoIndex >= 0;
+
+  // If navigated with ?media=video, open video item directly
+  const [index, setIndex] = useState(() => {
+    return wantsVideo && videoIndex >= 0 ? videoIndex : 0;
+  });
+
+  useEffect(() => {
+    if (wantsVideo && videoIndex >= 0) {
+      setIndex(videoIndex);
+    }
+  }, [wantsVideo, videoIndex]);
 
   function selectColor(id) {
     setColor(id);

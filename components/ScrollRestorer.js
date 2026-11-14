@@ -104,12 +104,12 @@ export default function ScrollRestorer() {
 
     if (isBackNavigation || isReturningToParent) {
       let attempts = 0;
-      const maxAttempts = 35; // 35 * 40ms = 1400ms max polling for lazy/hydrating components
+      const maxAttempts = 75; // 75 * 40ms = 3000ms max polling for lazy/hydrating components
 
       const timer = setInterval(() => {
         attempts++;
 
-        // Strategy A: Targeted anchor element restoration (CollectionCard, CategoryCard, ProductCard)
+        // Strategy A: Targeted anchor element restoration (CollectionCard, CategoryCard, ProductCard, VideoCard)
         if (targetElementId) {
           const targetEl = document.getElementById(targetElementId);
           if (targetEl) {
