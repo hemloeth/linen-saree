@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 function Chevron({ direction }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {direction === "left" ? <path d="m14 6-6 6 6 6" /> : <path d="m10 6 6 6-6 6" />}
     </svg>
   );
@@ -21,63 +21,49 @@ function PlayIcon({ className = "h-3.5 w-3.5" }) {
 
 /**
  * Product gallery with Image & Video media support.
- * Desktop: vertical thumbnail rail + large stage with video playback.
- * Mobile: swipeable stage with full thumbnail strip underneath for instant switching.
+ * Desktop: vertical thumbnail rail + large stage.
+ * Mobile: single active media slide with touch swipe (pointer events) + thumbnail grid below.
  */
 export default function ProductGallery({ images = [], index = 0, onSelect, sizes = "(max-width: 1024px) 100vw, 45vw" }) {
-  const trackRef = useRef(null);
-  const thumbTrackRef = useRef(null);
-  const lockRef = useRef(0);
-  const settleRef = useRef(null);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isDragging = useRef(false);
   const count = images.length;
   const active = images[Math.min(index, count - 1)] || images[0];
 
-  // Keep the mobile track aligned when the index changes
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const target = index * track.clientWidth;
-    if (Math.abs(track.scrollLeft - target) > 4) {
-      lockRef.current = Date.now() + 700;
-      track.scrollTo({ left: target, behavior: "smooth" });
-    }
-  }, [index]);
-
-  // Keep active mobile thumbnail centered in viewport
-  useEffect(() => {
-    const thumbTrack = thumbTrackRef.current;
-    if (!thumbTrack) return;
-    const activeThumb = thumbTrack.children[index];
-    if (activeThumb) {
-      activeThumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    }
-  }, [index]);
-
-  useEffect(() => () => clearTimeout(settleRef.current), []);
-
-  function handleScroll() {
-    if (Date.now() < lockRef.current) return;
-    clearTimeout(settleRef.current);
-    settleRef.current = setTimeout(() => {
-      const track = trackRef.current;
-      if (!track) return;
-      const next = Math.round(track.scrollLeft / track.clientWidth);
-      if (next !== index && next >= 0 && next < count) onSelect(next);
-    }, 120);
-  }
-
   function goTo(next) {
-    lockRef.current = Date.now() + 700;
-    onSelect(next);
-    const track = trackRef.current;
-    if (track) {
-      const target = next * track.clientWidth;
-      track.scrollTo({ left: target, behavior: "smooth" });
+    if (next >= 0 && next < count) {
+      onSelect(next);
     }
   }
 
   function step(direction) {
     goTo((index + direction + count) % count);
+  }
+
+  // Smooth touch swipe handlers for mobile
+  function handleTouchStart(e) {
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    isDragging.current = true;
+  }
+
+  function handleTouchEnd(e) {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    const touch = e.changedTouches[0];
+    const diffX = touchStartX.current - touch.clientX;
+    const diffY = touchStartY.current - touch.clientY;
+
+    // Only swipe if horizontal motion was dominant and greater than 40px
+    if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+      if (diffX > 0) {
+        step(1); // Swipe left -> Next image
+      } else {
+        step(-1); // Swipe right -> Previous image
+      }
+    }
   }
 
   if (!count || !active) return null;
@@ -194,50 +180,40 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
           </p>
         </div>
 
-        {/* Mobile Media Stage */}
+        {/* Mobile Media Stage with normal page scroll + swipe gestures */}
         <div className="w-full max-w-full overflow-hidden lg:hidden">
-          {/* Main media container showing full uncropped image */}
-          <div className="relative mx-auto w-full overflow-hidden rounded-lg bg-[#fbfaf8] shadow-xs">
-            <div
-              ref={trackRef}
-              onScroll={handleScroll}
-              className="no-scrollbar flex aspect-[3/4] w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain touch-pan-x"
-              aria-label="Product media — swipe to browse"
-            >
-              {images.map((item, i) => {
-                const isVideo = item.type === "video";
-                return (
-                  <div
-                    key={(item.src || "") + i}
-                    className="relative h-full w-full shrink-0 snap-center snap-always bg-[#fbfaf8]"
-                  >
-                    {isVideo ? (
-                      <div className="h-full w-full bg-black">
-                        <video
-                          src={item.src}
-                          poster={item.poster}
-                          controls
-                          playsInline
-                          preload="metadata"
-                          className="h-full w-full object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <Image
-                        src={item.src}
-                        unoptimized={/^https?:\/\//.test(item.src)}
-                        alt={item.alt || ""}
-                        fill
-                        quality={90}
-                        preload={i === 0}
-                        sizes="100vw"
-                        className="h-full w-full object-contain"
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          {/* Main active image - normal aspect-[3/4] showing full saree */}
+          <div
+            className="relative mx-auto aspect-[3/4] w-full overflow-hidden rounded-lg bg-[#fbfaf8] shadow-xs select-none touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {active.type === "video" ? (
+              <div className="h-full w-full bg-black">
+                <video
+                  key={active.src}
+                  src={active.src}
+                  poster={active.poster}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            ) : (
+              <Image
+                key={active.src}
+                src={active.src}
+                unoptimized={/^https?:\/\//.test(active.src)}
+                alt={active.alt || "Product image"}
+                fill
+                quality={90}
+                preload
+                sizes="100vw"
+                className="h-full w-full object-cover object-top"
+                draggable={false}
+              />
+            )}
 
             {/* Left/Right navigation arrows */}
             {count > 1 && (
@@ -246,7 +222,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                   type="button"
                   onClick={() => step(-1)}
                   aria-label="Previous image"
-                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-xs transition hover:bg-black/60 active:scale-95"
+                  className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white shadow backdrop-blur-xs transition active:scale-95 cursor-pointer"
                 >
                   <Chevron direction="left" />
                 </button>
@@ -254,7 +230,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
                   type="button"
                   onClick={() => step(1)}
                   aria-label="Next image"
-                  className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white shadow-sm backdrop-blur-xs transition hover:bg-black/60 active:scale-95"
+                  className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white shadow backdrop-blur-xs transition active:scale-95 cursor-pointer"
                 >
                   <Chevron direction="right" />
                 </button>
@@ -267,7 +243,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
             </span>
           </div>
 
-          {/* Mobile Thumbnails Grid - wraps to next line, zero horizontal scrolling, strictly within screen */}
+          {/* Mobile Thumbnails Grid - wraps to next line, zero horizontal scrolling */}
           {count > 1 && (
             <div className="mt-3 w-full">
               <div
@@ -330,7 +306,7 @@ export default function ProductGallery({ images = [], index = 0, onSelect, sizes
               {/* Progress counter + hint */}
               <div className="mt-2 flex items-center justify-between px-0.5">
                 <span className="font-inter text-[10.5px] text-muted">
-                  Tap thumbnail or swipe above
+                  Tap thumbnail or swipe image
                 </span>
                 <span className="font-inter text-[10.5px] font-semibold tabular-nums text-pine-900">
                   {index + 1} / {count}
