@@ -5,7 +5,7 @@ import ProductCard from "@/components/ProductCard";
 import SectionHeading from "@/components/SectionHeading";
 import productsApi, { fetchPaginatedProducts } from "@/lib/api/products";
 
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 32;
 
 function getFetchPaginated() {
   if (typeof fetchPaginatedProducts === "function") return fetchPaginatedProducts;

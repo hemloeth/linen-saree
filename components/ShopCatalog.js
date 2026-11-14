@@ -48,7 +48,7 @@ function Check({ label, checked, onChange }) {
   );
 }
 
-const ITEMS_PER_PAGE = 30;
+const ITEMS_PER_PAGE = 32;
 
 export default function ShopCatalog() {
   const { catalog: products, catalogLoading, catalogError } = useStore();
