@@ -94,19 +94,22 @@ export default function HomePage() {
         )}
 
         {/* Service highlights / Trust badges */}
-        <section aria-label="Why shop with us" className="py-8 lg:py-12 border-t border-pine-950/10">
+        <section aria-label="Why shop with us" className="py-8 lg:py-12 border-t border-pine-950/10 bg-linen/25">
           <div className="mx-auto max-w-[1240px] px-4 lg:px-10">
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4 lg:gap-8">
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 lg:gap-6">
               {services.map((service) => (
-                <li key={service.label} className="flex items-center gap-2.5">
+                <li
+                  key={service.label}
+                  className="flex items-center justify-center gap-2.5 rounded-lg border border-pine-950/[0.07] bg-white px-3 py-3 shadow-[0_1px_3px_rgba(25,71,53,0.04)] sm:px-4 sm:py-3.5"
+                >
                   <Image
                     src={service.icon}
                     alt=""
                     width={40}
                     height={40}
-                    className="h-8 w-8 shrink-0 object-contain lg:h-10 lg:w-10"
+                    className="h-7 w-7 shrink-0 object-contain sm:h-8 sm:w-8 lg:h-9 lg:w-9"
                   />
-                  <span className="font-inter text-[11px] font-medium leading-tight text-pine-800 lg:text-[13px]">
+                  <span className="font-inter text-[11px] font-medium leading-tight text-pine-900 sm:text-xs lg:text-[13px]">
                     {service.label}
                   </span>
                 </li>
