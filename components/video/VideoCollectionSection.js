@@ -118,7 +118,7 @@ function VideoProductCard({ product }) {
     <article
       id={`video-card-${product.id}`}
       ref={containerRef}
-      className="group relative aspect-[3/4] sm:aspect-[4/5] w-full overflow-hidden rounded-2xl bg-pine-950 shadow-md ring-1 ring-black/10 transition-all duration-300 hover:shadow-2xl"
+      className="group relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-pine-950 shadow-md ring-1 ring-black/10 transition-all duration-300 hover:shadow-2xl"
     >
       <Link
         href={`/product/${product.id}?media=video`}
@@ -162,23 +162,15 @@ function VideoProductCard({ product }) {
           />
         )}
 
-        {/* Full-card bottom gradient overlay */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent pb-3.5 pt-20 px-3 sm:px-3.5 text-white">
-          <p className="line-clamp-2 font-display text-xs font-semibold tracking-wide text-white drop-shadow-sm group-hover:text-cream sm:text-sm">
-            {product.name}
-          </p>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-inter text-xs font-bold text-white sm:text-sm">
+        {/* Full-card bottom gradient overlay - price only, no name */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/40 to-transparent pb-3.5 pt-16 px-3 sm:px-3.5 text-white">
+          <div className="flex items-baseline gap-2">
+            <span className="font-inter text-sm sm:text-base font-bold text-white tracking-tight drop-shadow-sm">
               {formatINR(product.price)}
             </span>
             {off > 0 && (
-              <span className="text-[10px] text-white/70 line-through sm:text-xs">
+              <span className="text-[11px] text-white/70 line-through sm:text-xs">
                 {formatINR(product.mrp)}
-              </span>
-            )}
-            {product.fabric && (
-              <span className="ml-auto rounded-full bg-white/20 backdrop-blur-xs px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-white">
-                {product.fabric}
               </span>
             )}
           </div>
@@ -297,7 +289,7 @@ export default function VideoCollectionSection() {
         {loading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] sm:aspect-[4/5] animate-pulse rounded-2xl bg-chip" />
+              <div key={i} className="aspect-[9/16] animate-pulse rounded-2xl bg-chip" />
             ))}
           </div>
         ) : (
