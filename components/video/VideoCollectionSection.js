@@ -39,44 +39,53 @@ function HeartIcon({ filled = false, size = 15 }) {
 }
 
 /**
- * Single Active Video Product Card for Home Section
- * Plays strictly when in focal center; stops and frees decoder when scrolled away
+ * Viewport-Aware Auto-Play Video Product Card for Home Section
+ * Plays when on screen (including multiple side-by-side); pauses when scrolled out
  */
-function VideoProductCard({ product, isActive, onRatioChange, onMouseEnter }) {
+function VideoProductCard({ product }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
-  const [manualPause, setManualPause] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [nearScreen, setNearScreen] = useState(false);
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
+  const [manualPause, setManualPause] = useState(false);
   const { isWished, toggleWishlist } = useStore();
   const wished = isWished(product.id);
   const off = discountPercent(product);
 
   useEffect(() => {
-    if (!isActive) {
-      setManualPause(false);
-    }
-  }, [isActive]);
-
-  useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const observer = new IntersectionObserver(
+    // 1. Mount/preload metadata near viewport
+    const mountObserver = new IntersectionObserver(
       ([entry]) => {
-        onRatioChange(product.id, entry.intersectionRatio, entry.isIntersecting);
+        setNearScreen(entry.isIntersecting);
+      },
+      { rootMargin: "300px 0px" }
+    );
+    mountObserver.observe(el);
+
+    // 2. Play when visible on screen, stop immediately when scrolled out
+    const viewObserver = new IntersectionObserver(
+      ([entry]) => {
+        const isVisible = entry.isIntersecting && entry.intersectionRatio >= 0.2;
+        setInView(isVisible);
+        if (!isVisible) {
+          setManualPause(false);
+        }
       },
       {
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-        rootMargin: "-10% 0px -10% 0px",
+        threshold: [0, 0.2, 0.5, 0.8],
       }
     );
-    observer.observe(el);
+    viewObserver.observe(el);
 
     return () => {
-      observer.disconnect();
-      onRatioChange(product.id, 0, false);
+      mountObserver.disconnect();
+      viewObserver.disconnect();
     };
-  }, [product.id, onRatioChange]);
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -86,7 +95,7 @@ function VideoProductCard({ product, isActive, onRatioChange, onMouseEnter }) {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (isActive && !manualPause && !prefersReducedMotion) {
+    if (inView && !manualPause && !prefersReducedMotion) {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
@@ -97,7 +106,7 @@ function VideoProductCard({ product, isActive, onRatioChange, onMouseEnter }) {
       video.pause();
       setHasStartedPlaying(false);
     }
-  }, [isActive, manualPause]);
+  }, [inView, manualPause]);
 
   const togglePlayback = useCallback((e) => {
     e.preventDefault();
@@ -115,13 +124,12 @@ function VideoProductCard({ product, isActive, onRatioChange, onMouseEnter }) {
     }
   }, []);
 
-  const isVideoVisible = isActive && hasStartedPlaying && !manualPause;
+  const isVideoVisible = inView && hasStartedPlaying && !manualPause;
 
   return (
     <article
       id={`video-card-${product.id}`}
       ref={containerRef}
-      onMouseEnter={onMouseEnter}
       className="group relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-pine-950 shadow-md ring-1 ring-black/10 transition-all duration-300 hover:shadow-2xl"
     >
       <Link
@@ -148,8 +156,8 @@ function VideoProductCard({ product, isActive, onRatioChange, onMouseEnter }) {
           }`}
         />
 
-        {/* Video rendered only when in focus */}
-        {product.video && (
+        {/* Video rendered near screen, plays when in view */}
+        {nearScreen && product.video && (
           <video
             ref={videoRef}
             src={product.video}
@@ -157,7 +165,7 @@ function VideoProductCard({ product, isActive, onRatioChange, onMouseEnter }) {
             loop
             muted
             playsInline
-            preload={isActive ? "auto" : "none"}
+            preload={inView ? "auto" : "metadata"}
             disablePictureInPicture
             disableRemotePlayback
             className={`h-full w-full object-cover object-top transition-opacity duration-300 group-hover:scale-105 ${
@@ -228,30 +236,6 @@ function VideoProductCard({ product, isActive, onRatioChange, onMouseEnter }) {
 export default function VideoCollectionSection() {
   const [videoProducts, setVideoProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activePlayingId, setActivePlayingId] = useState(null);
-  const cardRatiosRef = useRef(new Map());
-  const scrollTimeoutRef = useRef(null);
-
-  const handleRatioChange = useCallback((id, ratio, isIntersecting) => {
-    if (!isIntersecting || ratio < 0.25) {
-      cardRatiosRef.current.delete(id);
-    } else {
-      cardRatiosRef.current.set(id, ratio);
-    }
-
-    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    scrollTimeoutRef.current = setTimeout(() => {
-      let bestId = null;
-      let highestRatio = 0;
-      for (const [cardId, r] of cardRatiosRef.current.entries()) {
-        if (r > highestRatio) {
-          highestRatio = r;
-          bestId = cardId;
-        }
-      }
-      setActivePlayingId(bestId);
-    }, 70);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -326,9 +310,6 @@ export default function VideoCollectionSection() {
               <VideoProductCard
                 key={product.id}
                 product={product}
-                isActive={activePlayingId === product.id}
-                onRatioChange={handleRatioChange}
-                onMouseEnter={() => setActivePlayingId(product.id)}
               />
             ))}
           </div>

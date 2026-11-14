@@ -31,50 +31,58 @@ function HeartIcon({ filled = false, size = 15 }) {
 }
 
 /**
- * High-Performance Single Active Video Card
- * - Strictly plays ONLY when elected as the active card in focal view
- * - Pauses and frees hardware decoder immediately when scrolled away
- * - Fallbacks to instant static poster to ensure 60fps butter-smooth scroll
+ * Viewport-Aware Auto-Play Video Card
+ * - Plays automatically whenever it is visible on screen (including multiple side-by-side cards)
+ * - Immediately PAUSES and releases resources when scrolled out of view (above or below)
+ * - Resumes playback instantly when scrolled back into view
  */
-function LiveVideoCard({ product, isActive, onRatioChange, onMouseEnter }) {
+function LiveVideoCard({ product }) {
   const containerRef = useRef(null);
   const videoRef = useRef(null);
-  const [manualPause, setManualPause] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [nearScreen, setNearScreen] = useState(false);
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
+  const [manualPause, setManualPause] = useState(false);
   const { isWished, toggleWishlist } = useStore();
   const wished = isWished(product.id);
   const off = discountPercent(product);
 
-  // Reset manual pause state if card loses active focus
-  useEffect(() => {
-    if (!isActive) {
-      setManualPause(false);
-    }
-  }, [isActive]);
-
-  // Report intersection ratio to parent coordinator
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const observer = new IntersectionObserver(
+    // 1. Preload metadata when near viewport (300px margin)
+    const mountObserver = new IntersectionObserver(
       ([entry]) => {
-        onRatioChange(product.id, entry.intersectionRatio, entry.isIntersecting);
+        setNearScreen(entry.isIntersecting);
+      },
+      { rootMargin: "300px 0px" }
+    );
+    mountObserver.observe(el);
+
+    // 2. Play when visible on screen, stop immediately when scrolled out
+    const viewObserver = new IntersectionObserver(
+      ([entry]) => {
+        // True when at least 20% of the card is visible on screen
+        const isVisible = entry.isIntersecting && entry.intersectionRatio >= 0.2;
+        setInView(isVisible);
+        if (!isVisible) {
+          setManualPause(false); // reset manual pause when scrolled out
+        }
       },
       {
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-        rootMargin: "-10% 0px -10% 0px", // focus within central 80% viewport
+        threshold: [0, 0.2, 0.5, 0.8],
       }
     );
-    observer.observe(el);
+    viewObserver.observe(el);
 
     return () => {
-      observer.disconnect();
-      onRatioChange(product.id, 0, false);
+      mountObserver.disconnect();
+      viewObserver.disconnect();
     };
-  }, [product.id, onRatioChange]);
+  }, []);
 
-  // Handle play/pause with hardware decoder safety
+  // Handle play / pause based on in-screen visibility
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -83,7 +91,7 @@ function LiveVideoCard({ product, isActive, onRatioChange, onMouseEnter }) {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (isActive && !manualPause && !prefersReducedMotion) {
+    if (inView && !manualPause && !prefersReducedMotion) {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
@@ -94,7 +102,7 @@ function LiveVideoCard({ product, isActive, onRatioChange, onMouseEnter }) {
       video.pause();
       setHasStartedPlaying(false);
     }
-  }, [isActive, manualPause]);
+  }, [inView, manualPause]);
 
   const togglePlayback = useCallback((e) => {
     e.preventDefault();
@@ -112,13 +120,12 @@ function LiveVideoCard({ product, isActive, onRatioChange, onMouseEnter }) {
     }
   }, []);
 
-  const isVideoVisible = isActive && hasStartedPlaying && !manualPause;
+  const isVideoVisible = inView && hasStartedPlaying && !manualPause;
 
   return (
     <article
       id={`video-card-${product.id}`}
       ref={containerRef}
-      onMouseEnter={onMouseEnter}
       className="group relative aspect-[9/16] w-full overflow-hidden rounded-2xl bg-pine-950 shadow-md ring-1 ring-black/10 transition-all duration-300 hover:shadow-2xl"
     >
       <Link
@@ -132,7 +139,7 @@ function LiveVideoCard({ product, isActive, onRatioChange, onMouseEnter }) {
         className="absolute inset-0 z-0 block"
         aria-label={`View ${product.name} video`}
       >
-        {/* Poster image always visible as fallback and during scrolling */}
+        {/* Poster image always present */}
         <Image
           src={product.image}
           unoptimized={/^https?:\/\//.test(product.image || "")}
@@ -145,8 +152,8 @@ function LiveVideoCard({ product, isActive, onRatioChange, onMouseEnter }) {
           }`}
         />
 
-        {/* Video element - preloaded only when in focus */}
-        {product.video && (
+        {/* Video mounted near screen, plays strictly when in view */}
+        {nearScreen && product.video && (
           <video
             ref={videoRef}
             src={product.video}
@@ -154,7 +161,7 @@ function LiveVideoCard({ product, isActive, onRatioChange, onMouseEnter }) {
             loop
             muted
             playsInline
-            preload={isActive ? "auto" : "none"}
+            preload={inView ? "auto" : "metadata"}
             disablePictureInPicture
             disableRemotePlayback
             className={`h-full w-full object-cover object-top transition-opacity duration-300 group-hover:scale-105 ${
@@ -225,9 +232,6 @@ function LiveVideoCard({ product, isActive, onRatioChange, onMouseEnter }) {
 export default function LiveVideoCollection() {
   const { catalog, catalogLoading, catalogError } = useStore();
   const [active, setActive] = useState("all");
-  const [activePlayingId, setActivePlayingId] = useState(null);
-  const cardRatiosRef = useRef(new Map());
-  const scrollTimeoutRef = useRef(null);
 
   const videos = useMemo(() => catalog.filter((p) => p.video), [catalog]);
   const fabrics = useMemo(
@@ -235,29 +239,6 @@ export default function LiveVideoCollection() {
     [videos]
   );
   const visible = videos.filter((p) => active === "all" || p.fabric === active);
-
-  // Single-active video coordinator with scroll debounce
-  const handleRatioChange = useCallback((id, ratio, isIntersecting) => {
-    if (!isIntersecting || ratio < 0.25) {
-      cardRatiosRef.current.delete(id);
-    } else {
-      cardRatiosRef.current.set(id, ratio);
-    }
-
-    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    // 70ms debounce: during rapid scroll, zero video decoding happens -> 60fps smooth scroll!
-    scrollTimeoutRef.current = setTimeout(() => {
-      let bestId = null;
-      let highestRatio = 0;
-      for (const [cardId, r] of cardRatiosRef.current.entries()) {
-        if (r > highestRatio) {
-          highestRatio = r;
-          bestId = cardId;
-        }
-      }
-      setActivePlayingId(bestId);
-    }, 70);
-  }, []);
 
   return (
     <div className="mx-auto max-w-[1240px] px-4 py-8 lg:px-10 lg:py-14">
@@ -303,11 +284,7 @@ export default function LiveVideoCollection() {
             <button
               key={f}
               type="button"
-              onClick={() => {
-                setActive(f);
-                setActivePlayingId(null);
-                cardRatiosRef.current.clear();
-              }}
+              onClick={() => setActive(f)}
               aria-pressed={active === f}
               className={`rounded-full border px-4 py-1.5 font-inter text-xs font-medium transition-colors cursor-pointer ${
                 active === f
@@ -327,13 +304,7 @@ export default function LiveVideoCollection() {
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
         {visible.map((p) => (
-          <LiveVideoCard
-            key={p.id}
-            product={p}
-            isActive={activePlayingId === p.id}
-            onRatioChange={handleRatioChange}
-            onMouseEnter={() => setActivePlayingId(p.id)}
-          />
+          <LiveVideoCard key={p.id} product={p} />
         ))}
       </div>
     </div>
