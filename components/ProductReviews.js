@@ -5,6 +5,7 @@ import { reviewsApi } from "@/lib/api/reviews";
 import { apiConfigured } from "@/lib/api/client";
 import Stars from "@/components/Stars";
 import { reviews as seedReviews } from "@/lib/data";
+import { useStore } from "@/components/StoreProvider";
 
 function RatingInput({ value, onChange }) {
   return (
@@ -29,12 +30,14 @@ function RatingInput({ value, onChange }) {
 }
 
 export default function ProductReviews({ product }) {
+  const { notify } = useStore() || {};
   const [reviews, setReviews] = useState(product.id && /^[a-f\d]{24}$/i.test(String(product.id)) ? [] : seedReviews);
   const [formOpen, setFormOpen] = useState(false);
   const [draft, setDraft] = useState({ name: "", rating: 5, title: "", body: "" });
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState("");
   const [sending, setSending] = useState(false);
+
   useEffect(() => {
     if (!apiConfigured || !/^[a-f\d]{24}$/i.test(String(product.id))) return;
     let active = true;
@@ -56,25 +59,87 @@ export default function ProductReviews({ product }) {
   }));
 
   async function submit(event) {
-    event.preventDefault(); setError(null); setNotice("");
-    if (!draft.name.trim() || !draft.title.trim() || !draft.body.trim()) {setError("Name, title and review are required."); return;}
-    const isLive = apiConfigured && /^[a-f\d]{24}$/i.test(String(product.id));
-    if (isLive) {
-      setSending(true);
-      try {
-        await reviewsApi.create(product.id, {rating:draft.rating,title:draft.title,comment:draft.body,name:draft.name});
-        setFormOpen(false);setNotice("Review submitted for moderation. It will appear after approval.");
-        setDraft({name:"",rating:5,title:"",body:""});
-      } catch (e) {setError(e.message);} finally {setSending(false);}
+    event.preventDefault();
+    setError(null);
+    setNotice("");
+
+    if (!draft.name.trim() || !draft.title.trim() || !draft.body.trim()) {
+      setError("Please fill in your name, review title, and review message.");
       return;
     }
-    setReviews(current => [{id:Date.now(),name:draft.name.trim(),rating:draft.rating,title:draft.title,body:draft.body,date:new Date().toLocaleDateString("en-IN"),verified:false},...current]);
-    setDraft({name:"",rating:5,title:"",body:""});setFormOpen(false);
+
+    setSending(true);
+    const isLive = apiConfigured && /^[a-f\d]{24}$/i.test(String(product.id));
+
+    if (isLive) {
+      try {
+        await reviewsApi.create(product.id, {
+          rating: draft.rating,
+          title: draft.title.trim(),
+          comment: draft.body.trim(),
+          name: draft.name.trim(),
+        });
+        setFormOpen(false);
+        const successMsg = "Review submitted for moderation. It will appear after approval.";
+        setNotice(successMsg);
+        if (notify) notify(successMsg);
+        setDraft({ name: "", rating: 5, title: "", body: "" });
+      } catch (e) {
+        setError(e.message || "Failed to submit review. Please try again.");
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
+    // Local/mock product fallback with brief simulated async latency
+    setTimeout(() => {
+      setReviews((current) => [
+        {
+          id: Date.now(),
+          name: draft.name.trim(),
+          rating: draft.rating,
+          title: draft.title.trim(),
+          body: draft.body.trim(),
+          date: new Date().toLocaleDateString("en-IN"),
+          verified: false,
+        },
+        ...current,
+      ]);
+      setDraft({ name: "", rating: 5, title: "", body: "" });
+      setFormOpen(false);
+      setSending(false);
+      const successMsg = "Thank you! Your review has been submitted successfully.";
+      setNotice(successMsg);
+      if (notify) notify(successMsg);
+    }, 400);
   }
 
   return (
     <section aria-label="Customer reviews" className="mt-12 border-t border-pine-950/10 pt-8 lg:mt-16">
-      {notice && <p role="status" className="mb-4 text-xs text-pine-900">{notice}</p>}
+      {notice && (
+        <div
+          role="status"
+          className="mb-6 flex items-center justify-between gap-3 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-900 shadow-2xs animate-in fade-in slide-in-from-top-1"
+        >
+          <div className="flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-emerald-600" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span>{notice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNotice("")}
+            aria-label="Dismiss notice"
+            className="cursor-pointer p-1 text-emerald-700 hover:text-emerald-950"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="font-display text-lg font-semibold uppercase tracking-[0.12em] text-pine-950">
@@ -150,14 +215,36 @@ export default function ProductReviews({ product }) {
               />
 
               {error ? (
-                <p role="alert" className="mt-1 text-[11px] text-[#b42318]">{error}</p>
+                <div role="alert" className="mt-2.5 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 animate-in fade-in duration-150">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-red-600" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
               ) : null}
 
               <button
                 type="submit"
-                className="mt-3 h-9 rounded-md bg-pine-900 px-4 font-inter text-[11px] font-semibold text-white transition-colors hover:bg-pine-950"
+                disabled={sending}
+                className={`mt-3 flex h-10 items-center justify-center gap-2 rounded-md px-5 font-inter text-xs font-semibold text-white shadow-xs transition-all ${
+                  sending
+                    ? "cursor-not-allowed bg-tomato/80 opacity-80"
+                    : "cursor-pointer bg-tomato hover:bg-tomato-hover active:scale-[0.98]"
+                }`}
               >
-                Submit review
+                {sending ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    <span>Submitting review…</span>
+                  </>
+                ) : (
+                  <span>Submit review</span>
+                )}
               </button>
             </form>
           ) : null}
