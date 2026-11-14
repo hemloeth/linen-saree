@@ -45,22 +45,12 @@ export default function ProductCarousel({
       className={`py-6 sm:py-8 lg:py-14 overflow-hidden ${tone === "linen" ? "bg-linen" : ""}`}
     >
       <div className="mx-auto max-w-[1240px] px-3.5 sm:px-4 lg:px-10">
-        <div className="mb-4 sm:mb-6 flex items-center justify-between gap-2">
-          {/* Section title + subtitle/view all */}
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-              <h2 className="font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950 sm:text-lg lg:text-xl">
-                {title}
-              </h2>
-              {viewAllHref && (
-                <Link
-                  href={viewAllHref}
-                  className="font-inter text-[11px] font-semibold text-pine-900 underline underline-offset-3 hover:text-pine-950 sm:text-xs"
-                >
-                  {viewAllLabel} &rarr;
-                </Link>
-              )}
-            </div>
+        <div className="mb-3.5 sm:mb-6 flex items-end justify-between gap-3">
+          {/* Section title + subtitle */}
+          <div className="min-w-0">
+            <h2 className="font-display text-base font-semibold uppercase tracking-[0.12em] text-pine-950 sm:text-lg lg:text-xl">
+              {title}
+            </h2>
             <div className="mt-1 flex items-center gap-1.5">
               <span aria-hidden="true" className="h-0.5 w-6 rounded-full bg-pine-900 sm:w-10" />
               <span className="font-inter text-[10px] text-muted sm:text-xs">
@@ -69,10 +59,20 @@ export default function ProductCarousel({
             </div>
           </div>
 
-          {/* Desktop/Tablet Carousel Arrows */}
-          <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-            <Arrow direction="left" onClick={() => scrollByPage(-1)} />
-            <Arrow direction="right" onClick={() => scrollByPage(1)} />
+          {/* Right side: View All text just above the right side of the product cards + desktop arrows */}
+          <div className="flex items-center gap-3 shrink-0">
+            {viewAllHref && (
+              <Link
+                href={viewAllHref}
+                className="font-inter text-xs font-semibold text-pine-900 underline underline-offset-4 hover:text-pine-950 transition-colors"
+              >
+                {viewAllLabel} &rarr;
+              </Link>
+            )}
+            <div className="hidden sm:flex items-center gap-1.5">
+              <Arrow direction="left" onClick={() => scrollByPage(-1)} />
+              <Arrow direction="right" onClick={() => scrollByPage(1)} />
+            </div>
           </div>
         </div>
 

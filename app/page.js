@@ -62,7 +62,7 @@ export default function HomePage() {
             title="Trending Now"
             id="trending"
             viewAllHref="/shop"
-            viewAllLabel="View All Trending"
+            viewAllLabel="View All"
             columns={4}
           >
             {trending.map((product) => (
@@ -84,7 +84,7 @@ export default function HomePage() {
             id="bestsellers"
             tone="linen"
             viewAllHref="/best-sellers"
-            viewAllLabel="View All Bestsellers"
+            viewAllLabel="View All"
             columns={4}
           >
             {bestsellers.map((product) => (
