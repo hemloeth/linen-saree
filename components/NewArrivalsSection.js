@@ -41,23 +41,14 @@ function LoadingSpinner() {
 
 function ProductSkeletonGrid({ count = 8 }) {
   return (
-    <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex h-full flex-col justify-between rounded-xl border border-pine-950/[0.08] bg-white overflow-hidden p-2.5 sm:p-3">
-          <div className="aspect-[500/650] w-full animate-pulse rounded-lg bg-chip" />
-          <div className="mt-2.5 flex flex-1 flex-col justify-between">
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <div className="h-2 w-1/3 animate-pulse rounded bg-chip" />
-                <div className="h-2 w-1/4 animate-pulse rounded bg-chip" />
-              </div>
-              <div className="h-4 w-4/5 animate-pulse rounded bg-chip" />
-              <div className="h-3.5 w-1/2 animate-pulse rounded bg-chip" />
-            </div>
-            <div className="mt-3">
-              <div className="h-3 w-1/3 animate-pulse rounded bg-chip mb-2" />
-              <div className="h-8 w-full animate-pulse rounded-md bg-chip sm:h-8.5" />
-            </div>
+        <div key={i} className="flex h-full flex-col rounded-lg border border-pine-950/[0.06] bg-white overflow-hidden">
+          <div className="aspect-[4/5] w-full animate-pulse bg-chip" />
+          <div className="p-2 sm:p-2.5 space-y-1.5">
+            <div className="h-3 w-4/5 animate-pulse rounded bg-chip" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-chip" />
+            <div className="h-[34px] w-full animate-pulse rounded-md bg-chip" />
           </div>
         </div>
       ))}
@@ -217,7 +208,7 @@ export default function NewArrivalsSection() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}

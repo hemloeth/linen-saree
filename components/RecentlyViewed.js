@@ -114,7 +114,7 @@ export default function RecentlyViewed({ currentId }) {
           Recently Viewed
         </h2>
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
         {items.slice(0, 4).map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}

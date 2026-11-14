@@ -219,7 +219,7 @@ export default function ShopCatalog() {
             </button>
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 lg:gap-6">
             {results.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

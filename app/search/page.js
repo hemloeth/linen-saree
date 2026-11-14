@@ -91,7 +91,7 @@ function SearchResults() {
           <p className="mt-2 text-xs text-muted">Try checking for spelling or searching for a broader term like &quot;Linen&quot; or &quot;Silk&quot;.</p>
         </div>
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4 lg:gap-6">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

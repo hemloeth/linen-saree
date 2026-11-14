@@ -65,9 +65,19 @@ export default function ProductCarousel({
 
         <div
           ref={trackRef}
-          className={`no-scrollbar -mx-4 flex items-stretch snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pt-2 pb-1 lg:mx-0 lg:grid ${colClass} lg:gap-6 lg:overflow-visible lg:px-0 lg:pt-0`}
+          className={`no-scrollbar -mx-4 flex items-stretch snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth px-4 pt-1 pb-1 lg:mx-0 lg:grid ${colClass} lg:gap-6 lg:overflow-visible lg:px-0 lg:pt-0`}
         >
-          {children}
+          {/* Wrap each child in a flex-basis container for proper mobile carousel sizing */}
+          {Array.isArray(children)
+            ? children.map((child, i) => (
+                <div
+                  key={child?.key ?? i}
+                  className="w-[44vw] min-w-[150px] max-w-[200px] shrink-0 snap-start sm:w-[42vw] sm:max-w-[220px] lg:w-auto lg:min-w-0 lg:max-w-none lg:shrink"
+                >
+                  {child}
+                </div>
+              ))
+            : children}
         </div>
       </div>
     </section>

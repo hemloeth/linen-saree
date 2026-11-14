@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { AddToBagButton } from "@/components/ProductActions";
-import Stars from "@/components/Stars";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { AddToBagButton, BuyNowButton } from "@/components/ProductActions";
 import { useStore } from "@/components/StoreProvider";
 import { discountPercent, formatINR } from "@/lib/data";
 
 const HOVER_INTERVAL = 1100;
+
+/* ───── Inline SVG icons ───── */
 
 function HeartIcon({ filled = false, size = 14 }) {
   return (
@@ -27,55 +28,93 @@ function BagIcon({ size = 12 }) {
   );
 }
 
-export default function ProductCard({ product }) {
+function BoltIcon({ size = 11 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" />
+    </svg>
+  );
+}
+
+/* ───── Touch-device detection ───── */
+function useIsTouchDevice() {
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    setIsTouch(
+      typeof window !== "undefined" &&
+        ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+    );
+  }, []);
+  return isTouch;
+}
+
+/* ───── Main ProductCard component ───── */
+
+export default function ProductCard({ product, variant = "default" }) {
   const { isWished, toggleWishlist } = useStore();
   const gallery = useMemo(
     () => (product.gallery?.length ? product.gallery : [product.image]),
     [product.gallery, product.image]
   );
   const [frame, setFrame] = useState(0);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const timerRef = useRef(null);
   const wished = isWished(product.id);
   const off = discountPercent(product);
+  const isTouch = useIsTouchDevice();
+  const prefersReducedMotion = useRef(false);
 
-  // Warm the cache so the hover cross-fade never shows a blank frame.
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      prefersReducedMotion.current = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+    }
+  }, []);
+
+  // Pre-warm hover images (desktop only)
+  useEffect(() => {
+    if (isTouch || prefersReducedMotion.current) return;
     gallery.slice(1).forEach((src) => {
       const img = new window.Image();
       img.src = src;
     });
     return () => clearInterval(timerRef.current);
-  }, [gallery]);
+  }, [gallery, isTouch]);
 
-  function startCycle() {
-    if (gallery.length < 2) return;
+  const startCycle = useCallback(() => {
+    if (gallery.length < 2 || isTouch || prefersReducedMotion.current) return;
     clearInterval(timerRef.current);
     let next = 0;
     timerRef.current = setInterval(() => {
       next = (next + 1) % gallery.length;
       setFrame(next);
     }, HOVER_INTERVAL);
-  }
+  }, [gallery, isTouch]);
 
-  function stopCycle() {
+  const stopCycle = useCallback(() => {
     clearInterval(timerRef.current);
     setFrame(0);
-  }
+  }, []);
+
+  const isCompact = variant === "compact";
 
   return (
     <article
-      className="group relative flex h-full w-[180px] shrink-0 snap-start flex-col rounded-xl border border-pine-950/[0.08] bg-white shadow-[0_1px_4px_rgba(9,43,43,0.04)] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-pine-950/20 hover:shadow-[0_12px_28px_-10px_rgba(9,43,43,0.15)] sm:w-[220px] lg:w-auto lg:shrink"
+      className={`group relative flex h-full w-full flex-col rounded-lg border border-pine-950/[0.06] bg-white shadow-[0_1px_3px_rgba(9,43,43,0.03)] transition-shadow duration-300 hover:shadow-[0_6px_20px_-8px_rgba(9,43,43,0.12)] hover:border-pine-950/15 ${
+        isCompact ? "" : ""
+      }`}
       onMouseEnter={startCycle}
       onMouseLeave={stopCycle}
     >
-      {/* Product Image Stage — Native 500/650 aspect ratio with object-top to never cut the model head */}
-      <div
-        className="relative aspect-[500/650] w-full overflow-hidden rounded-t-xl bg-chip cursor-pointer"
-        onFocus={startCycle}
-        onBlur={stopCycle}
-      >
-        <Link href={`/product/${product.id}`} aria-label={product.name} className="absolute inset-0 block cursor-pointer">
-          {/* Base image anchored to top so head/pallu are always 100% visible */}
+      {/* ── Image Stage ── */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-lg bg-chip">
+        <Link
+          href={`/product/${product.id}`}
+          aria-label={product.name}
+          className="absolute inset-0 block"
+        >
+          {/* Base image — object-contain so full product is always visible */}
           {gallery[0] && (
             <span className="absolute inset-0 z-0">
               <Image
@@ -83,14 +122,25 @@ export default function ProductCard({ product }) {
                 unoptimized={/^https?:\/\//.test(gallery[0] || "")}
                 alt={product.name}
                 fill
-                quality={100}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover object-top transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04] motion-reduce:scale-100! motion-reduce:transition-none!"
+                quality={85}
+                sizes="(max-width: 640px) 48vw, (max-width: 1024px) 33vw, 25vw"
+                onLoad={() => setImgLoaded(true)}
+                className={`object-contain transition-opacity duration-300 ${
+                  imgLoaded ? "opacity-100" : "opacity-0"
+                } motion-reduce:transition-none`}
               />
             </span>
           )}
 
-          {/* Additional frames layered on top with smooth cross-fade */}
+          {/* Loading skeleton */}
+          {!imgLoaded && (
+            <span
+              className="absolute inset-0 animate-pulse bg-chip"
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Hover gallery frames (desktop only) */}
           {gallery.slice(1).map((src, idx) => {
             const frameIndex = idx + 1;
             const isCurrent = frame === frameIndex;
@@ -99,7 +149,9 @@ export default function ProductCard({ product }) {
                 key={src + frameIndex}
                 aria-hidden={!isCurrent}
                 className={`absolute inset-0 z-10 transition-opacity duration-400 ${
-                  isCurrent ? "opacity-100" : "opacity-0 pointer-events-none"
+                  isCurrent
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none"
                 }`}
               >
                 <Image
@@ -107,45 +159,45 @@ export default function ProductCard({ product }) {
                   unoptimized={/^https?:\/\//.test(src || "")}
                   alt=""
                   fill
-                  quality={100}
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-cover object-top transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04] motion-reduce:scale-100! motion-reduce:transition-none!"
+                  quality={85}
+                  sizes="(max-width: 640px) 48vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-contain motion-reduce:transition-none"
                 />
               </span>
             );
           })}
         </Link>
 
-        {/* Hover scrim + view affordance */}
+        {/* Desktop hover scrim */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-20 bg-gradient-to-t from-pine-950/45 to-transparent opacity-0 transition-opacity duration-400 group-hover:opacity-100 lg:block"
+          className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-16 bg-gradient-to-t from-pine-950/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:block"
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute bottom-2.5 right-2.5 hidden translate-y-1.5 items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 font-inter text-[9px] font-semibold text-pine-950 opacity-0 shadow-sm transition-all duration-400 ease-out group-hover:translate-y-0 group-hover:opacity-100 lg:flex"
+          className="pointer-events-none absolute bottom-2 right-2 hidden translate-y-1 items-center gap-0.5 rounded-full bg-white/95 px-1.5 py-0.5 font-inter text-[8px] font-semibold text-pine-950 opacity-0 shadow-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 lg:flex"
         >
           View
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M7 17 17 7M9 7h8v8" />
           </svg>
         </span>
 
-        {/* Refined clean badges */}
-        <div className="pointer-events-none absolute left-2.5 top-2.5 z-20 flex flex-col items-start gap-1">
-          {off > 0 ? (
-            <span className="rounded-full bg-white/95 px-2 py-0.5 font-inter text-[8.5px] font-bold tracking-wider uppercase text-[#b42318] shadow-sm backdrop-blur-sm border border-[#b42318]/15">
+        {/* Badges — top-left */}
+        <div className="pointer-events-none absolute left-1.5 top-1.5 z-20 flex flex-col items-start gap-0.5 sm:left-2 sm:top-2 sm:gap-1">
+          {off > 0 && (
+            <span className="rounded-full bg-white/95 px-1.5 py-[1px] font-inter text-[7.5px] font-bold tracking-wider uppercase text-[#b42318] shadow-sm backdrop-blur-sm border border-[#b42318]/15 sm:text-[8.5px] sm:px-2 sm:py-0.5">
               {off}% OFF
             </span>
-          ) : null}
-          {product.isNew ? (
-            <span className="rounded-full bg-pine-900/95 px-2 py-0.5 font-inter text-[8.5px] font-semibold tracking-wider uppercase text-white shadow-sm backdrop-blur-sm">
+          )}
+          {product.isNew && (
+            <span className="rounded-full bg-pine-900/95 px-1.5 py-[1px] font-inter text-[7.5px] font-semibold tracking-wider uppercase text-white shadow-sm backdrop-blur-sm sm:text-[8.5px] sm:px-2 sm:py-0.5">
               New
             </span>
-          ) : null}
+          )}
         </div>
 
-        {/* Wishlist Button */}
+        {/* Wishlist — top-right */}
         <button
           type="button"
           onClick={(e) => {
@@ -154,68 +206,86 @@ export default function ProductCard({ product }) {
             toggleWishlist(product.id);
           }}
           aria-pressed={wished}
-          aria-label={wished ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
-          className={`absolute right-2.5 top-2.5 z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-white ${
-            wished ? "text-[#b42318]" : "text-pine-950/70 hover:text-pine-950"
+          aria-label={
+            wished
+              ? `Remove ${product.name} from wishlist`
+              : `Add ${product.name} to wishlist`
+          }
+          className={`absolute right-1.5 top-1.5 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-110 hover:bg-white sm:right-2 sm:top-2 ${
+            wished
+              ? "text-[#b42318]"
+              : "text-pine-950/60 hover:text-pine-950"
           }`}
         >
-          <HeartIcon filled={wished} size={14} />
+          <HeartIcon filled={wished} size={13} />
         </button>
 
-        {!product.inStock ? (
-          <span className="absolute inset-x-0 bottom-0 bg-pine-950/85 py-0.5 text-center font-inter text-[9.5px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+        {/* Sold out overlay */}
+        {!product.inStock && (
+          <span className="absolute inset-x-0 bottom-0 bg-pine-950/85 py-0.5 text-center font-inter text-[8px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm sm:text-[9px]">
             Sold out
           </span>
-        ) : null}
+        )}
       </div>
 
-      {/* Product Details Area */}
-      <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-3">
-        {/* Top: Category, Rating & Title */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between gap-1">
-            <span className="font-inter text-[9.5px] font-medium uppercase tracking-[0.1em] text-muted">
-              {product.category || product.fabric || "Handwoven Saree"}
-            </span>
-            <Stars rating={product.rating} reviews={product.reviews} />
-          </div>
-
-          {/* Full Product Name without clipping */}
-          <h3
-            className="mt-1.5 min-h-[2.6rem] font-display text-[13px] font-medium leading-[1.38] text-pine-950 transition-colors duration-200 group-hover:text-pine-800 sm:min-h-[2.85rem] sm:text-[14px]"
-            title={product.name}
+      {/* ── Product Info ── */}
+      <div className="flex flex-1 flex-col justify-between px-2 pt-2 pb-2 sm:px-2.5 sm:pt-2.5 sm:pb-2.5">
+        {/* Title — 2 line clamp */}
+        <h3
+          className="font-display text-[11px] font-medium leading-[1.35] text-pine-950 line-clamp-2 sm:text-[12.5px] lg:text-[13.5px] lg:leading-[1.38]"
+          title={product.name}
+        >
+          <Link
+            href={`/product/${product.id}`}
+            className="hover:underline underline-offset-2"
           >
-            <Link href={`/product/${product.id}`} className="hover:underline underline-offset-2 cursor-pointer">
-              {product.name}
-            </Link>
-          </h3>
+            {product.name}
+          </Link>
+        </h3>
+
+        {/* Price row */}
+        <div className="mt-1 flex items-baseline gap-1 flex-wrap sm:mt-1.5">
+          <span className="font-inter text-[12px] font-semibold text-pine-900 sm:text-[13px]">
+            {formatINR(product.price)}
+          </span>
+          {product.mrp > product.price && (
+            <>
+              <span className="text-[9px] text-muted line-through sm:text-[10px]">
+                {formatINR(product.mrp)}
+              </span>
+              <span className="rounded bg-[#ecfdf3] px-1 py-[1px] font-inter text-[7.5px] font-bold text-[#027a48] sm:text-[8.5px] sm:px-1.5">
+                {off}% off
+              </span>
+            </>
+          )}
         </div>
 
-        {/* Bottom Pinned Block: Price & Add to Bag */}
-        <div className="mt-auto pt-2.5">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-inter text-[13.5px] font-semibold text-pine-900 sm:text-sm">
-              {formatINR(product.price)}
-            </span>
-            {product.mrp > product.price && (
-              <>
-                <span className="text-[10px] text-muted line-through">
-                  {formatINR(product.mrp)}
-                </span>
-                <span className="ml-auto rounded bg-[#ecfdf3] px-1.5 py-0.5 font-inter text-[9px] font-bold text-[#027a48]">
-                  {off}% off
-                </span>
-              </>
-            )}
-          </div>
+        {/* ── Action buttons row ── */}
+        <div className="mt-1.5 flex items-stretch gap-1 sm:mt-2 sm:gap-1.5">
+          {product.inStock ? (
+            <>
+              {/* Add to Cart — icon-only button */}
+              <AddToBagButton
+                product={product}
+                className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-md bg-pine-900 text-white shadow-sm transition-all duration-200 hover:bg-pine-950 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:h-[36px] sm:w-[36px]"
+              >
+                <BagIcon size={13} />
+              </AddToBagButton>
 
-          <AddToBagButton
-            product={product}
-            className="mt-2 flex h-8 w-full cursor-pointer items-center justify-center gap-1.5 rounded-md bg-pine-900 font-inter text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-pine-950 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:h-8.5"
-          >
-            <BagIcon size={12} />
-            Add to bag
-          </AddToBagButton>
+              {/* Buy Now — fills remaining width */}
+              <BuyNowButton
+                product={product}
+                className="flex h-[34px] flex-1 items-center justify-center gap-1 rounded-md border border-pine-900 bg-white font-inter text-[10px] font-semibold uppercase tracking-wider text-pine-900 shadow-sm transition-all duration-200 hover:bg-pine-900 hover:text-white active:scale-[0.98] sm:h-[36px] sm:text-[10.5px]"
+              >
+                <BoltIcon size={10} />
+                Buy Now
+              </BuyNowButton>
+            </>
+          ) : (
+            <div className="flex h-[34px] w-full items-center justify-center rounded-md border border-pine-950/15 bg-chip font-inter text-[9px] font-semibold uppercase tracking-wider text-muted sm:h-[36px] sm:text-[10px]">
+              Out of Stock
+            </div>
+          )}
         </div>
       </div>
     </article>

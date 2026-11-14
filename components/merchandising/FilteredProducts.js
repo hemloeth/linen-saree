@@ -146,7 +146,7 @@ export default function FilteredProducts({ kind, value }) {
       </div>
 
       {catalogLoading ? (
-        <div className="mt-8 grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-8 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="aspect-[3/3.7] animate-pulse rounded-xl bg-chip" />
           ))}
@@ -166,7 +166,7 @@ export default function FilteredProducts({ kind, value }) {
           </Link>
         </div>
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-8 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
           {matching.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
