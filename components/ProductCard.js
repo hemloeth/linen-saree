@@ -88,6 +88,7 @@ export default function ProductCard({ product, variant = "default" }) {
     if (typeof window !== "undefined") {
       try {
         sessionStorage.setItem("hoq_last_clicked_product_id", String(product.id));
+        sessionStorage.setItem("hoq_last_clicked_target_id", `product-card-${product.id}`);
         sessionStorage.setItem(`hoq_scroll_pos_${window.location.pathname}`, String(window.scrollY));
       } catch {
         /* ignore */

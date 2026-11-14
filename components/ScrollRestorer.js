@@ -4,23 +4,26 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 const SCROLL_STORAGE_KEY_PREFIX = "hoq_scroll_pos_";
-const CLICKED_ID_KEY = "hoq_last_clicked_product_id";
+const TARGET_ID_KEY = "hoq_last_clicked_target_id";
+const LEGACY_PRODUCT_ID_KEY = "hoq_last_clicked_product_id";
 
 /**
- * Global Scroll Restoration Coordinator
+ * Standard Production-Grade Scroll Restoration Coordinator
  * 
- * 1. Automatically restores native scroll position on browser back/forward (PopState).
- * 2. Saves scroll position before unmount/route changes.
- * 3. If returning from a product details page, smoothly scrolls exactly to the clicked product card.
+ * 1. Manages window.history.scrollRestoration = 'manual' to prevent jarring browser jumps to (0,0).
+ * 2. Tracks and restores exact scroll position & clicked card anchors across navigation (back/forward).
+ * 3. Handles async Next.js client component hydration gracefully via layout & height polling.
+ * 4. Supports collection cards, category cards, and product cards uniformly.
  */
 export default function ScrollRestorer() {
   const pathname = usePathname();
   const isPopStateRef = useRef(false);
+  const prevPathnameRef = useRef(pathname);
 
+  // 1. One-time setup: enable manual scroll restoration and hook popstate + beforeunload
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Tell the browser we want manual control so it doesn't jump to (0,0) before our state mounts
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
@@ -30,7 +33,11 @@ export default function ScrollRestorer() {
     }
 
     function onBeforeUnload() {
-      sessionStorage.setItem(`${SCROLL_STORAGE_KEY_PREFIX}${window.location.pathname}`, String(window.scrollY));
+      try {
+        sessionStorage.setItem(`${SCROLL_STORAGE_KEY_PREFIX}${window.location.pathname}`, String(window.scrollY));
+      } catch {
+        /* ignore */
+      }
     }
 
     window.addEventListener("popstate", onPopState);
@@ -42,64 +49,118 @@ export default function ScrollRestorer() {
     };
   }, []);
 
+  // 2. Continuous passive scroll tracker for active route (throttled via requestAnimationFrame)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const savedPos = sessionStorage.getItem(`${SCROLL_STORAGE_KEY_PREFIX}${pathname}`);
-    const lastClickedId = sessionStorage.getItem(CLICKED_ID_KEY);
+    let ticking = false;
 
-    // If navigated back via browser back or Link back
-    if (isPopStateRef.current || (!pathname.startsWith("/product/") && lastClickedId)) {
-      isPopStateRef.current = false;
-
-      // Strategy A: If coming back from product details, find that product element by id
-      if (lastClickedId && !pathname.startsWith("/product/")) {
-        let attempts = 0;
-        const maxAttempts = 15;
-
-        const interval = setInterval(() => {
-          attempts++;
-          const targetCard = document.getElementById(`product-card-${lastClickedId}`);
-          if (targetCard) {
-            clearInterval(interval);
-            sessionStorage.removeItem(CLICKED_ID_KEY);
-            targetCard.scrollIntoView({ behavior: "instant", block: "center" });
-            return;
+    function handleScroll() {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          try {
+            sessionStorage.setItem(`${SCROLL_STORAGE_KEY_PREFIX}${pathname}`, String(window.scrollY));
+          } catch {
+            /* ignore */
           }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }
 
-          // Fallback to saved pixel scroll position if card element takes too long
-          if (attempts >= maxAttempts) {
-            clearInterval(interval);
-            sessionStorage.removeItem(CLICKED_ID_KEY);
-            if (savedPos !== null) {
-              window.scrollTo({ top: Number(savedPos), behavior: "instant" });
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      // Save exact final position on route unmount/change
+      try {
+        sessionStorage.setItem(`${SCROLL_STORAGE_KEY_PREFIX}${pathname}`, String(window.scrollY));
+      } catch {
+        /* ignore */
+      }
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [pathname]);
+
+  // 3. Restoration Engine on Route Transition / Back Navigation
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isBackNavigation = isPopStateRef.current;
+    isPopStateRef.current = false;
+
+    const savedPosRaw = sessionStorage.getItem(`${SCROLL_STORAGE_KEY_PREFIX}${pathname}`);
+    const savedTargetId = sessionStorage.getItem(TARGET_ID_KEY);
+    const legacyProductId = sessionStorage.getItem(LEGACY_PRODUCT_ID_KEY);
+
+    const targetElementId = savedTargetId || (legacyProductId ? `product-card-${legacyProductId}` : null);
+    const savedPos = savedPosRaw !== null ? Number(savedPosRaw) : null;
+
+    // Check if user returned to a parent/previous page
+    const isReturningToParent =
+      Boolean(targetElementId) &&
+      !pathname.startsWith("/product/") &&
+      !pathname.startsWith("/collections/") &&
+      !pathname.startsWith("/categories/");
+
+    if (isBackNavigation || isReturningToParent) {
+      let attempts = 0;
+      const maxAttempts = 35; // 35 * 40ms = 1400ms max polling for lazy/hydrating components
+
+      const timer = setInterval(() => {
+        attempts++;
+
+        // Strategy A: Targeted anchor element restoration (CollectionCard, CategoryCard, ProductCard)
+        if (targetElementId) {
+          const targetEl = document.getElementById(targetElementId);
+          if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            if (rect.height > 0 || targetEl.offsetParent !== null) {
+              clearInterval(timer);
+              sessionStorage.removeItem(TARGET_ID_KEY);
+              sessionStorage.removeItem(LEGACY_PRODUCT_ID_KEY);
+              targetEl.scrollIntoView({ behavior: "instant", block: "center" });
+              return;
             }
           }
-        }, 60);
+        }
 
-        return () => clearInterval(interval);
-      }
+        // Strategy B: Height-aware pixel scroll restoration
+        if (savedPos !== null && !isNaN(savedPos) && savedPos > 0) {
+          const currentScrollHeight = document.documentElement.scrollHeight;
+          const maxPossible = Math.max(0, currentScrollHeight - window.innerHeight);
+          const desired = Math.min(savedPos, maxPossible);
 
-      // Strategy B: General back navigation to saved coordinate
-      if (savedPos !== null) {
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: Number(savedPos), behavior: "instant" });
-        });
-      }
+          window.scrollTo({ top: desired, behavior: "instant" });
+
+          // If reached target position within tolerance, or document is tall enough to hold target:
+          if (Math.abs(window.scrollY - savedPos) <= 12 || (currentScrollHeight >= savedPos + window.innerHeight && attempts > 5)) {
+            clearInterval(timer);
+            sessionStorage.removeItem(TARGET_ID_KEY);
+            sessionStorage.removeItem(LEGACY_PRODUCT_ID_KEY);
+            return;
+          }
+        }
+
+        // Strategy C: Timeout fallback
+        if (attempts >= maxAttempts) {
+          clearInterval(timer);
+          sessionStorage.removeItem(TARGET_ID_KEY);
+          sessionStorage.removeItem(LEGACY_PRODUCT_ID_KEY);
+          if (savedPos !== null && !isNaN(savedPos) && savedPos > 0) {
+            const maxPossible = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+            window.scrollTo({ top: Math.min(savedPos, maxPossible), behavior: "instant" });
+          }
+        }
+      }, 40);
+
+      prevPathnameRef.current = pathname;
+      return () => clearInterval(timer);
+    } else {
+      // Fresh navigation forward: scroll to top naturally
+      window.scrollTo({ top: 0, behavior: "instant" });
+      prevPathnameRef.current = pathname;
     }
-
-    // Save scroll position periodically and on leave
-    function saveCurrentScroll() {
-      sessionStorage.setItem(`${SCROLL_STORAGE_KEY_PREFIX}${pathname}`, String(window.scrollY));
-    }
-
-    window.addEventListener("scroll", saveCurrentScroll, { passive: true });
-    return () => {
-      saveCurrentScroll();
-      window.removeEventListener("scroll", saveCurrentScroll);
-    };
   }, [pathname]);
 
   return null;
 }
-

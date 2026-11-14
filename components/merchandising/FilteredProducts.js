@@ -115,21 +115,43 @@ export default function FilteredProducts({ kind, value }) {
   }, [catalog, kind, slug, decode, matchedCategory, matchedCollection]);
 
   return (
-    <main className="mx-auto max-w-[1240px] flex-1 px-4 py-8 lg:px-10 lg:py-12">
-      <nav aria-label="Breadcrumb" className="mb-4 text-[11px] text-muted lg:mb-6">
-        <Link href="/" className="hover:text-pine-900">
-          Home
-        </Link>
-        <span className="px-1.5">/</span>
-        <Link
-          href={kind === "category" ? "/categories" : "/collections"}
-          className="hover:text-pine-900"
+    <main className="mx-auto max-w-[1240px] flex-1 px-4 py-6 sm:py-8 lg:px-10 lg:py-12">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 lg:mb-6">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-y-1 text-[11px] text-muted">
+          <Link href="/" className="hover:text-pine-900 transition-colors">
+            Home
+          </Link>
+          <span className="px-1.5">/</span>
+          <Link
+            href={kind === "category" ? "/categories" : "/collections"}
+            className="hover:text-pine-900 transition-colors"
+          >
+            {kind === "category" ? "Categories" : "Collections"}
+          </Link>
+          <span className="px-1.5">/</span>
+          <span className="text-pine-900 font-medium truncate max-w-[200px] sm:max-w-none">{displayName}</span>
+        </nav>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = kind === "category" ? "/categories" : "/collections";
+              }
+            }
+          }}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-pine-950/15 bg-white px-3 py-1 font-inter text-[11px] font-semibold text-pine-900 shadow-xs transition hover:bg-cream-surface active:scale-95"
+          aria-label="Go back to previous page"
         >
-          {kind === "category" ? "Categories" : "Collections"}
-        </Link>
-        <span className="px-1.5">/</span>
-        <span className="text-pine-900 font-medium">{displayName}</span>
-      </nav>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
 
       <div className="flex flex-col gap-2 border-b border-pine-950/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
         <div>

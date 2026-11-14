@@ -24,7 +24,7 @@ export function CategorySection() {
   if (!items.length) return null;
 
   return (
-    <section aria-label="Shop by category" className="mx-auto max-w-[1240px] px-4 py-8 lg:px-10 lg:py-14">
+    <section id="shop-by-category" aria-label="Shop by category" className="mx-auto max-w-[1240px] px-4 py-8 lg:px-10 lg:py-14 scroll-mt-24">
       <SectionHeading title="Shop by Category" />
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-7">
         {items.map((item) => (
@@ -54,7 +54,7 @@ export function CollectionSection() {
   if (!groups.length) return null;
 
   return (
-    <section aria-label="Curated collections" className="mx-auto max-w-[1240px] px-4 py-8 lg:px-10 lg:py-14">
+    <section id="curated-collections" aria-label="Curated collections" className="mx-auto max-w-[1240px] px-4 py-8 lg:px-10 lg:py-14 scroll-mt-24">
       <SectionHeading title="Explore Collections" />
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-7">
         {groups.map((item) => (
