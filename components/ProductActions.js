@@ -44,11 +44,11 @@ export function AddToBagButton({ product, className = "", children }) {
       onClick={handleClick}
       aria-label={justAdded ? `Added ${product?.name} to bag` : `Add ${product?.name} to bag`}
       aria-live="polite"
-      className={`cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center justify-center text-center select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {justAdded ? (
-        <span className="flex items-center justify-center text-emerald-300 animate-in fade-in zoom-in-75 duration-200">
-          <CheckIcon size={13} />
+        <span className="flex items-center justify-center gap-1 font-semibold animate-in fade-in zoom-in-75 duration-200">
+          <CheckIcon size={14} /> Added
         </span>
       ) : (
         (children ?? "Add to bag")
@@ -78,7 +78,7 @@ export function BuyNowButton({ product, className = "", children }) {
       disabled={!product?.inStock || navigating}
       onClick={handleClick}
       aria-label={`Buy ${product?.name} now`}
-      className={`cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`inline-flex items-center justify-center text-center select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {navigating ? "Processing…" : (children ?? "Buy now")}
     </button>

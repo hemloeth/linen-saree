@@ -218,13 +218,13 @@ export default function ProductDetail({ product }) {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <AddToBagButton
               product={product}
-              className="flex-1 h-12 rounded-lg border-2 border-pine-900 bg-white font-inter text-xs font-bold uppercase tracking-wider text-pine-900 shadow-xs transition hover:bg-sand-50 active:scale-[0.99] disabled:opacity-50"
+              className="flex-1 min-h-[52px] sm:min-h-[56px] rounded-xl border-2 border-pine-900 bg-white px-6 py-3.5 font-inter text-xs sm:text-[13px] font-bold uppercase tracking-wider text-pine-900 shadow-xs transition hover:bg-sand-50 active:scale-[0.99] disabled:opacity-50"
             >
               Add to bag
             </AddToBagButton>
             <BuyNowButton
               product={product}
-              className="flex-1 h-12 rounded-lg bg-pine-900 font-inter text-xs font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-pine-950 active:scale-[0.99] disabled:opacity-50"
+              className="flex-1 min-h-[52px] sm:min-h-[56px] rounded-xl bg-pine-900 px-6 py-3.5 font-inter text-xs sm:text-[13px] font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-pine-950 active:scale-[0.99] disabled:opacity-50"
             />
           </div>
 
@@ -335,23 +335,23 @@ export default function ProductDetail({ product }) {
       </div>
 
       {/* Sticky mobile action bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-pine-950/10 bg-white/95 px-3 py-2.5 backdrop-blur lg:hidden shadow-lg">
-        <div className="flex items-center gap-2.5">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-pine-950/10 bg-white/95 px-3.5 py-3 backdrop-blur-md lg:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.06)] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="flex items-center gap-3">
           <div className="shrink-0 pr-1">
-            <p className="font-inter text-sm font-semibold leading-tight text-pine-900">
+            <p className="font-inter text-sm font-bold leading-tight text-pine-900">
               {formatINR(product.price)}
             </p>
             <p className="text-[10px] leading-tight text-muted line-through">{formatINR(product.mrp)}</p>
           </div>
           <AddToBagButton
             product={product}
-            className="h-11 flex-1 rounded-lg border-2 border-pine-900 bg-white font-inter text-xs font-bold uppercase tracking-wider text-pine-900 transition hover:bg-sand-50"
+            className="min-h-[48px] flex-1 rounded-xl border-2 border-pine-900 bg-white px-3 font-inter text-xs font-bold uppercase tracking-wider text-pine-900 transition hover:bg-sand-50 active:scale-[0.98]"
           >
             Add to bag
           </AddToBagButton>
           <BuyNowButton
             product={product}
-            className="h-11 flex-1 rounded-lg bg-pine-900 font-inter text-xs font-bold uppercase tracking-wider text-white shadow-xs transition hover:bg-pine-950"
+            className="min-h-[48px] flex-1 rounded-xl bg-pine-900 px-3 font-inter text-xs font-bold uppercase tracking-wider text-white shadow-xs transition hover:bg-pine-950 active:scale-[0.98]"
           />
         </div>
       </div>

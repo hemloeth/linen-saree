@@ -200,7 +200,7 @@ export default function ProductPageView({ productId }) {
       </main>
       <Footer />
       {/* Spacer so fixed mobile action bar never covers footer */}
-      <div aria-hidden="true" className="h-14 bg-linen lg:hidden" />
+      <div aria-hidden="true" className="h-24 bg-linen lg:hidden" />
     </>
   );
 }
