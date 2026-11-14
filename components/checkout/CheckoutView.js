@@ -37,7 +37,13 @@ function loadRazorpayScript() {
 }
 
 export default function CheckoutView() {
-  const { items, subtotal, clear, setQty, remove, user, notify } = useStore();
+  const { items, subtotal, clear, setQty, remove, user, notify, awaitCartSettled } = useStore();
+
+  useEffect(() => {
+    if (typeof awaitCartSettled === "function") {
+      awaitCartSettled();
+    }
+  }, [awaitCartSettled]);
   const [step, setStep] = useState(1); // 1 = Address Form, 2 = Payment Method
   const [address, setAddress] = useState(EMPTY_ADDRESS);
   const [selectedSavedAddrId, setSelectedSavedAddrId] = useState(null);

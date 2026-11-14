@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useStore } from "@/components/StoreProvider";
 import ProductCard from "@/components/ProductCard";
+import { fetchPaginatedProducts } from "@/lib/api/products";
 
 function normalizeSlug(str) {
   return String(str || "")
@@ -13,9 +14,17 @@ function normalizeSlug(str) {
 }
 
 export default function FilteredProducts({ kind, value }) {
-  const { catalog, catalogLoading, catalogError, categories, collectionsData } = useStore();
+  const { categories, collectionsData } = useStore();
   const decode = decodeURIComponent(value || "");
   const slug = normalizeSlug(decode);
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const activeRequestId = useRef(0);
 
   const matchedCategory = useMemo(() => {
     return categories.find(
@@ -52,67 +61,54 @@ export default function FilteredProducts({ kind, value }) {
     return decode;
   }, [kind, slug, matchedCategory, matchedCollection, decode]);
 
-  const matching = useMemo(() => {
-    if (!catalog.length) return [];
+  useEffect(() => {
+    const requestId = ++activeRequestId.current;
+    setLoading(true);
+    setError(null);
 
-    if (kind === "category") {
-      if (slug === "new-arrivals") {
-        return catalog.filter((p) => p.isNew || p.collection === "new-arrivals");
-      }
-      if (slug === "sale") {
-        return catalog.filter((p) => p.isOnSale || p.mrp > p.price);
-      }
-      if (slug === "handloom") {
-        return catalog.filter(
-          (p) =>
-            p.fabric?.toLowerCase().includes("handloom") ||
-            p.category?.toLowerCase().includes("handloom") ||
-            p.name?.toLowerCase().includes("handloom")
-        );
-      }
-      return catalog.filter(
-        (p) =>
-          normalizeSlug(p.category) === slug ||
-          (matchedCategory && normalizeSlug(p.category) === normalizeSlug(matchedCategory.name))
-      );
-    }
-
-    if (kind === "collection") {
-      if (slug === "new-arrivals") {
-        return catalog.filter((p) => p.isNew || p.collection === "new-arrivals");
-      }
-      if (slug === "big-sale" || slug === "sale") {
-        return catalog.filter((p) => p.isOnSale || p.mrp > p.price);
-      }
-      const targetKeys = [decode, matchedCollection?.key, matchedCollection?.name].filter(Boolean);
-      return catalog.filter((p) => {
-        return (
-          targetKeys.some(
-            (k) =>
-              normalizeSlug(p.collection) === normalizeSlug(k) ||
-              normalizeSlug(p.category) === normalizeSlug(k) ||
-              normalizeSlug(p.fabric) === normalizeSlug(k)
-          ) ||
-          (p.collection && targetKeys.includes(p.collection))
-        );
-      });
-    }
+    const queryParams = {
+      page,
+      limit: 32,
+    };
 
     if (kind === "bestseller") {
-      const explicit = catalog.filter((p) => p.isBestSeller);
-      if (explicit.length > 0) return explicit;
-      return [...catalog]
-        .sort((a, b) => {
-          if (b.rating !== a.rating) return b.rating - a.rating;
-          if (b.reviews !== a.reviews) return b.reviews - a.reviews;
-          const aDisc = a.mrp > a.price ? (a.mrp - a.price) / a.mrp : 0;
-          const bDisc = b.mrp > b.price ? (b.mrp - b.price) / b.mrp : 0;
-          return bDisc - aDisc;
-        });
+      queryParams.isBestSeller = true;
+      queryParams.sortBy = "featured";
+    } else if (kind === "category") {
+      if (slug === "new-arrivals") {
+        queryParams.sortBy = "newest";
+      } else if (slug === "sale") {
+        queryParams.isOnSale = true;
+      } else if (slug === "handloom") {
+        queryParams.search = "handloom";
+      } else {
+        queryParams.category = matchedCategory?.name || decode;
+      }
+    } else if (kind === "collection") {
+      if (slug === "new-arrivals") {
+        queryParams.sortBy = "newest";
+      } else if (slug === "big-sale" || slug === "sale") {
+        queryParams.isOnSale = true;
+      } else {
+        queryParams.collection = matchedCollection?.key || matchedCollection?.name || decode;
+      }
     }
 
-    return catalog;
-  }, [catalog, kind, slug, decode, matchedCategory, matchedCollection]);
+    fetchPaginatedProducts(queryParams)
+      .then((res) => {
+        if (requestId !== activeRequestId.current) return;
+        setProducts(res.products || []);
+        setTotalPages(res.pagination?.totalPages || 1);
+        setTotalCount(res.pagination?.totalProducts ?? (res.products?.length || 0));
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (requestId !== activeRequestId.current) return;
+        console.error("FilteredProducts load failed:", err);
+        setError("Failed to load products. Please try again.");
+        setLoading(false);
+      });
+  }, [kind, slug, decode, matchedCategory, matchedCollection, page]);
 
   return (
     <main className="mx-auto max-w-[1240px] flex-1 px-4 py-6 sm:py-8 lg:px-10 lg:py-12">
@@ -161,23 +157,23 @@ export default function FilteredProducts({ kind, value }) {
           <p className="mt-1.5 text-xs text-muted lg:text-sm">
             {matchedCollection?.description ||
               matchedCategory?.description ||
-              `Showing ${matching.length} handcrafted sarees`}
+              (loading ? "Loading handcrafted sarees..." : `Showing ${totalCount} handcrafted sarees`)}
           </p>
         </div>
-        <span className="text-xs text-pine-900 font-medium">{matching.length} products</span>
+        {!loading && <span className="text-xs text-pine-900 font-medium">{totalCount} products</span>}
       </div>
 
-      {catalogLoading ? (
+      {loading ? (
         <div className="mt-8 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="aspect-[3/3.7] animate-pulse rounded-xl bg-chip" />
           ))}
         </div>
-      ) : catalogError ? (
+      ) : error ? (
         <p role="alert" className="mt-8 text-sm text-red-700">
-          {catalogError}
+          {error}
         </p>
-      ) : matching.length === 0 ? (
+      ) : products.length === 0 ? (
         <div className="mt-12 rounded-lg border border-dashed border-pine-950/15 p-12 text-center">
           <p className="text-sm text-muted">No sarees found in this collection yet.</p>
           <Link
@@ -188,11 +184,37 @@ export default function FilteredProducts({ kind, value }) {
           </Link>
         </div>
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-          {matching.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <>
+          <div className="mt-8 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            {products.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-10 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="rounded-md border border-pine-950/20 bg-white px-3.5 py-1.5 text-xs font-medium text-pine-950 transition hover:bg-linen disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
+              >
+                Previous
+              </button>
+              <span className="font-inter text-xs text-muted">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="rounded-md border border-pine-950/20 bg-white px-3.5 py-1.5 text-xs font-medium text-pine-950 transition hover:bg-linen disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </main>
   );

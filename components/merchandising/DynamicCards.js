@@ -12,14 +12,8 @@ function toSlug(str) {
 }
 
 export function CategorySection() {
-  const { categories, catalog } = useStore();
-  const items = categories.length
-    ? categories
-    : [...new Set(catalog.map((p) => p.category).filter(Boolean))].map((name) => ({
-        name,
-        slug: toSlug(name),
-        image: catalog.find((p) => p.category === name)?.image,
-      }));
+  const { categories } = useStore();
+  const items = categories || [];
 
   if (!items.length) return null;
 
@@ -41,15 +35,8 @@ export function CategorySection() {
 }
 
 export function CollectionSection() {
-  const { collectionsData, catalog } = useStore();
-  const groups = collectionsData.length
-    ? collectionsData
-    : [...new Set(catalog.map((p) => p.collection).filter(Boolean))].map((name) => ({
-        id: name,
-        key: name,
-        name,
-        image: catalog.find((p) => p.collection === name)?.image,
-      }));
+  const { collectionsData } = useStore();
+  const groups = collectionsData || [];
 
   if (!groups.length) return null;
 
@@ -59,7 +46,7 @@ export function CollectionSection() {
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-7">
         {groups.map((item) => (
           <CollectionCard
-            key={item.id}
+            key={item.id || item.key}
             name={item.name}
             image={item.image || "/images/banner-shop-by-fabric.jpg"}
             href={`/collections/${encodeURIComponent(item.key || item.id)}`}

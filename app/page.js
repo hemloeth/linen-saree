@@ -11,53 +11,39 @@ import ProductCarousel from "@/components/ProductCarousel";
 import ProductCard from "@/components/ProductCard";
 import VideoCollectionSection from "@/components/video/VideoCollectionSection";
 import TestimonialCarousel from "@/components/TestimonialCarousel";
-import { services, products as fallbackProducts } from "@/lib/data";
+import { services } from "@/lib/data";
 import { useStore } from "@/components/StoreProvider";
 import { fetchPaginatedProducts } from "@/lib/api/products";
 
-function getBestsellers(products) {
-  const explicit = products.filter((p) => p.isBestSeller);
-  if (explicit.length >= 8) return explicit.slice(0, 8);
-  const sorted = [...products].sort((a, b) => {
-    if (b.rating !== a.rating) return b.rating - a.rating;
-    if (b.reviews !== a.reviews) return b.reviews - a.reviews;
-    const aDisc = a.mrp > a.price ? (a.mrp - a.price) / a.mrp : 0;
-    const bDisc = b.mrp > b.price ? (b.mrp - b.price) / b.mrp : 0;
-    return bDisc - aDisc;
-  });
-  return sorted.slice(0, 8);
-}
-
-function getTrending(products, bestsellers) {
-  const bestsellerIds = new Set(bestsellers.map((p) => p.id));
-  const pool = products.filter((p) => !bestsellerIds.has(p.id));
-  return (pool.length ? pool : products).slice(0, 8);
-}
-
 export default function HomePage() {
-  const { catalog: storeProducts, catalogError } = useStore();
-  const initialPool = storeProducts.length > 0 ? storeProducts : fallbackProducts;
+  const { catalogError } = useStore();
 
-  const [bestsellers, setBestsellers] = useState(() => getBestsellers(initialPool));
-  const [trending, setTrending] = useState(() => getTrending(initialPool, getBestsellers(initialPool)));
+  const [bestsellers, setBestsellers] = useState([]);
+  const [trending, setTrending] = useState([]);
+  const [loadingSections, setLoadingSections] = useState(true);
 
-  // Use case-specific paginated fetching with bounded caching: only fetches what homepage needs!
+  // Pure API-driven case-specific fetching: zero mock/demo inventory in production
   useEffect(() => {
     let active = true;
     Promise.all([
       fetchPaginatedProducts({ isBestSeller: true, limit: 8 }).catch(() => ({ products: [] })),
       fetchPaginatedProducts({ sortBy: "featured", limit: 12 }).catch(() => ({ products: [] })),
-    ]).then(([bestRes, trendRes]) => {
-      if (!active) return;
-      if (bestRes.products?.length > 0) {
-        setBestsellers(bestRes.products.slice(0, 8));
-      }
-      if (trendRes.products?.length > 0) {
-        const bestIds = new Set((bestRes.products || []).map((p) => p.id));
-        const filteredTrend = trendRes.products.filter((p) => !bestIds.has(p.id));
-        setTrending(filteredTrend.slice(0, 8));
-      }
-    });
+    ])
+      .then(([bestRes, trendRes]) => {
+        if (!active) return;
+        if (bestRes.products?.length > 0) {
+          setBestsellers(bestRes.products.slice(0, 8));
+        }
+        if (trendRes.products?.length > 0) {
+          const bestIds = new Set((bestRes.products || []).map((p) => p.id));
+          const filteredTrend = trendRes.products.filter((p) => !bestIds.has(p.id));
+          setTrending(filteredTrend.slice(0, 8));
+        }
+        setLoadingSections(false);
+      })
+      .catch(() => {
+        if (active) setLoadingSections(false);
+      });
 
     return () => {
       active = false;
@@ -83,7 +69,13 @@ export default function HomePage() {
         <CategorySection />
 
         {/* 4. Trending Products — Limited selection of 8 products + View All */}
-        {trending.length > 0 && (
+        {loadingSections ? (
+          <ProductCarousel title="Trending Now" id="trending" viewAllHref="/shop" columns={4}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-chip" />
+            ))}
+          </ProductCarousel>
+        ) : trending.length > 0 ? (
           <ProductCarousel
             title="Trending Now"
             id="trending"
@@ -95,7 +87,7 @@ export default function HomePage() {
               <ProductCard key={product.id} product={product} />
             ))}
           </ProductCarousel>
-        )}
+        ) : null}
 
         {/* 5. Explore Collections */}
         <CollectionSection />
@@ -104,7 +96,13 @@ export default function HomePage() {
         <VideoCollectionSection />
 
         {/* 7. Bestsellers — Limited selection of 8 products + View All */}
-        {bestsellers.length > 0 && (
+        {loadingSections ? (
+          <ProductCarousel title="Bestsellers" id="bestsellers" tone="linen" viewAllHref="/best-sellers" columns={4}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-white/70" />
+            ))}
+          </ProductCarousel>
+        ) : bestsellers.length > 0 ? (
           <ProductCarousel
             title="Bestsellers"
             id="bestsellers"
@@ -117,7 +115,7 @@ export default function HomePage() {
               <ProductCard key={product.id} product={product} />
             ))}
           </ProductCarousel>
-        )}
+        ) : null}
 
         {/* Service highlights / Trust badges */}
         <section aria-label="Why shop with us" className="py-8 lg:py-12 border-t border-pine-950/10 bg-linen/25">

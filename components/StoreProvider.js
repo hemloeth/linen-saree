@@ -11,7 +11,7 @@ import {
 } from "react";
 
 import { apiConfigured } from "@/lib/api/client";
-import { fetchAllProducts, fetchPaginatedProducts, normalizeProduct } from "@/lib/api/products";
+import { fetchAllProducts, fetchPaginatedProducts, fetchProductCardsByIds, normalizeProduct } from "@/lib/api/products";
 import { accountApi, wishlistIds } from "@/lib/api/account";
 import { cartApi } from "@/lib/api/cart";
 import { fetchMerchandising } from "@/lib/api/merchandising";
@@ -188,7 +188,7 @@ export function StoreProvider({ children }) {
         }
       } else {
         // -------------------------------------------------------------------
-        // GUEST FLOW (load from local storage)
+        // GUEST FLOW (load from local storage with independent card hydration)
         // -------------------------------------------------------------------
         try {
           const rawCart = window.localStorage.getItem(CART_KEY);
@@ -200,7 +200,22 @@ export function StoreProvider({ children }) {
                 qty: Number(line.qty || 1),
               }))
               .filter((line) => line.product && line.qty > 0);
-            if (lines.length && active) setItems(lines);
+            if (lines.length && active) {
+              setItems(lines);
+              const lineIds = lines.map((l) => l.product.id);
+              fetchProductCardsByIds(lineIds)
+                .then((hydrated) => {
+                  if (!active || !hydrated?.length) return;
+                  const byId = new Map(hydrated.map((p) => [String(p.id), p]));
+                  setItems((current) =>
+                    current.map((line) => {
+                      const p = byId.get(String(line.product.id));
+                      return p ? { ...line, product: p } : line;
+                    })
+                  );
+                })
+                .catch(() => {});
+            }
           }
           const rawWishlist = window.localStorage.getItem(WISHLIST_KEY);
           if (rawWishlist) {
@@ -222,7 +237,7 @@ export function StoreProvider({ children }) {
     };
   }, [user, authInitialized]);
 
-  // 3. On-Demand Product Catalog Loading: Fetches only when explicitly requested by listing components
+  // 3. On-Demand Product Catalog Loading: Fetches all catalog products without 100-item cutoff
   const loadCatalog = useCallback(async () => {
     if (catalogRef.current.length > 0) {
       return catalogRef.current;
@@ -231,8 +246,7 @@ export function StoreProvider({ children }) {
     isFetchingCatalogRef.current = true;
     setCatalogLoading(true);
     try {
-      const res = await fetchPaginatedProducts({ page: 1, limit: 100, sortBy: "newest" });
-      const prods = res.products || [];
+      const prods = await fetchAllProducts();
       catalogRef.current = prods;
       setCatalog(prods);
       setCatalogError(null);
@@ -408,6 +422,8 @@ export function StoreProvider({ children }) {
     }
   }, [user]);
 
+  const pendingCartMutationsRef = useRef(0);
+
   // Synchronous guest cart persistence helper
   const persistGuestCart = useCallback((newLines) => {
     if (!user && typeof window !== "undefined") {
@@ -422,7 +438,21 @@ export function StoreProvider({ children }) {
     }
   }, [user]);
 
-  // Cart Operation: Add with Functional State & Delta Rollback
+  // Synchronize itemsRef without mutating state in render/updaters
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  // Await in-flight cart mutations to complete (essential for checkout navigation)
+  const awaitCartSettled = useCallback(async () => {
+    try {
+      await cartQueueRef.current;
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Cart Operation: Add with Pure Functional State & Delta Rollback
   const add = useCallback(
     async (product, quantity = 1, message = "Added to bag") => {
       if (!product) {
@@ -435,8 +465,9 @@ export function StoreProvider({ children }) {
 
       const pid = String(product.id);
       let calculatedCount = 0;
+      let nextLines = [];
 
-      // Functional state update: completely eliminates stale closure bugs
+      // Pure functional state update
       setItems((current) => {
         const existing = current.find((line) => String(line.product.id) === pid);
         const next = existing
@@ -444,36 +475,39 @@ export function StoreProvider({ children }) {
               String(line.product.id) === pid ? { ...line, qty: line.qty + quantity } : line
             )
           : [...current, { product, qty: quantity }];
-
-        itemsRef.current = next;
         calculatedCount = next.length;
-        persistGuestCart(next);
+        nextLines = next;
         return next;
       });
+
+      // Synchronous guest persistence outside state updater
+      persistGuestCart(nextLines);
 
       if (message) notify(message, product.name);
 
       // Authenticated backend mutation serialized via queue with isolated delta rollback
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
+        pendingCartMutationsRef.current++;
         return new Promise((resolve) => {
           cartQueueRef.current = cartQueueRef.current
             .then(async () => {
               try {
                 const res = await cartApi.add(pid, quantity);
-                if (res?.cart) {
+                pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
+                // Only overwrite if no subsequent mutations are currently in flight
+                if (pendingCartMutationsRef.current === 0 && res?.cart) {
                   const serverItems = res.cart
                     .filter((l) => l.productId)
                     .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
-                  setItems((_) => {
-                    itemsRef.current = serverItems;
-                    return serverItems;
-                  });
+                  setItems(serverItems);
                 }
                 resolve({ success: true, count: calculatedCount });
               } catch (err) {
+                pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
                 // DELTA ROLLBACK: only subtract this mutation's quantity so subsequent additions are NOT lost!
+                let revertedLines = [];
                 setItems((current) => {
-                  const reverted = current
+                  revertedLines = current
                     .map((line) => {
                       if (String(line.product.id) === pid) {
                         const remaining = line.qty - quantity;
@@ -482,16 +516,18 @@ export function StoreProvider({ children }) {
                       return line;
                     })
                     .filter(Boolean);
-                  itemsRef.current = reverted;
-                  persistGuestCart(reverted);
-                  return reverted;
+                  return revertedLines;
                 });
+                persistGuestCart(revertedLines);
                 notify(err.message || "Could not add item to bag. Please try again.");
-                await refetchServerCart();
+                if (pendingCartMutationsRef.current === 0) {
+                  await refetchServerCart();
+                }
                 resolve({ success: false, error: err.message || "Failed to add to bag" });
               }
             })
             .catch(() => {
+              pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
               resolve({ success: false, error: "Network error" });
             });
         });
@@ -502,56 +538,60 @@ export function StoreProvider({ children }) {
     [user, notify, persistGuestCart, refetchServerCart]
   );
 
-  // Cart Operation: Set Quantity with Functional State & Delta Rollback
+  // Cart Operation: Set Quantity with Pure Functional State & Delta Rollback
   const setQty = useCallback(
     async (id, qty) => {
       const pid = String(id);
       let previousQty = 0;
+      let nextLines = [];
 
       setItems((current) => {
         const target = current.find((l) => String(l.product.id) === pid);
         if (target) previousQty = target.qty;
-        const next =
-          qty <= 0
-            ? current.filter((line) => String(line.product.id) !== pid)
-            : current.map((line) => (String(line.product.id) === pid ? { ...line, qty } : line));
-        itemsRef.current = next;
-        persistGuestCart(next);
+        const next = qty <= 0
+          ? current.filter((line) => String(line.product.id) !== pid)
+          : current.map((line) => (String(line.product.id) === pid ? { ...line, qty } : line));
+        nextLines = next;
         return next;
       });
 
+      persistGuestCart(nextLines);
+
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
+        pendingCartMutationsRef.current++;
         return new Promise((resolve) => {
           cartQueueRef.current = cartQueueRef.current
             .then(async () => {
               try {
                 const res = qty <= 0 ? await cartApi.remove(pid) : await cartApi.update(pid, qty);
-                if (res?.cart) {
+                pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
+                if (pendingCartMutationsRef.current === 0 && res?.cart) {
                   const serverItems = res.cart
                     .filter((l) => l.productId)
                     .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
-                  setItems((_) => {
-                    itemsRef.current = serverItems;
-                    return serverItems;
-                  });
+                  setItems(serverItems);
                 }
                 resolve({ success: true });
               } catch (err) {
+                pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
                 // Revert to previous quantity for this specific item
+                let revertedLines = [];
                 setItems((current) => {
-                  const reverted = current.map((line) =>
+                  revertedLines = current.map((line) =>
                     String(line.product.id) === pid ? { ...line, qty: previousQty } : line
                   );
-                  itemsRef.current = reverted;
-                  persistGuestCart(reverted);
-                  return reverted;
+                  return revertedLines;
                 });
+                persistGuestCart(revertedLines);
                 notify(err.message || "Failed to update quantity. Please try again.");
-                await refetchServerCart();
+                if (pendingCartMutationsRef.current === 0) {
+                  await refetchServerCart();
+                }
                 resolve({ success: false, error: err.message });
               }
             })
             .catch(() => {
+              pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
               resolve({ success: false, error: "Network error" });
             });
         });
@@ -562,52 +602,57 @@ export function StoreProvider({ children }) {
     [user, notify, persistGuestCart, refetchServerCart]
   );
 
-  // Cart Operation: Remove with Functional State & Delta Rollback
+  // Cart Operation: Remove with Pure Functional State & Delta Rollback
   const remove = useCallback(
     async (id) => {
       const pid = String(id);
       let removedLine = null;
+      let nextLines = [];
 
       setItems((current) => {
         removedLine = current.find((line) => String(line.product.id) === pid) || null;
         const next = current.filter((line) => String(line.product.id) !== pid);
-        itemsRef.current = next;
-        persistGuestCart(next);
+        nextLines = next;
         return next;
       });
 
+      persistGuestCart(nextLines);
+
       if (user && /^[a-f\d]{24}$/i.test(pid)) {
+        pendingCartMutationsRef.current++;
         return new Promise((resolve) => {
           cartQueueRef.current = cartQueueRef.current
             .then(async () => {
               try {
                 const res = await cartApi.remove(pid);
-                if (res?.cart) {
+                pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
+                if (pendingCartMutationsRef.current === 0 && res?.cart) {
                   const serverItems = res.cart
                     .filter((l) => l.productId)
                     .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
-                  setItems((_) => {
-                    itemsRef.current = serverItems;
-                    return serverItems;
-                  });
+                  setItems(serverItems);
                 }
                 resolve({ success: true });
               } catch (err) {
+                pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
                 // Reinsert removed line on failure
+                let revertedLines = [];
                 if (removedLine) {
                   setItems((current) => {
-                    const reverted = [...current, removedLine];
-                    itemsRef.current = reverted;
-                    persistGuestCart(reverted);
-                    return reverted;
+                    revertedLines = [...current, removedLine];
+                    return revertedLines;
                   });
+                  persistGuestCart(revertedLines);
                 }
                 notify(err.message || "Failed to remove item. Please try again.");
-                await refetchServerCart();
+                if (pendingCartMutationsRef.current === 0) {
+                  await refetchServerCart();
+                }
                 resolve({ success: false, error: err.message });
               }
             })
             .catch(() => {
+              pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
               resolve({ success: false, error: "Network error" });
             });
         });
@@ -621,15 +666,6 @@ export function StoreProvider({ children }) {
   // Cart Operation: Clear
   const clear = useCallback(async () => {
     setItems([]);
-    itemsRef.current = [];
-
-    if (!user && typeof window !== "undefined") {
-      try {
-        window.localStorage.removeItem(CART_KEY);
-      } catch {
-        /* storage unavailable */
-      }
-    }
 
     if (user) {
       try {
@@ -746,6 +782,7 @@ export function StoreProvider({ children }) {
       logout,
       refreshProfile,
       refetchServerCart,
+      awaitCartSettled,
       count,
       subtotal,
       add,
@@ -782,6 +819,7 @@ export function StoreProvider({ children }) {
     logout,
     refreshProfile,
     refetchServerCart,
+    awaitCartSettled,
     add,
     setQty,
     remove,

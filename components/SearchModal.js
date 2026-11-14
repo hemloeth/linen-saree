@@ -3,18 +3,22 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/components/StoreProvider";
 import { useScrollLock } from "@/lib/useScrollLock";
 import { formatINR } from "@/lib/data";
+import { fetchPaginatedProducts } from "@/lib/api/products";
 
-const QUICK_TAGS = ["Silk", "Cotton", "Banarasi", "Festive", "Under Rs. 3,000"];
+const QUICK_TAGS = ["Silk", "Cotton", "Banarasi", "Festive", "Linen"];
 
 export default function SearchModal() {
   const router = useRouter();
-  const { searchOpen, closeSearch, catalog: products } = useStore();
+  const { searchOpen, closeSearch } = useStore();
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
+  const activeRequestId = useRef(0);
 
   useScrollLock(searchOpen);
 
@@ -35,18 +39,34 @@ export default function SearchModal() {
     }
   }, [searchOpen]);
 
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return products.slice(0, 4);
-    return products
-      .filter((product) =>
-        [product.name, product.sku, product.fabric, product.colour]
-          .join(" ")
-          .toLowerCase()
-          .includes(q)
-      )
-      .slice(0, 6);
-  }, [query, products]);
+  useEffect(() => {
+    if (!searchOpen) return;
+
+    const trimmed = query.trim();
+    const requestId = ++activeRequestId.current;
+    setLoading(true);
+
+    const timer = setTimeout(() => {
+      fetchPaginatedProducts({
+        search: trimmed || undefined,
+        sortBy: trimmed ? "newest" : "featured",
+        limit: trimmed ? 6 : 4,
+      })
+        .then((res) => {
+          if (requestId !== activeRequestId.current) return;
+          setResults(res.products || []);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (requestId !== activeRequestId.current) return;
+          console.error("Search suggestion error:", err);
+          setResults([]);
+          setLoading(false);
+        });
+    }, trimmed ? 250 : 0);
+
+    return () => clearTimeout(timer);
+  }, [query, searchOpen]);
 
   if (!searchOpen) return null;
 
@@ -80,7 +100,9 @@ export default function SearchModal() {
             aria-label="Close search"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-pine-900 hover:bg-linen sm:hidden cursor-pointer"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
           </button>
         </form>
       </div>
@@ -91,19 +113,24 @@ export default function SearchModal() {
             <button
               key={tag}
               type="button"
-              onClick={() => setQuery(tag.replace("Under Rs. 3,000", ""))}
-              className="rounded-full border border-pine-950/15 px-3 py-1 font-inter text-[11px] text-pine-900 transition-colors hover:border-pine-900 hover:bg-linen"
+              onClick={() => setQuery(tag)}
+              className="rounded-full border border-pine-950/15 px-3 py-1 font-inter text-[11px] text-pine-900 transition-colors hover:border-pine-900 hover:bg-linen cursor-pointer"
             >
               {tag}
             </button>
           ))}
         </div>
 
-        <p className="mt-6 font-inter text-[11px] font-semibold uppercase tracking-wider text-muted">
-          {query.trim() ? `${results.length} result${results.length === 1 ? "" : "s"}` : "Popular right now"}
-        </p>
+        <div className="mt-6 flex items-center justify-between">
+          <p className="font-inter text-[11px] font-semibold uppercase tracking-wider text-muted">
+            {query.trim() ? `${results.length} suggestion${results.length === 1 ? "" : "s"}` : "Popular right now"}
+          </p>
+          {loading && (
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-pine-900 border-r-transparent" />
+          )}
+        </div>
 
-        {results.length === 0 ? (
+        {!loading && results.length === 0 && query.trim() ? (
           <p className="mt-4 text-sm text-muted">
             No matches for &ldquo;{query}&rdquo;. Try a fabric like silk, or a colour like red.
           </p>
@@ -117,12 +144,19 @@ export default function SearchModal() {
                   className="flex items-center gap-3 py-3 transition-colors hover:bg-linen/50"
                 >
                   <span className="relative h-16 w-14 shrink-0 overflow-hidden rounded bg-chip">
-                    <Image unoptimized={/^https?:\/\//.test(product.image)} src={product.image} alt="" fill sizes="56px" className="object-cover" />
+                    <Image
+                      unoptimized={/^https?:\/\//.test(product.image)}
+                      src={product.image}
+                      alt=""
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] text-black">{product.name}</span>
                     <span className="mt-0.5 block text-[11px] text-muted">
-                      {product.sku} · {product.fabric} · {product.colour}
+                      {product.sku || product.category} {product.colour ? `· ${product.colour}` : ""}
                     </span>
                   </span>
                   <span className="shrink-0 font-inter text-[13px] font-semibold text-pine-900">
@@ -134,7 +168,7 @@ export default function SearchModal() {
           </ul>
         )}
 
-        {query.trim() && results.length > 0 && (
+        {query.trim() && (
           <div className="mt-5 border-t border-pine-950/10 pt-4 text-center">
             <Link
               href={`/search?q=${encodeURIComponent(query.trim())}`}

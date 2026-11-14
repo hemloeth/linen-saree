@@ -6,21 +6,6 @@ import { useRef } from "react";
 import SectionHeading from "@/components/SectionHeading";
 import { formatINR, reels } from "@/lib/data";
 
-function Arrow({ direction, onClick, label }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="flex h-7 w-7 items-center justify-center rounded-full bg-pine-900 text-white transition-colors hover:bg-pine-950"
-    >
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        {direction === "left" ? <path d="m14 6-6 6 6 6" /> : <path d="m10 6 6 6-6 6" />}
-      </svg>
-    </button>
-  );
-}
-
 function ReelCard({ reel, sizes }) {
   return (
     <article className="w-[168px] shrink-0 snap-start sm:w-[190px] lg:w-auto lg:shrink">
@@ -63,10 +48,6 @@ export default function ReelCarousel() {
       <div className="mx-auto max-w-[1240px] px-4 lg:px-10">
         <div className="relative mb-4">
           <SectionHeading title="Trending Looks To Watch" />
-          <div className="absolute right-0 top-1/2 flex -translate-y-1/2 gap-2 lg:hidden">
-            <Arrow direction="left" label="Previous looks" onClick={() => scrollByPage(-1)} />
-            <Arrow direction="right" label="Next looks" onClick={() => scrollByPage(1)} />
-          </div>
         </div>
 
         <div

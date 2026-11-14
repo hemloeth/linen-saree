@@ -8,10 +8,11 @@ import { useEffect, useRef, useState, useCallback } from "react";
  * Centralized coordination of video playback across multiple video cards:
  * - Desktop (>= 1024px): Up to 4 videos autoplay simultaneously when eligible and visible
  * - Mobile (< 1024px): Up to 2 videos autoplay simultaneously when eligible and visible
- * - Centralized IntersectionObserver: single observer for all cards with hysteresis
+ * - Dual IntersectionObserver separation:
+ *    1. Playback Observer: strict 0px rootMargin for true in-viewport visibility & autoplay decisions
+ *    2. Preload Observer: 300px rootMargin strictly for nearViewportIds metadata preloading & release
  * - Guard against redundant play()/pause() calls: checks video.paused before mutating
  * - Render throttling: only triggers setPlayingIds when the active set actually changes
- * - Lazy resource management: provides nearViewportIds so offscreen videos don't fetch metadata
  * - Automatic pause on tab hidden (document.visibilityState === 'hidden')
  * - Respects prefers-reduced-motion and navigator.connection.saveData
  * - Fair rotation scheduling on mobile when more than 2 videos are eligible
@@ -26,7 +27,8 @@ export function useVideoCoordinator() {
 
   const rotationTimerRef = useRef(null);
   const rotationIndexRef = useRef(0);
-  const observerRef = useRef(null);
+  const playbackObserverRef = useRef(null);
+  const preloadObserverRef = useRef(null);
 
   const updatePlayback = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -65,7 +67,7 @@ export function useVideoCoordinator() {
     const isDesktop = window.innerWidth >= 1024;
     const budget = isDesktop ? 4 : 2;
 
-    // Collect eligible cards (visible and not manually paused)
+    // Collect eligible cards (truly visible in viewport and not manually paused)
     const eligible = [];
     cardsRef.current.forEach((data, id) => {
       if (data.manualPause) return;
@@ -128,11 +130,9 @@ export function useVideoCoordinator() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    observerRef.current = new IntersectionObserver(
+    // 1. Playback Observer: strict 0px rootMargin for in-viewport accuracy
+    playbackObserverRef.current = new IntersectionObserver(
       (entries) => {
-        let nearChanged = false;
-        const nextNear = new Set(nearViewportIdsRef.current);
-
         entries.forEach((entry) => {
           const id = entry.target.dataset.videoId;
           if (id && cardsRef.current.has(id)) {
@@ -144,33 +144,56 @@ export function useVideoCoordinator() {
             if (entry.intersectionRatio === 0) {
               data.manualPause = false;
             }
-
-            if (entry.isIntersecting || entry.intersectionRatio > 0) {
-              if (!nextNear.has(id)) {
-                nextNear.add(id);
-                nearChanged = true;
-              }
-            }
           }
         });
-
-        if (nearChanged) {
-          nearViewportIdsRef.current = nextNear;
-          setNearViewportIds(nextNear);
-        }
 
         updatePlayback();
       },
       {
         threshold: [0, 0.15, 0.3, 0.5, 0.7, 0.85, 1.0],
-        rootMargin: "300px 0px 300px 0px", // Preload metadata when within 300px of viewport
+        rootMargin: "0px",
+      }
+    );
+
+    // 2. Preload Observer: 300px rootMargin to preload metadata and release when away
+    preloadObserverRef.current = new IntersectionObserver(
+      (entries) => {
+        let changed = false;
+        const nextNear = new Set(nearViewportIdsRef.current);
+
+        entries.forEach((entry) => {
+          const id = entry.target.dataset.videoId;
+          if (!id) return;
+
+          if (entry.isIntersecting) {
+            if (!nextNear.has(id)) {
+              nextNear.add(id);
+              changed = true;
+            }
+          } else {
+            if (nextNear.has(id)) {
+              nextNear.delete(id);
+              changed = true;
+            }
+          }
+        });
+
+        if (changed) {
+          nearViewportIdsRef.current = nextNear;
+          setNearViewportIds(nextNear);
+        }
+      },
+      {
+        threshold: 0,
+        rootMargin: "300px 0px 300px 0px",
       }
     );
 
     // Re-observe any already registered elements
     cardsRef.current.forEach(({ element }) => {
-      if (element && observerRef.current) {
-        observerRef.current.observe(element);
+      if (element) {
+        playbackObserverRef.current?.observe(element);
+        preloadObserverRef.current?.observe(element);
       }
     });
 
@@ -194,7 +217,8 @@ export function useVideoCoordinator() {
     }, 7000);
 
     return () => {
-      if (observerRef.current) observerRef.current.disconnect();
+      if (playbackObserverRef.current) playbackObserverRef.current.disconnect();
+      if (preloadObserverRef.current) preloadObserverRef.current.disconnect();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("resize", handleResize);
       if (rotationTimerRef.current) clearInterval(rotationTimerRef.current);
@@ -216,16 +240,18 @@ export function useVideoCoordinator() {
       isPlaying: existing.isPlaying || false,
     });
 
-    if (observerRef.current && element) {
-      observerRef.current.observe(element);
+    if (element) {
+      playbackObserverRef.current?.observe(element);
+      preloadObserverRef.current?.observe(element);
     }
   }, []);
 
   const unregisterCard = useCallback((id) => {
     const sid = String(id);
     const data = cardsRef.current.get(sid);
-    if (data?.element && observerRef.current) {
-      observerRef.current.unobserve(data.element);
+    if (data?.element) {
+      playbackObserverRef.current?.unobserve(data.element);
+      preloadObserverRef.current?.unobserve(data.element);
     }
     cardsRef.current.delete(sid);
   }, []);
