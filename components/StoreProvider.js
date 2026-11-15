@@ -10,6 +10,8 @@ import {
   useState,
 } from "react";
 
+import Image from "next/image";
+import { formatINR } from "@/lib/data";
 import { apiConfigured } from "@/lib/api/client";
 import { fetchAllProducts, fetchPaginatedProducts, fetchProductCardsByIds, normalizeProduct } from "@/lib/api/products";
 import { accountApi, wishlistIds } from "@/lib/api/account";
@@ -101,10 +103,36 @@ export function StoreProvider({ children }) {
   const cartQueueRef = useRef(Promise.resolve());
   const wishlistInFlightRef = useRef(new Set());
 
-  const notify = useCallback((message, item) => {
-    setToast({ id: Date.now(), message, item });
+  const notify = useCallback((message, meta) => {
+    let product = null;
+    let item = null;
+    let type = "info";
+
+    if (meta && typeof meta === "object") {
+      if (meta.product) {
+        product = meta.product;
+      } else if (meta.name && meta.price !== undefined) {
+        product = meta;
+      }
+      type = meta.type || (product ? "cart" : "info");
+      item = meta.item || product?.name || null;
+    } else if (typeof meta === "string") {
+      item = meta;
+    }
+
+    if (!type && /error|failed|could not|unable/i.test(message)) {
+      type = "error";
+    }
+
+    setToast({
+      id: Date.now(),
+      message,
+      item,
+      product,
+      type,
+    });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 3000);
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
   }, []);
 
   // 1. Initial Session Restoration: Check if user has an active session cookie on mount
@@ -547,7 +575,7 @@ export function StoreProvider({ children }) {
                     .map((l) => ({ product: normalizeProduct(l.productId), qty: l.quantity }));
                   updateCartState(serverItems);
                 }
-                if (message) notify(message, product.name);
+                if (message) notify(message, { product, type: "cart" });
                 resolve({ success: true, count: calculatedCount });
               } catch (err) {
                 pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
@@ -571,7 +599,7 @@ export function StoreProvider({ children }) {
       }
 
       // Guest flow: operation is immediately committed and confirmed
-      if (message) notify(message, product.name);
+      if (message) notify(message, { product, type: "cart" });
       return { success: true, count: calculatedCount };
     },
     [user, notify, updateCartState, refetchServerCart]
@@ -895,28 +923,83 @@ export function StoreProvider({ children }) {
   return (
     <StoreContext.Provider value={value}>
       {children}
+      {/* Standard Toast Notification */}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-4 z-[70] flex justify-center px-4"
+        className="pointer-events-none fixed inset-x-0 bottom-5 z-[100] flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       >
         {toast ? (
-          <p className="pointer-events-auto flex items-center gap-2 rounded-full bg-pine-950 px-4 py-2 font-inter text-xs text-white shadow-lg">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+          toast.product ? (
+            <div className="pointer-events-auto flex items-center gap-3 rounded-xl border border-pine-900/15 bg-white/95 p-2.5 pr-3 shadow-[0_12px_40px_rgba(18,54,42,0.18)] backdrop-blur-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-3 sm:min-w-[340px] max-w-[92vw]">
+              {/* Product Thumbnail */}
+              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-pine-950/10 bg-sand-50">
+                <Image
+                  src={toast.product.image || toast.product.gallery?.[0] || "/images/product-1.png"}
+                  alt={toast.product.name || "Saree"}
+                  fill
+                  unoptimized={/^https?:\/\//.test(toast.product.image || "")}
+                  sizes="48px"
+                  className="object-cover object-top"
+                />
+              </div>
+
+              {/* Message & Product details */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-600 text-white">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  </span>
+                  <p className="font-inter text-[11px] font-semibold text-emerald-800">
+                    {toast.message || "Added to bag"}
+                  </p>
+                </div>
+                <p className="mt-0.5 truncate font-display text-xs font-medium text-pine-950">
+                  {toast.product.name}
+                </p>
+                {toast.product.price ? (
+                  <p className="font-inter text-[11px] font-semibold text-pine-900">
+                    {formatINR(toast.product.price)}
+                  </p>
+                ) : null}
+              </div>
+
+              {/* View Bag CTA Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setToast(null);
+                  setCartOpen(true);
+                }}
+                className="shrink-0 cursor-pointer rounded-lg bg-pine-900 px-3 py-1.5 font-inter text-[11px] font-semibold text-white shadow-xs transition hover:bg-pine-950 active:scale-95"
+              >
+                View bag
+              </button>
+            </div>
+          ) : (
+            <div
+              className={`pointer-events-auto flex items-center gap-2.5 rounded-xl border px-4 py-2.5 font-inter text-xs shadow-lg backdrop-blur-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-3 ${
+                toast.type === "error"
+                  ? "border-red-200 bg-red-50/95 text-red-800"
+                  : "border-pine-950/20 bg-pine-950 text-white"
+              }`}
             >
-              <path d="m5 13 4 4L19 7" />
-            </svg>
-            {toast.message}
-            {toast.item ? <span className="text-white/70">· {toast.item}</span> : null}
-          </p>
+              {toast.type === "error" ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-red-600" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-emerald-400" aria-hidden="true">
+                  <path d="m5 13 4 4L19 7" />
+                </svg>
+              )}
+              <span>{toast.message}</span>
+              {toast.item ? <span className="opacity-75">· {toast.item}</span> : null}
+            </div>
+          )
         ) : null}
       </div>
     </StoreContext.Provider>

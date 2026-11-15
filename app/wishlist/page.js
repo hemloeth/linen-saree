@@ -46,7 +46,10 @@ export default function WishlistPage() {
   }, [wishlist, retryNonce]);
 
   // Keep locally filtered if an item was removed
-  const saved = products.filter((p) => wishlist.includes(String(p.id)));
+  const saved = products.filter((p) => {
+    const pid = String(p.id || p._id);
+    return wishlist.some((wId) => String(wId) === pid);
+  });
 
   return (
     <>

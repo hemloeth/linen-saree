@@ -314,6 +314,7 @@ export default function ProductCard({ product, variant = "default" }) {
               {/* Add to Cart — Secondary CTA: Spruce Velvet icon button */}
               <AddToBagButton
                 product={product}
+                iconOnly={true}
                 className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-md border border-pine-900 bg-white text-pine-900 shadow-sm transition-all duration-200 hover:bg-pine-900 hover:text-white active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine-900 sm:h-[36px] sm:w-[36px]"
               >
                 <BagIcon size={13} />

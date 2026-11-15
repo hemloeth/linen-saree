@@ -58,5 +58,27 @@ test("Catalog Regression & Video Coordinator Test Suite", async (t) => {
     assert.doesNotMatch(carouselContent, /scrollByPage/, "ProductCarousel has no desktop scrollByPage buttons");
     assert.doesNotMatch(reelContent, /function Arrow/, "ReelCarousel has no desktop Arrow buttons");
   });
+
+  await t.test("9. fetchProductCardsByIds stringifies JSON payload and client auto-serializes body", () => {
+    const productsApiContent = fs.readFileSync(path.join(ROOT, "lib", "api", "products.js"), "utf8");
+    const clientApiContent = fs.readFileSync(path.join(ROOT, "lib", "api", "client.js"), "utf8");
+    assert.match(productsApiContent, /JSON\.stringify\(\{\s*ids:\s*chunk\s*\}\)/, "fetchProductCardsByIds stringifies request body");
+    assert.match(clientApiContent, /serializedBody/, "API client safely auto-serializes plain object request bodies");
+  });
+
+  await t.test("10. AddToBagButton supports iconOnly mode to prevent overflow between product card buttons", () => {
+    const actionsContent = fs.readFileSync(path.join(ROOT, "components", "ProductActions.js"), "utf8");
+    const cardContent = fs.readFileSync(path.join(ROOT, "components", "ProductCard.js"), "utf8");
+    assert.match(actionsContent, /isIcon/, "AddToBagButton detects iconOnly or fixed-width compact mode");
+    assert.match(actionsContent, /CheckIcon\s+size=\{15\}/, "Renders compact check icon without overflowing 'Added' text");
+    assert.match(cardContent, /iconOnly=\{true\}/, "ProductCard passes iconOnly to AddToBagButton");
+  });
+
+  await t.test("11. StoreProvider renders standard rich toast with product thumbnail, price, and View bag CTA", () => {
+    const storeContent = fs.readFileSync(path.join(ROOT, "components", "StoreProvider.js"), "utf8");
+    assert.match(storeContent, /toast\.product/, "StoreProvider supports rich cart toast with product metadata");
+    assert.match(storeContent, /View bag/, "Toast includes direct View bag action button");
+    assert.match(storeContent, /formatINR\(toast\.product\.price\)/, "Toast displays formatted price in INR");
+  });
 });
 
