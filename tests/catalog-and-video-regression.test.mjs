@@ -80,5 +80,12 @@ test("Catalog Regression & Video Coordinator Test Suite", async (t) => {
     assert.match(storeContent, /View bag/, "Toast includes direct View bag action button");
     assert.match(storeContent, /formatINR\(toast\.product\.price\)/, "Toast displays formatted price in INR");
   });
+
+  await t.test("12. VideoCoordinator enforces 4-video desktop budget and 2-video mobile budget", () => {
+    const videoCoordinatorContent = fs.readFileSync(path.join(ROOT, "components", "video", "useVideoCoordinator.js"), "utf8");
+    assert.match(videoCoordinatorContent, /isDesktop\s*=\s*window\.innerWidth\s*>=\s*1024/, "Desktop breakpoint configured at 1024px");
+    assert.match(videoCoordinatorContent, /budget\s*=\s*isDesktop\s*\?\s*4\s*:\s*2/, "Desktop allows up to 4 concurrent videos, mobile allows up to 2 concurrent videos");
+    assert.match(videoCoordinatorContent, /rotationTimerRef/, "Fair rotation scheduler implemented for mobile budget excess");
+  });
 });
 
