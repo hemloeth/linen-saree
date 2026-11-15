@@ -55,6 +55,13 @@ export default function CheckoutView() {
   const [attempt, setAttempt] = useState(null);
   const [copiedToken, setCopiedToken] = useState(false);
 
+  // Instant scroll to top on order confirmation so the user is immediately on the confirmation banner
+  useEffect(() => {
+    if (confirmed && typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, [confirmed]);
+
   // In-flight payment recovery state if gateway verification times out
   const [pendingVerification, setPendingVerification] = useState(null);
   const [verifyingPending, setVerifyingPending] = useState(false);
@@ -436,11 +443,17 @@ export default function CheckoutView() {
     const validationError = validateAddress();
     if (validationError) {
       setError(validationError);
+      if (typeof window !== "undefined") {
+        const errorEl = document.querySelector('[role="alert"]');
+        if (errorEl) {
+          errorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
       return;
     }
     setStep(2);
     if (typeof window !== "undefined") {
-      window.scrollTo({ top: 120, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 
@@ -904,7 +917,7 @@ export default function CheckoutView() {
                 <button
                   type="button"
                   onClick={() => copyCapabilityToken(checkoutToken)}
-                  className="text-[11px] font-semibold text-pine-900 underline hover:text-pine-700 cursor-pointer"
+                  className="cursor-pointer inline-flex items-center gap-1 rounded-md bg-pine-900/10 px-2.5 py-1 text-[11px] font-semibold text-pine-900 transition hover:bg-pine-900 hover:text-white"
                 >
                   {copiedToken ? "Copied! ✓" : "Copy Token"}
                 </button>
@@ -919,18 +932,19 @@ export default function CheckoutView() {
           )}
         </div>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <Link
-            href="/orders"
-            className="cursor-pointer rounded-lg bg-pine-900 px-6 py-3 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow transition-colors hover:bg-pine-950"
-          >
-            View Your Orders
-          </Link>
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
           <Link
             href="/shop"
-            className="cursor-pointer rounded-lg border border-pine-950/20 bg-white px-6 py-3 font-inter text-xs font-semibold uppercase tracking-wider text-pine-950 transition-colors hover:bg-sand-50"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-tomato px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition-all duration-200 hover:bg-tomato-hover active:scale-[0.98] cursor-pointer"
           >
-            Continue Shopping
+            <span>Continue Shopping</span>
+            <span aria-hidden="true" className="text-sm font-bold">→</span>
+          </Link>
+          <Link
+            href="/orders"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-pine-900/30 bg-white px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-pine-900 shadow-xs transition-all duration-200 hover:bg-pine-900 hover:text-white active:scale-[0.98] cursor-pointer"
+          >
+            <span>View Your Orders</span>
           </Link>
         </div>
       </div>
@@ -1254,7 +1268,12 @@ export default function CheckoutView() {
 
                     <button
                       type="button"
-                      onClick={() => setStep(1)}
+                      onClick={() => {
+                        setStep(1);
+                        if (typeof window !== "undefined") {
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }}
                       className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-pine-950/20 bg-white px-3 py-1.5 text-xs font-semibold text-pine-900 transition hover:bg-cream-card shrink-0"
                     >
                       ✏️ Edit Address
@@ -1263,17 +1282,17 @@ export default function CheckoutView() {
                 </div>
 
                 {/* Payment Option Selection */}
-                <div className="rounded-2xl border border-pine-950/10 bg-white p-6 shadow-sm sm:p-8">
-                  <div className="flex items-center justify-between border-b border-pine-950/10 pb-4">
-                    <div>
-                      <h2 className="font-display text-xl font-semibold text-pine-950">
+                <div className="rounded-2xl border border-pine-950/10 bg-white p-5 sm:p-8 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-pine-950/10 pb-4">
+                    <div className="min-w-0 flex-1">
+                      <h2 className="font-display text-lg sm:text-xl font-semibold text-pine-950 leading-tight">
                         Choose Payment Method
                       </h2>
                       <p className="mt-1 text-xs text-muted">
                         Select your preferred payment mode to place your order.
                       </p>
                     </div>
-                    <span className="rounded-full bg-cream-card px-3 py-1 text-xs font-semibold text-pine-900">
+                    <span className="shrink-0 whitespace-nowrap rounded-full bg-cream-card px-3 py-1 text-xs font-semibold text-pine-900 border border-pine-950/10">
                       Step 2 of 2
                     </span>
                   </div>
@@ -1375,11 +1394,16 @@ export default function CheckoutView() {
                     </div>
                   )}
 
-                  <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-pine-950/10 pt-5">
+                  <div className="mt-8 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3.5 border-t border-pine-950/10 pt-5">
                     <button
                       type="button"
-                      onClick={() => setStep(1)}
-                      className="inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-pine-900 underline hover:text-pine-950"
+                      onClick={() => {
+                        setStep(1);
+                        if (typeof window !== "undefined") {
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }}
+                      className="inline-flex cursor-pointer items-center justify-center gap-1 py-2 text-xs font-semibold text-pine-900 underline hover:text-pine-950 transition"
                     >
                       ← Back to Delivery Address
                     </button>
@@ -1388,15 +1412,23 @@ export default function CheckoutView() {
                       type="button"
                       onClick={submit}
                       disabled={!isCheckoutEnabled || placing}
-                      className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-tomato px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-tomato-hover disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full sm:w-auto inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-tomato px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-tomato-hover active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {!isCheckoutEnabled
-                        ? "Checkout Paused"
-                        : placing
-                        ? "Confirming Order…"
-                        : paymentMethod === "cod"
-                        ? "Place Cash on Delivery Order"
-                        : `Pay ${formatINR(grandTotal)} Online`}
+                      {placing && (
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                      )}
+                      <span>
+                        {!isCheckoutEnabled
+                          ? "Checkout Paused"
+                          : placing
+                          ? "Confirming Order…"
+                          : paymentMethod === "cod"
+                          ? "Place Cash on Delivery Order"
+                          : `Pay ${formatINR(grandTotal)} Online`}
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -1606,15 +1638,23 @@ export default function CheckoutView() {
                 type="button"
                 onClick={submit}
                 disabled={!isCheckoutEnabled || placing}
-                className="mt-6 w-full cursor-pointer rounded-lg bg-tomato px-4 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow transition-all hover:bg-tomato-hover disabled:opacity-60 disabled:cursor-not-allowed"
+                className="mt-6 w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-lg bg-tomato px-4 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow transition-all duration-200 hover:bg-tomato-hover active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {!isCheckoutEnabled
-                  ? "Checkout Paused"
-                  : placing
-                  ? "Confirming Order…"
-                  : paymentMethod === "cod"
-                  ? "Place Cash on Delivery Order"
-                  : `Pay ${formatINR(grandTotal)} Online`}
+                {placing && (
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                )}
+                <span>
+                  {!isCheckoutEnabled
+                    ? "Checkout Paused"
+                    : placing
+                    ? "Confirming Order…"
+                    : paymentMethod === "cod"
+                    ? "Place Cash on Delivery Order"
+                    : `Pay ${formatINR(grandTotal)} Online`}
+                </span>
               </button>
             )}
 

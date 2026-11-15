@@ -85,16 +85,16 @@ export default function ShippingAddressForm({ value, onChange, error, onContinue
   return (
     <div className="rounded-2xl border border-pine-950/10 bg-white p-5 sm:p-8 shadow-sm">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-pine-950/10 pb-4">
-        <div>
-          <h2 className="font-display text-xl font-semibold text-pine-950">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-pine-950/10 pb-4">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-lg sm:text-xl font-semibold text-pine-950 leading-tight">
             Delivery Address
           </h2>
           <p className="mt-1 text-xs text-muted">
             Fields marked with an asterisk (<span className="text-[#b42318] font-bold">*</span>) are mandatory.
           </p>
         </div>
-        <span className="inline-flex items-center rounded-full bg-sand-100 px-3 py-1 text-xs font-semibold text-pine-900">
+        <span className="shrink-0 whitespace-nowrap inline-flex items-center rounded-full bg-sand-100 px-3 py-1 text-xs font-semibold text-pine-900 border border-pine-950/10">
           Step 1 of 2
         </span>
       </div>
@@ -297,9 +297,9 @@ export default function ShippingAddressForm({ value, onChange, error, onContinue
 
       {/* Unified Action Footer (Integrated directly inside the same card) */}
       {onContinue && (
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-pine-950/10 pt-6">
-          <div>
-            <p className="font-display text-base font-semibold text-pine-950">
+        <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 border-t border-pine-950/10 pt-6">
+          <div className="min-w-0">
+            <p className="font-display text-sm sm:text-base font-semibold text-pine-950">
               Ready for Payment?
             </p>
             <p className="mt-0.5 text-xs text-muted">
@@ -309,10 +309,10 @@ export default function ShippingAddressForm({ value, onChange, error, onContinue
           <button
             type="button"
             onClick={onContinue}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-tomato px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-tomato-hover shrink-0 active:scale-[0.98]"
+            className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-lg bg-tomato px-7 py-3.5 font-inter text-xs font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-tomato-hover shrink-0 active:scale-[0.98] w-full sm:w-auto"
           >
             <span>Continue to Payment</span>
-            <span>→</span>
+            <span aria-hidden="true" className="text-sm font-bold">→</span>
           </button>
         </div>
       )}
