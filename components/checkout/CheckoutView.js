@@ -614,6 +614,7 @@ export default function CheckoutView() {
 
     try {
       const orderPayload = {
+        storeId: "linen",
         items: items.map(({ product, qty }) => ({
           productId: product.id,
           quantity: qty,
