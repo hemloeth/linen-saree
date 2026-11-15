@@ -13,12 +13,14 @@ export default function WishlistPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(wishlist.length > 0);
   const [error, setError] = useState(null);
+  const [partialError, setPartialError] = useState(null);
   const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     if (!wishlist || wishlist.length === 0) {
       setProducts([]);
       setError(null);
+      setPartialError(null);
       setLoading(false);
       return;
     }
@@ -26,11 +28,15 @@ export default function WishlistPage() {
     let active = true;
     setLoading(true);
     setError(null);
+    setPartialError(null);
 
     fetchProductCardsByIds(wishlist)
       .then((items) => {
         if (!active) return;
         setProducts(items);
+        if (items?.hasPartialErrors) {
+          setPartialError("Some saved pieces could not be loaded due to a network interruption.");
+        }
         setLoading(false);
       })
       .catch((err) => {
@@ -63,16 +69,16 @@ export default function WishlistPage() {
             <p className="mt-1 text-xs text-muted">
               {loading
                 ? "Loading saved pieces…"
-                : error
+                : error && saved.length === 0
                 ? "Could not load saved pieces."
-                : saved.length === 0
+                : wishlist.length === 0
                 ? "Nothing saved yet."
                 : `${saved.length} piece${saved.length === 1 ? "" : "s"} saved`}
             </p>
             <span aria-hidden="true" className="mt-3 block h-px w-16 bg-pine-950/40" />
           </div>
 
-          {error && !loading ? (
+          {error && !loading && saved.length === 0 ? (
             <div className="rounded-lg border border-red-200 bg-red-50/50 px-6 py-10 text-center">
               <p className="text-sm font-medium text-red-700">{error}</p>
               <button
@@ -93,7 +99,7 @@ export default function WishlistPage() {
                 </div>
               ))}
             </div>
-          ) : saved.length === 0 ? (
+          ) : wishlist.length === 0 ? (
             <div className="rounded-lg border border-dashed border-pine-950/20 px-6 py-14 text-center">
               <p className="text-sm text-muted">
                 Tap the heart on any saree to keep it here.
@@ -105,12 +111,50 @@ export default function WishlistPage() {
                 Browse sarees
               </Link>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-              {saved.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+          ) : saved.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-pine-950/20 px-6 py-14 text-center">
+              <p className="text-sm text-muted">
+                The saved pieces are no longer available in the catalog.
+              </p>
+              <Link
+                href="/shop"
+                className="mt-4 inline-flex h-10 items-center rounded-md bg-pine-900 px-5 font-inter text-xs font-semibold text-white transition-colors hover:bg-pine-950"
+              >
+                Browse sarees
+              </Link>
             </div>
+          ) : (
+            <>
+              {partialError && (
+                <div className="mb-6 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-800">
+                  <span>{partialError}</span>
+                  <button
+                    type="button"
+                    onClick={() => setRetryNonce((c) => c + 1)}
+                    className="font-medium underline hover:text-amber-950 cursor-pointer"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+              {error && (
+                <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50/70 px-4 py-3 text-xs text-red-800">
+                  <span>{error}</span>
+                  <button
+                    type="button"
+                    onClick={() => setRetryNonce((c) => c + 1)}
+                    className="font-medium underline hover:text-red-950 cursor-pointer"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+                {saved.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </main>
