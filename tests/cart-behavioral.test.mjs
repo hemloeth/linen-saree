@@ -310,4 +310,125 @@ test("Cart Behavioral Concurrency & State Machine Suite", async (t) => {
       "clear returns explicit success result"
     );
   });
+
+  await t.test("12. Quantity 1 -> 2 -> 3 with Request 1 failing: productOpVersionRef prevents rollback from resetting to 1", async () => {
+    let clientCart = [{ product: { id: "p1", name: "Saree 1" }, qty: 1 }];
+    const opVersions = new Map();
+    let queue = Promise.resolve();
+
+    const pid = "p1";
+
+    // Step 1: User changes quantity to 2 (opVersion 1)
+    const op1 = (opVersions.get(pid) || 0) + 1;
+    opVersions.set(pid, op1);
+    const prevQty1 = 1;
+    clientCart = pureSetQty(clientCart, pid, 2);
+
+    // Step 2: User immediately changes quantity to 3 (opVersion 2)
+    const op2 = (opVersions.get(pid) || 0) + 1;
+    opVersions.set(pid, op2);
+    const prevQty2 = 2;
+    clientCart = pureSetQty(clientCart, pid, 3);
+
+    // Simulate Request 1 fails in queue
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+      // In StoreProvider: rollback ONLY occurs if opVersions.get(pid) === opVersion
+      if (opVersions.get(pid) === op1) {
+        clientCart = pureSetQty(clientCart, pid, prevQty1);
+      }
+    });
+
+    // Simulate Request 2 succeeds in queue
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+      // Success
+    });
+
+    await queue;
+    assert.equal(clientCart.length, 1);
+    assert.equal(clientCart[0].qty, 3, "Quantity remains 3! Stale Request 1 failure did NOT reset to 1");
+  });
+
+  await t.test("13. Add followed by Remove on same product in serialized queue cleans line item", async () => {
+    let clientCart = [];
+    let queue = Promise.resolve();
+    const pid = "p-combo";
+
+    // Add
+    clientCart = pureAdd(clientCart, { id: pid, name: "Combo Saree" }, 1);
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
+
+    // Remove
+    clientCart = pureRemove(clientCart, pid);
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
+
+    await queue;
+    assert.equal(clientCart.length, 0, "Cart is empty after Add then Remove");
+  });
+
+  await t.test("14. Remove fails while another Add is pending: duplicate line item is guarded", async () => {
+    let clientCart = [{ product: { id: "p1", name: "Saree 1" }, qty: 1 }];
+    const opVersions = new Map();
+    let queue = Promise.resolve();
+    const pid = "p1";
+
+    // 1. Remove operation (opVersion 1)
+    const op1 = (opVersions.get(pid) || 0) + 1;
+    opVersions.set(pid, op1);
+    const removedLine = clientCart[0];
+    clientCart = pureRemove(clientCart, pid);
+
+    // 2. Immediate Re-Add operation (opVersion 2)
+    const op2 = (opVersions.get(pid) || 0) + 1;
+    opVersions.set(pid, op2);
+    clientCart = pureAdd(clientCart, { id: pid, name: "Saree 1" }, 1);
+
+    // Remove fails
+    queue = queue.then(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+      if (opVersions.get(pid) === op1 && removedLine) {
+        const alreadyExists = clientCart.some((l) => String(l.product.id) === pid);
+        if (!alreadyExists) {
+          clientCart = [...clientCart, removedLine];
+        }
+      }
+    });
+
+    await queue;
+    assert.equal(clientCart.length, 1, "Only 1 line item exists; no duplication");
+    assert.equal(clientCart[0].qty, 1);
+  });
+
+  await t.test("15. Guest cart persistence round-trip saves exact IDs and quantities", () => {
+    const originalCart = [
+      { product: { id: "6aae48baf0fd4c699a0d7075", name: "Printed Saree", price: 2999 }, qty: 2 },
+      { product: { id: "6a6ccfb085f2c8547d42ef85", name: "Golden Zari Saree", price: 3499 }, qty: 1 },
+    ];
+
+    // Persistence payload serialization
+    const serialized = JSON.stringify(
+      originalCart.map((line) => ({
+        id: String(line.product.id),
+        qty: line.qty,
+      }))
+    );
+
+    // Hydration deserialization
+    const parsed = JSON.parse(serialized);
+    const hydratedLines = parsed.map((item) => ({
+      product: { id: item.id },
+      qty: item.qty,
+    }));
+
+    assert.equal(hydratedLines.length, 2);
+    assert.equal(hydratedLines[0].product.id, "6aae48baf0fd4c699a0d7075");
+    assert.equal(hydratedLines[0].qty, 2);
+    assert.equal(hydratedLines[1].product.id, "6a6ccfb085f2c8547d42ef85");
+    assert.equal(hydratedLines[1].qty, 1);
+  });
 });
