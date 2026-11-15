@@ -46,7 +46,42 @@ const BACKEND_MODEL_PATH = path.join(BACKEND_DIR, "models", "productModal.js");
 const BACKEND_STORES_PATH = path.join(BACKEND_DIR, "config", "stores.js");
 
 // ---------------------------------------------------------------------------
-// 2. Mock Response Helper
+// 2. Strict Database Validation Guard
+// ---------------------------------------------------------------------------
+function validateTestDatabase(uri) {
+  if (!uri || typeof uri !== "string") {
+    return { valid: false, reason: "TEST_MONGO_URI is missing. Explicit TEST_MONGO_URI is required." };
+  }
+
+  // Must NEVER be derived from or identical to production MONGO_URI
+  if (process.env.MONGO_URI && uri.trim() === process.env.MONGO_URI.trim()) {
+    return { valid: false, reason: "Refusing to run: TEST_MONGO_URI is identical to production MONGO_URI." };
+  }
+
+  // Extract database name from URI
+  const match = uri.match(/\/([a-zA-Z0-9_-]+)(?:\?|$)/);
+  if (!match || !match[1]) {
+    return { valid: false, reason: "Unable to parse database name from TEST_MONGO_URI." };
+  }
+
+  const dbName = match[1].toLowerCase();
+
+  // Protected production database names that must NEVER be targeted
+  const forbiddenDbNames = ["linen", "handloomer", "production", "prod", "saree", "admin"];
+  if (forbiddenDbNames.includes(dbName)) {
+    return { valid: false, reason: `Refusing to run: Database '${dbName}' is a forbidden production database.` };
+  }
+
+  // Must explicitly contain 'test'
+  if (!dbName.includes("test")) {
+    return { valid: false, reason: `Refusing to run: Database '${dbName}' does not contain 'test'. Only dedicated test databases are allowed.` };
+  }
+
+  return { valid: true, dbName };
+}
+
+// ---------------------------------------------------------------------------
+// 3. Mock Response Helper
 // ---------------------------------------------------------------------------
 function mockRes() {
   const res = {
@@ -87,17 +122,47 @@ test("Backend Controller Contract & Multi-Store Live Database Suite", async (t) 
   const Product = modelModule.default;
   const { STORES } = storesModule;
 
-  // DEDICATED ISOLATED TEST DATABASE: strictly prevents modifying production MongoDB
-  const TEST_MONGO_URI = process.env.TEST_MONGO_URI || (
-    process.env.MONGO_URI ? process.env.MONGO_URI.replace(/\/([^\/?]+)(\?|$)/, '/$1_test$2') : null
-  );
+  await t.test("1. Actual backend controller exports getAllProducts and getProductCardsByIds", () => {
+    assert.equal(typeof productController.getAllProducts, "function", "getAllProducts is exported");
+    assert.equal(typeof productController.getProductCardsByIds, "function", "getProductCardsByIds is exported");
+  });
 
-  assert.ok(TEST_MONGO_URI, "TEST_MONGO_URI or fallback test database URI must be available");
-  assert.match(TEST_MONGO_URI, /_test|test/i, "Target URI must point to dedicated test database");
+  await t.test("2. Stores configuration retains exact store IDs and isolates Handloomer settings", () => {
+    assert.ok(STORES.handloomer, "handloomer store config exists");
+    assert.ok(STORES.linen, "linen store config exists");
+    assert.equal(STORES.linen.id, "linen", "linen store ID is locked to 'linen'");
+    assert.equal(STORES.handloomer.id, "handloomer", "handloomer store ID is locked to 'handloomer'");
 
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(TEST_MONGO_URI);
+    // Confirm Handloomer settings are untouched
+    assert.equal(STORES.handloomer.name, "Handloomer");
+    assert.equal(STORES.handloomer.brandTitle, "MS HANDLOOM");
+    assert.equal(STORES.handloomer.orderPrefix, "HL");
+  });
+
+  // STRICT SAFETY GATE: Requires explicit TEST_MONGO_URI and validates database name
+  const testDbValidation = validateTestDatabase(process.env.TEST_MONGO_URI);
+
+  if (!testDbValidation.valid) {
+    t.skip(`Live database integration tests skipped: ${testDbValidation.reason} Define TEST_MONGO_URI explicitly pointing to a dedicated test database (e.g. mongodb://.../linen_test).`);
+    return;
   }
+
+  // Connect to the verified test database
+  if (mongoose.connection.readyState !== 1) {
+    await mongoose.connect(process.env.TEST_MONGO_URI);
+  }
+
+  // Double check runtime connected database name
+  assert.equal(
+    mongoose.connection.name.toLowerCase(),
+    testDbValidation.dbName,
+    "Connected database name must match validated test database name"
+  );
+  assert.match(
+    mongoose.connection.name,
+    /test/i,
+    "Runtime connected database must contain 'test'"
+  );
 
   const suffix = Date.now().toString().slice(-6);
   const testCategory = `contract-test-${suffix}`;
@@ -153,12 +218,7 @@ test("Backend Controller Contract & Multi-Store Live Database Suite", async (t) 
     });
     createdIds.push(pOutOfStock._id);
 
-    await t.test("1. Actual backend controller exports getAllProducts and getProductCardsByIds", () => {
-      assert.equal(typeof productController.getAllProducts, "function", "getAllProducts is exported");
-      assert.equal(typeof productController.getProductCardsByIds, "function", "getProductCardsByIds is exported");
-    });
-
-    await t.test("2. Legacy Handloomer request (omitted inStock) returns all products without filtering", async () => {
+    await t.test("3. Legacy Handloomer request (omitted inStock) returns all products without filtering", async () => {
       const req = {
         query: { category: testCategory },
         headers: { "x-store-id": "handloomer" },
@@ -174,7 +234,7 @@ test("Backend Controller Contract & Multi-Store Live Database Suite", async (t) 
       assert.ok(res.body.products.some((p) => p.sku === pOutOfStock.sku), "Out-of-stock product is returned");
     });
 
-    await t.test("3. Actual controller applies inStock=true before pagination and countDocuments", async () => {
+    await t.test("4. Actual controller applies inStock=true before pagination and countDocuments", async () => {
       const req = {
         query: { category: testCategory, inStock: "true" },
         headers: { "x-store-id": "linen" },
@@ -192,7 +252,7 @@ test("Backend Controller Contract & Multi-Store Live Database Suite", async (t) 
       assert.ok(res.body.products.every((p) => p.stock > 0), "All returned products have stock > 0");
     });
 
-    await t.test("4. Actual controller applies inStock=false for backordered/sold-out inventory", async () => {
+    await t.test("5. Actual controller applies inStock=false for backordered/sold-out inventory", async () => {
       const req = {
         query: { category: testCategory, inStock: "false" },
       };
@@ -208,7 +268,7 @@ test("Backend Controller Contract & Multi-Store Live Database Suite", async (t) 
       assert.ok(res.body.products.every((p) => p.stock <= 0), "All returned products have stock <= 0");
     });
 
-    await t.test("5. Category and price range combinations execute accurately on actual controller", async () => {
+    await t.test("6. Category and price range combinations execute accurately on actual controller", async () => {
       // Price range matching in-stock saree (2500 is between 2000 and 3000)
       const reqMatch = {
         query: { category: testCategory, inStock: "true", priceMin: "2000", priceMax: "3000" },
@@ -232,7 +292,7 @@ test("Backend Controller Contract & Multi-Store Live Database Suite", async (t) 
       assert.equal(resMismatch.body.products.length, 0);
     });
 
-    await t.test("6. Server pagination and total page calculations reflect stock filtering", async () => {
+    await t.test("7. Server pagination and total page calculations reflect stock filtering", async () => {
       const reqPage1 = {
         query: { category: testCategory, inStock: "true", page: "1", limit: "1" },
       };
@@ -253,18 +313,6 @@ test("Backend Controller Contract & Multi-Store Live Database Suite", async (t) 
       assert.equal(resPage2.body.pagination.totalProducts, 1);
       assert.equal(resPage2.body.pagination.totalPages, 1);
       assert.equal(resPage2.body.products.length, 0, "Page 2 is out of range");
-    });
-
-    await t.test("7. Stores configuration retains exact store IDs and isolates Handloomer settings", () => {
-      assert.ok(STORES.handloomer, "handloomer store config exists");
-      assert.ok(STORES.linen, "linen store config exists");
-      assert.equal(STORES.linen.id, "linen", "linen store ID is locked to 'linen'");
-      assert.equal(STORES.handloomer.id, "handloomer", "handloomer store ID is locked to 'handloomer'");
-
-      // Confirm Handloomer settings are untouched
-      assert.equal(STORES.handloomer.name, "Handloomer");
-      assert.equal(STORES.handloomer.brandTitle, "MS HANDLOOM");
-      assert.equal(STORES.handloomer.orderPrefix, "HL");
     });
   } finally {
     if (createdIds.length > 0) {

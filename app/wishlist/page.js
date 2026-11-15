@@ -13,6 +13,7 @@ export default function WishlistPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(wishlist.length > 0);
   const [error, setError] = useState(null);
+  const [hasPartialErrors, setHasPartialErrors] = useState(false);
   const [partialError, setPartialError] = useState(null);
   const [retryNonce, setRetryNonce] = useState(0);
 
@@ -20,6 +21,7 @@ export default function WishlistPage() {
     if (!wishlist || wishlist.length === 0) {
       setProducts([]);
       setError(null);
+      setHasPartialErrors(false);
       setPartialError(null);
       setLoading(false);
       return;
@@ -28,6 +30,7 @@ export default function WishlistPage() {
     let active = true;
     setLoading(true);
     setError(null);
+    setHasPartialErrors(false);
     setPartialError(null);
 
     fetchProductCardsByIds(wishlist)
@@ -35,7 +38,11 @@ export default function WishlistPage() {
         if (!active) return;
         setProducts(items);
         if (items?.hasPartialErrors) {
+          setHasPartialErrors(true);
           setPartialError("Some saved pieces could not be loaded due to a network interruption.");
+        } else {
+          setHasPartialErrors(false);
+          setPartialError(null);
         }
         setLoading(false);
       })
@@ -69,18 +76,22 @@ export default function WishlistPage() {
             <p className="mt-1 text-xs text-muted">
               {loading
                 ? "Loading saved pieces…"
-                : error && saved.length === 0
+                : error || (hasPartialErrors && saved.length === 0)
                 ? "Could not load saved pieces."
                 : wishlist.length === 0
                 ? "Nothing saved yet."
+                : saved.length === 0
+                ? "No pieces currently available."
                 : `${saved.length} piece${saved.length === 1 ? "" : "s"} saved`}
             </p>
             <span aria-hidden="true" className="mt-3 block h-px w-16 bg-pine-950/40" />
           </div>
 
-          {error && !loading && saved.length === 0 ? (
+          {(error && !loading) || (hasPartialErrors && !loading && saved.length === 0) ? (
             <div className="rounded-lg border border-red-200 bg-red-50/50 px-6 py-10 text-center">
-              <p className="text-sm font-medium text-red-700">{error}</p>
+              <p className="text-sm font-medium text-red-700">
+                {error || partialError || "Unable to load saved pieces. Please check your network connection and try again."}
+              </p>
               <button
                 type="button"
                 onClick={() => setRetryNonce((c) => c + 1)}
