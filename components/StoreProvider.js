@@ -356,6 +356,7 @@ export function StoreProvider({ children }) {
 
   const pendingCartMutationsRef = useRef(0);
   const cartRef = useRef(items);
+  const productOpVersionRef = useRef(new Map());
 
   // Synchronous guest cart persistence helper
   const persistGuestCart = useCallback((newLines) => {
@@ -473,6 +474,7 @@ export function StoreProvider({ children }) {
     } catch {
       /* ignore network errors on logout */
     }
+    productOpVersionRef.current.clear();
     setUser(null);
     setWishlist([]);
     updateCartState([]);
@@ -521,6 +523,8 @@ export function StoreProvider({ children }) {
       }
 
       const pid = String(product.id);
+      const opVersion = (productOpVersionRef.current.get(pid) || 0) + 1;
+      productOpVersionRef.current.set(pid, opVersion);
 
       // Synchronously compute next state and commit
       const nextCart = pureAdd(cartRef.current, product, quantity);
@@ -547,9 +551,11 @@ export function StoreProvider({ children }) {
                 resolve({ success: true, count: calculatedCount });
               } catch (err) {
                 pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
-                // DELTA ROLLBACK: only subtract this mutation's quantity so subsequent additions are NOT lost!
-                const rolledBack = pureDeltaRollback(cartRef.current, pid, quantity);
-                updateCartState(rolledBack);
+                // DELTA ROLLBACK: only subtract this mutation's quantity if no newer mutation on this product superseded it
+                if (productOpVersionRef.current.get(pid) === opVersion) {
+                  const rolledBack = pureDeltaRollback(cartRef.current, pid, quantity);
+                  updateCartState(rolledBack);
+                }
                 notify(err.message || "Could not add item to bag. Please try again.");
                 if (pendingCartMutationsRef.current === 0) {
                   await refetchServerCart();
@@ -577,6 +583,8 @@ export function StoreProvider({ children }) {
       const pid = String(id);
       const target = cartRef.current.find((l) => String(l.product.id) === pid);
       const previousQty = target?.qty || 0;
+      const opVersion = (productOpVersionRef.current.get(pid) || 0) + 1;
+      productOpVersionRef.current.set(pid, opVersion);
 
       const nextCart = pureSetQty(cartRef.current, pid, qty);
       updateCartState(nextCart);
@@ -598,9 +606,11 @@ export function StoreProvider({ children }) {
                 resolve({ success: true });
               } catch (err) {
                 pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
-                // Revert to previous quantity for this specific item
-                const reverted = pureSetQty(cartRef.current, pid, previousQty);
-                updateCartState(reverted);
+                // Revert to previous quantity only if no newer operation on this product has superseded this request!
+                if (productOpVersionRef.current.get(pid) === opVersion) {
+                  const reverted = pureSetQty(cartRef.current, pid, previousQty);
+                  updateCartState(reverted);
+                }
                 notify(err.message || "Failed to update quantity. Please try again.");
                 if (pendingCartMutationsRef.current === 0) {
                   await refetchServerCart();
@@ -625,6 +635,8 @@ export function StoreProvider({ children }) {
     async (id) => {
       const pid = String(id);
       const removedLine = cartRef.current.find((line) => String(line.product.id) === pid) || null;
+      const opVersion = (productOpVersionRef.current.get(pid) || 0) + 1;
+      productOpVersionRef.current.set(pid, opVersion);
 
       const nextCart = pureRemove(cartRef.current, pid);
       updateCartState(nextCart);
@@ -646,10 +658,14 @@ export function StoreProvider({ children }) {
                 resolve({ success: true });
               } catch (err) {
                 pendingCartMutationsRef.current = Math.max(0, pendingCartMutationsRef.current - 1);
-                // Reinsert removed line on failure
-                if (removedLine) {
-                  const reverted = [...cartRef.current, removedLine];
-                  updateCartState(reverted);
+                // Reinsert removed line on failure only if no newer mutation on this product superseded it
+                // and avoid duplicating if item was re-added concurrently
+                if (productOpVersionRef.current.get(pid) === opVersion && removedLine) {
+                  const alreadyExists = cartRef.current.some((l) => String(l.product.id) === pid);
+                  if (!alreadyExists) {
+                    const reverted = [...cartRef.current, removedLine];
+                    updateCartState(reverted);
+                  }
                 }
                 notify(err.message || "Failed to remove item. Please try again.");
                 if (pendingCartMutationsRef.current === 0) {
@@ -672,6 +688,7 @@ export function StoreProvider({ children }) {
 
   // Cart Operation: Clear with Mutex Queue, Delta Safety & Server Authorization
   const clear = useCallback(async () => {
+    productOpVersionRef.current.clear();
     const prevCart = [...cartRef.current];
     updateCartState([]);
 
