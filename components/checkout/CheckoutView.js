@@ -617,7 +617,12 @@ export default function CheckoutView() {
         storeId: "linen",
         items: items.map(({ product, qty }) => ({
           productId: product.id,
+          name: product.name,
+          price: product.price,
           quantity: qty,
+          image: product.image || product.mainImage || (Array.isArray(product.galleryImages) && product.galleryImages[0]?.url) || (Array.isArray(product.images) && product.images[0]) || "",
+          sku: product.sku || "",
+          slug: product.slug || "",
         })),
         shippingAddress: {
           firstName: address.firstName.trim(),
